@@ -36,6 +36,62 @@
       width: 100%;
     }
 
+    /* Launcher Styles */
+    .launcher {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
+    }
+
+    .launcher.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-bar {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loading-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: white;
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+
+    /* App Styles */
+    .app-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .app-container.visible {
+      opacity: 1;
+    }
+
     /* Contenedor de paneles */
     .panels-container {
       display: flex;
@@ -495,85 +551,126 @@
   </style>
 </head>
 <body>
-  <!-- Contenedor de paneles -->
-  <div class="panels-container" id="panels-container">
-    <!-- Panel Explorar -->
-    <div class="panel" id="explore-panel">
-      <div class="panel-header">
-        <h1 class="panel-title">Explorar</h1>
-      </div>
-      <div class="search-container">
-        <input type="text" class="search-input" id="search" placeholder="Buscar...">
-        <button class="add-btn" id="add-btn">AÑADIR</button>
-      </div>
-      <div class="scroll-container">
-        <!-- Degradados fijos -->
-        <div class="fade-overlay top-fade"></div>
-        <div class="scroll-area">
-          <div class="grid" id="products-grid"></div>
-        </div>
-        <div class="fade-overlay bottom-fade"></div>
-      </div>
-    </div>
-
-    <!-- Panel Lista -->
-    <div class="panel" id="list-panel">
-      <div class="panel-header">
-        <h1 class="panel-title">Lista</h1>
-      </div>
-      <div class="scroll-container">
-        <!-- Degradados fijos -->
-        <div class="fade-overlay top-fade"></div>
-        <div class="scroll-area">
-          <div class="cart-list" id="cart-list"></div>
-        </div>
-        <div class="fade-overlay bottom-fade"></div>
-      </div>
-      <div class="list-footer" id="list-footer" style="display: none;">
-        <span id="total-text"></span>
-        <button class="clear-all" id="clear-all">Vaciar</button>
-      </div>
-    </div>
-
-    <!-- Panel Notas -->
-    <div class="panel" id="notes-panel">
-      <div class="panel-header">
-        <h1 class="panel-title">Notas</h1>
-      </div>
-      <div class="search-container">
-        <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas...">
-        <button class="add-btn" id="add-note-btn">NUEVA NOTA</button>
-      </div>
-      <div class="scroll-container">
-        <!-- Degradados fijos -->
-        <div class="fade-overlay top-fade"></div>
-        <div class="scroll-area">
-          <div class="notes-grid" id="notes-grid"></div>
-        </div>
-        <div class="fade-overlay bottom-fade"></div>
-      </div>
+  <!-- Launcher Screen -->
+  <div class="launcher" id="launcher">
+    <div class="loading-bar">
+      <div class="loading-progress" id="loading-progress"></div>
     </div>
   </div>
 
-  <!-- Modal para crear/editar notas -->
-  <div class="modal" id="note-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="modal-title">Nueva Nota</h2>
-        <button class="close-modal" id="close-modal">×</button>
-      </div>
-      <form class="note-form" id="note-form">
-        <input type="text" id="note-title" placeholder="Título de la nota" required>
-        <textarea id="note-content" placeholder="Contenido de la nota" required></textarea>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
-          <button type="submit" class="btn btn-save">Guardar</button>
+  <!-- App Container -->
+  <div class="app-container" id="app-container">
+    <!-- Contenedor de paneles -->
+    <div class="panels-container" id="panels-container">
+      <!-- Panel Explorar -->
+      <div class="panel" id="explore-panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Explorar</h1>
         </div>
-      </form>
+        <div class="search-container">
+          <input type="text" class="search-input" id="search" placeholder="Buscar...">
+          <button class="add-btn" id="add-btn">AÑADIR</button>
+        </div>
+        <div class="scroll-container">
+          <!-- Degradados fijos -->
+          <div class="fade-overlay top-fade"></div>
+          <div class="scroll-area">
+            <div class="grid" id="products-grid"></div>
+          </div>
+          <div class="fade-overlay bottom-fade"></div>
+        </div>
+      </div>
+
+      <!-- Panel Lista -->
+      <div class="panel" id="list-panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Lista</h1>
+        </div>
+        <div class="scroll-container">
+          <!-- Degradados fijos -->
+          <div class="fade-overlay top-fade"></div>
+          <div class="scroll-area">
+            <div class="cart-list" id="cart-list"></div>
+          </div>
+          <div class="fade-overlay bottom-fade"></div>
+        </div>
+        <div class="list-footer" id="list-footer" style="display: none;">
+          <span id="total-text"></span>
+          <button class="clear-all" id="clear-all">Vaciar</button>
+        </div>
+      </div>
+
+      <!-- Panel Notas -->
+      <div class="panel" id="notes-panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Notas</h1>
+        </div>
+        <div class="search-container">
+          <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas...">
+          <button class="add-btn" id="add-note-btn">NUEVA NOTA</button>
+        </div>
+        <div class="scroll-container">
+          <!-- Degradados fijos -->
+          <div class="fade-overlay top-fade"></div>
+          <div class="scroll-area">
+            <div class="notes-grid" id="notes-grid"></div>
+          </div>
+          <div class="fade-overlay bottom-fade"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para crear/editar notas -->
+    <div class="modal" id="note-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modal-title">Nueva Nota</h2>
+          <button class="close-modal" id="close-modal">×</button>
+        </div>
+        <form class="note-form" id="note-form">
+          <input type="text" id="note-title" placeholder="Título de la nota" required>
+          <textarea id="note-content" placeholder="Contenido de la nota" required></textarea>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
+            <button type="submit" class="btn btn-save">Guardar</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
   <script>
+    // Simulación de carga real de la aplicación
+    document.addEventListener('DOMContentLoaded', function() {
+      const launcher = document.getElementById('launcher');
+      const loadingProgress = document.getElementById('loading-progress');
+      const appContainer = document.getElementById('app-container');
+      const panelsContainer = document.getElementById('panels-container');
+      
+      // Iniciar la animación de carga
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 5; // Incremento aleatorio para simular carga real
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          
+          // Cuando termina la animación, ocultar el launcher y mostrar la app
+          setTimeout(() => {
+            launcher.classList.add('hidden');
+            appContainer.classList.add('visible');
+            
+            // Mostrar el panel central (Lista)
+            panelsContainer.style.transform = 'translateX(-100vw)';
+          }, 100);
+        }
+        loadingProgress.style.width = `${progress}%`;
+      }, 50);
+      
+      // Inicializar la aplicación después de la carga
+      setTimeout(initApp, 1000);
+    });
+
     // === localStorage helpers ===
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
     const CART_STORAGE_KEY = 'superapp_cart';
@@ -657,10 +754,11 @@
     let products = [];
     let cartItems = [];
     let notes = [];
-    let currentPanel = 0;
+    let currentPanel = 1; // Comenzamos en el panel central (Lista)
     let startX = 0;
     let currentX = 0;
     let isSwiping = false;
+    let currentNote = null;
 
     // === Inicialización ===
     async function initApp() {
@@ -1121,9 +1219,6 @@
         closeNoteModal();
       }
     });
-
-    // === Iniciar app ===
-    initApp();
   </script>
 </body>
 </html>
