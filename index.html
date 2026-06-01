@@ -36,7 +36,6 @@
       width: 100%;
     }
 
-    /* Launcher Styles */
     .launcher {
       position: fixed;
       top: 0;
@@ -77,7 +76,6 @@
       transition: width 0.1s linear;
     }
 
-    /* App Styles */
     .app-container {
       position: absolute;
       top: 0;
@@ -92,7 +90,6 @@
       opacity: 1;
     }
 
-    /* Contenedor de paneles */
     .panels-container {
       display: flex;
       width: 300vw;
@@ -123,7 +120,6 @@
       font-weight: bold;
     }
 
-    /* Panel Explorar */
     .search-container {
       position: relative;
       margin-bottom: 20px;
@@ -169,7 +165,6 @@
 
     .scroll-area::-webkit-scrollbar { display: none; }
 
-    /* Contenedores para los degradados fijos */
     .fade-overlay {
       position: absolute;
       left: 0;
@@ -220,7 +215,6 @@
       padding: 40px 0;
     }
 
-    /* Panel Lista */
     .cart-list {
       display: flex;
       flex-direction: column;
@@ -290,7 +284,6 @@
       background: rgba(255, 69, 58, 0.15);
     }
 
-    /* Empty state */
     .empty-state {
       text-align: center;
       color: var(--text-muted);
@@ -308,7 +301,6 @@
       line-height: 1.5;
     }
 
-    /* Footer sin línea */
     .list-footer {
       padding-top: 16px;
       display: flex;
@@ -334,7 +326,6 @@
       background: rgba(255, 69, 58, 0.15);
     }
 
-    /* Panel Notas */
     .notes-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -414,7 +405,6 @@
       background: rgba(255, 69, 58, 0.3);
     }
 
-    /* Modal para crear/editar notas */
     .modal {
       position: fixed;
       top: 0;
@@ -551,18 +541,14 @@
   </style>
 </head>
 <body>
-  <!-- Launcher Screen -->
   <div class="launcher" id="launcher">
     <div class="loading-bar">
       <div class="loading-progress" id="loading-progress"></div>
     </div>
   </div>
 
-  <!-- App Container -->
   <div class="app-container" id="app-container">
-    <!-- Contenedor de paneles -->
     <div class="panels-container" id="panels-container">
-      <!-- Panel Explorar -->
       <div class="panel" id="explore-panel">
         <div class="panel-header">
           <h1 class="panel-title">Explorar</h1>
@@ -572,7 +558,6 @@
           <button class="add-btn" id="add-btn">AÑADIR</button>
         </div>
         <div class="scroll-container">
-          <!-- Degradados fijos -->
           <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="grid" id="products-grid"></div>
@@ -581,13 +566,11 @@
         </div>
       </div>
 
-      <!-- Panel Lista -->
       <div class="panel" id="list-panel">
         <div class="panel-header">
           <h1 class="panel-title">Lista</h1>
         </div>
         <div class="scroll-container">
-          <!-- Degradados fijos -->
           <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="cart-list" id="cart-list"></div>
@@ -600,7 +583,6 @@
         </div>
       </div>
 
-      <!-- Panel Notas -->
       <div class="panel" id="notes-panel">
         <div class="panel-header">
           <h1 class="panel-title">Notas</h1>
@@ -610,7 +592,6 @@
           <button class="add-btn" id="add-note-btn">NUEVA NOTA</button>
         </div>
         <div class="scroll-container">
-          <!-- Degradados fijos -->
           <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="notes-grid" id="notes-grid"></div>
@@ -620,7 +601,6 @@
       </div>
     </div>
 
-    <!-- Modal para crear/editar notas -->
     <div class="modal" id="note-modal">
       <div class="modal-content">
         <div class="modal-header">
@@ -640,38 +620,69 @@
   </div>
 
   <script>
-    // Simulación de carga real de la aplicación
     document.addEventListener('DOMContentLoaded', function() {
       const launcher = document.getElementById('launcher');
       const loadingProgress = document.getElementById('loading-progress');
       const appContainer = document.getElementById('app-container');
       const panelsContainer = document.getElementById('panels-container');
       
-      // Iniciar la animación de carga
       let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 5; // Incremento aleatorio para simular carga real
+      let stallPoints = [];
+      let speeds = [];
+      
+      for(let i = 0; i < 360; i++) {
+        speeds.push(Math.random() * 10 + 1);
+      }
+      
+      const stallCount = Math.floor(Math.random() * 5) + 3;
+      for(let i = 0; i < stallCount; i++) {
+        stallPoints.push(Math.random() * 90);
+      }
+      
+      let speedIndex = 0;
+      
+      function updateProgress() {
+        let isStalling = false;
+        for(let i = 0; i < stallPoints.length; i++) {
+          if (stallPoints[i] > 0 && Math.abs(progress - stallPoints[i]) < 1) {
+            stallPoints[i] = -stallPoints[i];
+            isStalling = true;
+            const stallDuration = Math.random() * 800 + 200;
+            
+            setTimeout(() => {
+              updateProgress();
+            }, stallDuration);
+            
+            return;
+          }
+        }
+        
+        const currentSpeed = speeds[speedIndex] || (Math.random() * 3 + 0.5);
+        speedIndex = (speedIndex + 1) % speeds.length;
+        
+        progress += currentSpeed * 0.3;
+        
         if (progress >= 100) {
           progress = 100;
-          clearInterval(interval);
+          loadingProgress.style.width = '100%';
           
-          // Cuando termina la animación, ocultar el launcher y mostrar la app
           setTimeout(() => {
             launcher.classList.add('hidden');
             appContainer.classList.add('visible');
-            
-            // Mostrar el panel central (Lista)
             panelsContainer.style.transform = 'translateX(-100vw)';
-          }, 100);
+            initApp();
+          }, 300);
+          
+          return;
         }
+        
         loadingProgress.style.width = `${progress}%`;
-      }, 50);
+        requestAnimationFrame(updateProgress);
+      }
       
-      // Inicializar la aplicación después de la carga
-      setTimeout(initApp, 1000);
+      requestAnimationFrame(updateProgress);
     });
 
-    // === localStorage helpers ===
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
     const CART_STORAGE_KEY = 'superapp_cart';
     const NOTES_STORAGE_KEY = 'superapp_notes';
@@ -745,51 +756,41 @@
       }
     }
 
-    // Datos por defecto
     const defaultProducts = [
       "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural", "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja", "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva", "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate", "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas", "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo", "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido", "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg", "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello", "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar", "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate", "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles", "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquilares", "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno", "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado", "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano", "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña", "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti", "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24", "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva", "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfec", "Leche condensada entera", "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera", "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja", "Limbiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca", "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji", "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche", "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal", "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia", "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta", "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano", "Pack Cola Zero", "Pan blanco", "Pan bocadillo", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr", "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo", "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo", "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate", "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce", "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas", "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni", "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Pure de patatas", "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage", "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido", "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichon", "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas", "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés", "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo", "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet", "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa", "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas", "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
     ];
 
-    // === Estado de la aplicación ===
     let products = [];
     let cartItems = [];
     let notes = [];
-    let currentPanel = 1; // Comenzamos en el panel central (Lista)
+    let currentPanel = 1;
     let startX = 0;
     let currentX = 0;
     let isSwiping = false;
     let currentNote = null;
 
-    // === Inicialización ===
     async function initApp() {
       loadAllDataFromStorage();
       renderProducts();
       renderCart();
       renderNotes();
       
-      // Escuchar cambios en otros paneles
       window.addEventListener('storage', handleStorageChange);
       window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
       window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
       window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
       
-      // Configurar navegación
       setupSwipe();
     }
 
     function loadAllDataFromStorage() {
-      // Carga productos
       products = loadProductsFromStorage();
       if (products.length === 0) {
-        // Si no hay productos guardados, inicializa con los por defecto
         products = defaultProducts.map(name => ({ name }));
         saveProductsToStorage(products);
       }
 
-      // Carga carrito
       cartItems = loadCartFromStorage();
-      
-      // Carga notas
       notes = loadNotesFromStorage();
     }
 
@@ -821,7 +822,6 @@
       renderNotes();
     }
 
-    // === Gestos de deslizamiento ===
     function setupSwipe() {
       const panelsContainer = document.getElementById('panels-container');
       
@@ -835,7 +835,6 @@
         currentX = e.touches[0].clientX;
         const diff = currentX - startX;
         
-        // Aplicar transformación para el efecto de arrastre
         const translateX = -currentPanel * 100 + (diff / window.innerWidth) * 100;
         panelsContainer.style.transform = `translateX(${translateX}vw)`;
       });
@@ -845,21 +844,17 @@
         isSwiping = false;
         
         const diff = currentX - startX;
-        const threshold = window.innerWidth / 4; // 25% del ancho de la pantalla
+        const threshold = window.innerWidth / 4;
         
         if (diff > threshold && currentPanel > 0) {
-          // Deslizar hacia la derecha
           switchPanel(currentPanel - 1);
         } else if (diff < -threshold && currentPanel < 2) {
-          // Deslizar hacia la izquierda
           switchPanel(currentPanel + 1);
         } else {
-          // Volver a la posición original
           switchPanel(currentPanel);
         }
       });
       
-      // Soporte para mouse en escritorio
       panelsContainer.addEventListener('mousedown', (e) => {
         startX = e.clientX;
         isSwiping = true;
@@ -870,7 +865,6 @@
         currentX = e.clientX;
         const diff = currentX - startX;
         
-        // Aplicar transformación para el efecto de arrastre
         const translateX = -currentPanel * 100 + (diff / window.innerWidth) * 100;
         panelsContainer.style.transform = `translateX(${translateX}vw)`;
       });
@@ -880,16 +874,13 @@
         isSwiping = false;
         
         const diff = currentX - startX;
-        const threshold = window.innerWidth / 4; // 25% del ancho de la pantalla
+        const threshold = window.innerWidth / 4;
         
         if (diff > threshold && currentPanel > 0) {
-          // Deslizar hacia la derecha
           switchPanel(currentPanel - 1);
         } else if (diff < -threshold && currentPanel < 2) {
-          // Deslizar hacia la izquierda
           switchPanel(currentPanel + 1);
         } else {
-          // Volver a la posición original
           switchPanel(currentPanel);
         }
       });
@@ -910,7 +901,6 @@
       panelsContainer.style.transform = `translateX(-${index * 100}vw)`;
     }
 
-    // === Renderizado del Panel Explorar ===
     function renderProducts(query = "") {
       const filtered = query
         ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
@@ -933,7 +923,6 @@
       });
     }
 
-    // === Funcionalidad del Panel Explorar ===
     async function addToCart(name) {
       const existing = cartItems.find(item => item.name === name);
       if (existing) {
@@ -941,13 +930,10 @@
       } else {
         cartItems.push({ name, qty: 1 });
       }
-      // Guarda el carrito actualizado
       saveCartToStorage(cartItems);
-      // Notificar a otros paneles que el carrito cambió
       window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
     }
 
-    // === Eventos del Panel Explorar ===
     document.getElementById('search').addEventListener('input', (e) => {
       renderProducts(e.target.value);
       const val = e.target.value;
@@ -959,21 +945,19 @@
       const input = document.getElementById('search');
       const name = input.value.trim();
       if (name) {
-        // Verifica duplicado antes de añadir
         const exists = products.some(p => p.name.toLowerCase() === name.toLowerCase());
         if (!exists) {
             products.push({ name });
             saveProductsToStorage(products);
             input.value = '';
-            document.getElementById('add-btn').style.display = 'none'; // Oculta el botón tras añadir
-            renderProducts(); // Refresca la grilla
+            document.getElementById('add-btn').style.display = 'none';
+            renderProducts();
         } else {
             alert("El producto ya existe.");
         }
       }
     });
 
-    // === Renderizado del Panel Lista ===
     function renderCart() {
       const list = document.getElementById('cart-list');
       const footer = document.getElementById('list-footer');
@@ -994,7 +978,6 @@
       const sorted = [...cartItems].sort((a, b) => a.name.localeCompare(b.name));
 
       sorted.forEach((item, index) => {
-        // Añadir ID único si no existe
         if (!item.id) {
           item.id = Date.now() + index;
         }
@@ -1011,13 +994,10 @@
         list.appendChild(el);
       });
 
-      // Listener único para eliminar
       list.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id = parseInt(btn.dataset.id);
-          // Filtrar el array local para quitar el elemento
           cartItems = cartItems.filter(i => i.id !== id);
-          // Guardar el array actualizado en localStorage
           saveCartToStorage(cartItems);
           renderCart();
           syncWithExplore();
@@ -1031,7 +1011,6 @@
       return div.innerHTML;
     }
 
-    // === Eliminar un artículo ===
     async function deleteItem(id) {
       cartItems = cartItems.filter(i => i.id !== id);
       saveCartToStorage(cartItems);
@@ -1039,7 +1018,6 @@
       syncWithExplore();
     }
 
-    // === Vaciar lista ===
     document.getElementById('clear-all').addEventListener('click', async () => {
       if (cartItems.length === 0) return;
       if (!confirm('¿Vaciar toda la lista?')) return;
@@ -1049,16 +1027,13 @@
       syncWithExplore();
     });
 
-    // === Sincronización con panel Explorar y Notas ===
     function syncWithExplore() {
       if (window.opener) {
         window.opener.postMessage({ type: 'CART_UPDATED' }, '*');
       }
-      // Notificar a otros posibles listeners
       window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
     }
 
-    // === Renderizado del Panel Notas ===
     function renderNotes(query = "") {
       const filtered = query
         ? notes.filter(note => 
@@ -1099,7 +1074,6 @@
         grid.appendChild(card);
       });
 
-      // Agregar listeners para eliminar notas
       document.querySelectorAll('.delete-note').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1109,7 +1083,6 @@
       });
     }
 
-    // === Funcionalidad de notas ===
     function openNoteModal(note = null) {
       currentNote = note;
       const modal = document.getElementById('note-modal');
@@ -1139,12 +1112,10 @@
       const now = new Date().toISOString();
       
       if (currentNote) {
-        // Actualizar nota existente
         currentNote.title = title;
         currentNote.content = content;
         currentNote.date = now;
       } else {
-        // Crear nueva nota
         const newNote = {
           id: Date.now(),
           title,
@@ -1157,8 +1128,6 @@
       saveNotesToStorage(notes);
       renderNotes(document.getElementById('search-notes').value);
       closeNoteModal();
-      
-      // Notificar a otros paneles si es necesario
       window.dispatchEvent(new CustomEvent('SuperAppNotesUpdated'));
     }
 
@@ -1167,17 +1136,8 @@
         notes = notes.filter(note => note.id !== id);
         saveNotesToStorage(notes);
         renderNotes(document.getElementById('search-notes').value);
-        
-        // Notificar a otros paneles
         window.dispatchEvent(new CustomEvent('SuperAppNotesUpdated'));
       }
-    }
-
-    // === Funciones auxiliares ===
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
     }
 
     function formatDate(dateString) {
@@ -1189,7 +1149,6 @@
       });
     }
 
-    // === Eventos del Panel Notas ===
     document.getElementById('search-notes').addEventListener('input', (e) => {
       renderNotes(e.target.value);
       const val = e.target.value;
@@ -1213,7 +1172,6 @@
       }
     });
 
-    // Cerrar modal al hacer clic fuera del contenido
     document.getElementById('note-modal').addEventListener('click', (e) => {
       if (e.target.id === 'note-modal') {
         closeNoteModal();
