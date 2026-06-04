@@ -24,10 +24,23 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Aplicar user-select: none solo a elementos que no sean inputs */
+    body, .product-card, .cart-item, .note-card, .panel, .grid, .cart-list, .notes-grid, .panel-header, .empty-state, .item-info, .item-name, .item-qty, .note-title, .note-content, .note-date, .modal-header, .modal-title {
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;
+    }
+
+    /* Permitir selección en inputs y textareas */
+    input, textarea, .search-input, .note-form input, .note-form textarea {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+      pointer-events: auto;
     }
 
     body {
@@ -142,10 +155,6 @@
       border-radius: var(--radius);
       color: var(--text-main);
       font-size: 16px;
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-      user-select: text;
     }
 
     .add-btn {
@@ -215,10 +224,6 @@
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-      user-select: text;
     }
 
     .product-card:active {
@@ -249,10 +254,6 @@
       justify-content: space-between;
       gap: 12px;
       transition: border-color 0.2s;
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-      user-select: text;
     }
 
     .cart-item:active {
@@ -365,10 +366,6 @@
       min-height: 150px;
       display: flex;
       flex-direction: column;
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-      user-select: text;
     }
 
     .note-card:active {
@@ -508,10 +505,6 @@
       color: var(--text-main);
       font-family: inherit;
       font-size: 15px;
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-      user-select: text;
     }
 
     .note-form textarea {
