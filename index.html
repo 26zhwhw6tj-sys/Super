@@ -24,7 +24,6 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
-      /* Elimina el color azul de selección */
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
@@ -39,11 +38,6 @@
       height: 100vh;
       position: fixed;
       width: 100%;
-      /* Evita selección de texto */
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
     }
 
     .launcher {
@@ -104,7 +98,6 @@
       display: flex;
       width: 300vw;
       height: 100vh;
-      /* Animación más lenta para navegación con ratón */
       transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
@@ -117,6 +110,11 @@
       padding-top: 50px;
       padding-bottom: 80px;
       position: relative;
+      cursor: grab;
+    }
+
+    .panel:active {
+      cursor: grabbing;
     }
 
     .panel-header {
@@ -144,7 +142,6 @@
       border-radius: var(--radius);
       color: var(--text-main);
       font-size: 16px;
-      /* Permite selección en campos de entrada */
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
@@ -218,7 +215,6 @@
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
-      /* Permite selección de texto en tarjetas */
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
@@ -253,7 +249,6 @@
       justify-content: space-between;
       gap: 12px;
       transition: border-color 0.2s;
-      /* Permite selección de texto en elementos de lista */
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
@@ -370,7 +365,6 @@
       min-height: 150px;
       display: flex;
       flex-direction: column;
-      /* Permite selección de texto en notas */
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
@@ -514,7 +508,6 @@
       color: var(--text-main);
       font-family: inherit;
       font-size: 15px;
-      /* Permite selección de texto en formularios */
       -webkit-user-select: text;
       -moz-user-select: text;
       -ms-user-select: text;
@@ -573,20 +566,6 @@
 
     .btn-delete:active {
       background: #e03e34;
-    }
-
-    /* Estilos para navegación con ratón */
-    .panel {
-      cursor: grab;
-    }
-
-    .panel:active {
-      cursor: grabbing;
-    }
-
-    /* Mejora la visibilidad del cursor */
-    .product-card, .cart-item, .note-card {
-      cursor: pointer;
     }
   </style>
 </head>
@@ -877,7 +856,6 @@
     function setupSwipe() {
       const panelsContainer = document.getElementById('panels-container');
       
-      // Eventos táctiles (mantenidos como estaban)
       panelsContainer.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
         isSwiping = true;
@@ -908,13 +886,12 @@
         }
       });
       
-      // Eventos del ratón mejorados
       panelsContainer.addEventListener('mousedown', (e) => {
         isMouseDown = true;
         startX = e.clientX;
         startTransform = -currentPanel * 100;
-        panelsContainer.style.transition = 'none'; // Desactivar transición temporalmente
-        e.preventDefault(); // Prevenir selección de texto
+        panelsContainer.style.transition = 'none';
+        e.preventDefault();
       });
       
       document.addEventListener('mousemove', (e) => {
@@ -924,16 +901,16 @@
         
         const translateX = startTransform + (diff / window.innerWidth) * 100;
         panelsContainer.style.transform = `translateX(${translateX}vw)`;
-        e.preventDefault(); // Prevenir selección de texto
+        e.preventDefault();
       });
       
       document.addEventListener('mouseup', () => {
         if (!isMouseDown) return;
         isMouseDown = false;
-        panelsContainer.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)'; // Reactivar transición
+        panelsContainer.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)';
         
         const diff = currentX - startX;
-        const threshold = window.innerWidth / 6; // Umbral más sensible para ratón
+        const threshold = window.innerWidth / 6;
         
         if (diff > threshold && currentPanel > 0) {
           switchPanel(currentPanel - 1);
@@ -944,7 +921,6 @@
         }
       });
       
-      // Manejar cuando el ratón sale del área mientras arrastra
       panelsContainer.addEventListener('mouseleave', () => {
         if (isMouseDown) {
           isMouseDown = false;
