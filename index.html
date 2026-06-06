@@ -538,6 +538,35 @@
     .btn-delete:active {
       background: #e03e34;
     }
+
+    .processing-indicator {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 2000;
+      display: none;
+      text-align: center;
+    }
+
+    .ai-process-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -545,6 +574,10 @@
     <div class="loading-bar">
       <div class="loading-progress" id="loading-progress"></div>
     </div>
+  </div>
+
+  <div class="processing-indicator" id="processing-indicator">
+    Procesando lista con IA...
   </div>
 
   <div class="app-container" id="app-container">
@@ -586,6 +619,7 @@
       <div class="panel" id="notes-panel">
         <div class="panel-header">
           <h1 class="panel-title">Notas</h1>
+          <button class="ai-process-btn" id="ai-process-btn" title="Procesar con IA">🧠</button>
         </div>
         <div class="search-container">
           <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas...">
@@ -619,6 +653,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.15.1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const launcher = document.getElementById('launcher');
@@ -768,6 +803,22 @@
     let currentX = 0;
     let isSwiping = false;
     let currentNote = null;
+    let aiProcessor = null;
+
+    // Inicializar el procesador de IA
+    async function initAIProcessor() {
+      try {
+        // Cargar modelo de procesamiento de lenguaje (simulado)
+        console.log("Cargando modelo de IA...");
+        // En una implementación real, aquí cargarías el modelo
+        // const pipeline = await pipeline('text-classification', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
+        console.log("Modelo de IA cargado");
+        return true;
+      } catch (error) {
+        console.error("Error cargando modelo de IA:", error);
+        return false;
+      }
+    }
 
     async function initApp() {
       loadAllDataFromStorage();
@@ -781,6 +832,16 @@
       window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
       
       setupSwipe();
+      
+      // Inicializar procesador de IA
+      initAIProcessor().then(success => {
+        if (success) {
+          console.log("IA lista para usar");
+        }
+      });
+      
+      // Configurar botón de procesamiento con IA
+      document.getElementById('ai-process-btn').addEventListener('click', processActiveNoteWithAI);
     }
 
     function loadAllDataFromStorage() {
@@ -1162,12 +1223,15 @@
     document.getElementById('close-modal').addEventListener('click', closeNoteModal);
     document.getElementById('cancel-note').addEventListener('click', closeNoteModal);
 
-    document.getElementById('note-form').addEventListener('submit', (e) => {
+    // Procesar con IA al guardar la nota
+    document.getElementById('note-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('note-title').value.trim();
       const content = document.getElementById('note-content').value.trim();
       
       if (title && content) {
+        // Procesar con IA antes de guardar
+        await processWithAI(content);
         saveNote(title, content);
       }
     });
@@ -1177,6 +1241,149 @@
         closeNoteModal();
       }
     });
+
+    // Función para procesar la lista con IA
+    async function processWithAI(notesText) {
+      const indicator = document.getElementById('processing-indicator');
+      indicator.style.display = 'block';
+      
+      try {
+        // Obtener estado actual del localStorage
+        const currentState = loadCartFromStorage().map(item => ({
+          id: item.id || Date.now() + Math.random(),
+          producto: item.name,
+          cantidad: item.qty,
+          unidad: "unidades",
+          categoria: "Despensa" // Valor por defecto, será actualizado por IA
+        }));
+        
+        // Enviar a API de IA (simulada)
+        const response = await simulateAIProcessing(notesText, currentState);
+        
+        // Actualizar el carrito con la respuesta
+        updateCartFromAIResponse(response);
+        
+      } catch (error) {
+        console.error('Error procesando con IA:', error);
+      } finally {
+        indicator.style.display = 'none';
+      }
+    }
+
+    // Simulación de la API de IA
+    async function simulateAIProcessing(notesText, currentState) {
+      // Esta es una simulación - en producción conectarías con tu API real
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // Simulamos una respuesta de IA basada en el texto de entrada
+          const products = parseProductsFromText(notesText);
+          
+          const response = {
+            lista_completa_saneada_y_ordenada: products.map((product, index) => ({
+              id: product.id || `new-${index}`,
+              producto: product.name,
+              cantidad: product.qty,
+              unidad: product.unit || "unidades",
+              categoria: categorizeProduct(product.name)
+            })),
+            sugerencias_ocultas: []
+          };
+          
+          // Combinar con estado actual
+          currentState.forEach(item => {
+            if (!response.lista_completa_saneada_y_ordenada.some(p => p.producto === item.producto)) {
+              response.lista_completa_saneada_y_ordenada.push(item);
+            }
+          });
+          
+          resolve(response);
+        }, 1500);
+      });
+    }
+
+    // Función para analizar productos del texto
+    function parseProductsFromText(text) {
+      const lines = text.split('\n').filter(line => line.trim());
+      const products = [];
+      
+      lines.forEach(line => {
+        // Patrón simple para extraer cantidad y producto
+        const match = line.match(/^(\d*)\s*(.*?)\s*(kg|g|ml|l|unidades|uds|pack|bolsa)?$/i);
+        if (match) {
+          const qty = match[1] ? parseInt(match[1]) : 1;
+          const name = match[2].trim();
+          const unit = match[3] || "unidades";
+          
+          if (name) {
+            products.push({
+              name: name,
+              qty: qty,
+              unit: unit
+            });
+          }
+        } else if (line.trim()) {
+          products.push({
+            name: line.trim(),
+            qty: 1,
+            unit: "unidades"
+          });
+        }
+      });
+      
+      return products;
+    }
+
+    // Función para categorizar productos
+    function categorizeProduct(productName) {
+      const categories = {
+        'Frutería': ['manzana', 'plátano', 'naranja', 'limón', 'tomate', 'pepino', 'lechuga', 'zanahoria', 'patata', 'cebolla'],
+        'Carnicería': ['carne', 'pollo', 'cerdo', 'ternera', 'salchicha', 'jamón', 'tocino'],
+        'Pescadería': ['pescado', 'salmón', 'merluza', 'atún', 'calamar', 'camarón'],
+        'Lácteos': ['leche', 'yogur', 'queso', 'mantequilla', 'nata', 'crema'],
+        'Panadería': ['pan', 'tostada', 'croissant', 'baguette'],
+        'Bebidas': ['agua', 'refresco', 'zumo', 'vino', 'cerveza', 'té', 'café'],
+        'Congelados': ['helado', 'verdura congelada', 'pizza', 'patata frita'],
+        'Limpieza': ['detergente', 'jabón', 'limpiador', 'desinfectante'],
+        'Despensa': ['arroz', 'pasta', 'aceite', 'sal', 'azúcar', 'galleta']
+      };
+      
+      const lowerName = productName.toLowerCase();
+      for (const [category, keywords] of Object.entries(categories)) {
+        if (keywords.some(keyword => lowerName.includes(keyword))) {
+          return category;
+        }
+      }
+      
+      return 'Despensa'; // Categoría por defecto
+    }
+
+    // Actualizar carrito desde respuesta de IA
+    function updateCartFromAIResponse(response) {
+      const newCart = response.lista_completa_saneada_y_ordenada.map(item => ({
+        id: item.id,
+        name: item.producto,
+        qty: item.cantidad
+      }));
+      
+      // Guardar en localStorage
+      saveCartToStorage(newCart);
+      
+      // Actualizar UI
+      cartItems = newCart;
+      renderCart();
+      syncWithExplore();
+    }
+
+    // Procesar nota activa con IA
+    async function processActiveNoteWithAI() {
+      const activeNote = document.querySelector('.note-card');
+      if (activeNote) {
+        const content = activeNote.querySelector('.note-content').textContent;
+        await processWithAI(content);
+      } else {
+        alert('No hay notas para procesar');
+      }
+    }
   </script>
 </body>
 </html>
