@@ -18,7 +18,6 @@
       --note-bg: #1a1a1a;
       --note-border: #333;
       --ai-suggestion: #00cc6a;
-      --ai-progress: #00cc6a;
     }
 
     *, *::before, *::after {
@@ -58,90 +57,24 @@
       pointer-events: none;
     }
 
-    .logo {
-      font-size: 48px;
-      margin-bottom: 30px;
-      color: var(--accent);
-      text-align: center;
-    }
-
-    .loading-section {
-      width: 80%;
-      max-width: 300px;
-      margin-bottom: 20px;
-    }
-
-    .loading-bar-container {
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
+    .loading-bar {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
       overflow: hidden;
-      margin-bottom: 15px;
       position: relative;
     }
 
-    .loading-bar {
+    .loading-progress {
       position: absolute;
       top: 0;
       left: 0;
       height: 100%;
       width: 0%;
-      background: var(--accent);
-      border-radius: 3px;
-      transition: width 0.3s ease;
-    }
-
-    .loading-text {
-      text-align: center;
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-top: 5px;
-    }
-
-    .loading-steps {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-      width: 100%;
-    }
-
-    .step {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      opacity: 0.4;
-      transition: opacity 0.3s;
-    }
-
-    .step.active {
-      opacity: 1;
-    }
-
-    .step-icon {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 5px;
-      font-size: 12px;
-    }
-
-    .step.active .step-icon {
-      background: var(--accent);
-      color: #000;
-    }
-
-    .step-label {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-
-    .step.active .step-label {
-      color: var(--accent);
+      background: white;
+      border-radius: 2px;
+      transition: width 0.1s linear;
     }
 
     .app-container {
@@ -722,32 +655,8 @@
 </head>
 <body>
   <div class="launcher" id="launcher">
-    <div class="logo">🛒 Súper</div>
-    
-    <div class="loading-section">
-      <div class="loading-bar-container">
-        <div class="loading-bar" id="loading-bar"></div>
-      </div>
-      <div class="loading-text" id="loading-text">Inicializando aplicación...</div>
-    </div>
-    
-    <div class="loading-steps">
-      <div class="step active" id="step-app">
-        <div class="step-icon">📱</div>
-        <div class="step-label">App</div>
-      </div>
-      <div class="step" id="step-data">
-        <div class="step-icon">💾</div>
-        <div class="step-label">Datos</div>
-      </div>
-      <div class="step" id="step-ai">
-        <div class="step-icon">🤖</div>
-        <div class="step-label">IA</div>
-      </div>
-      <div class="step" id="step-ready">
-        <div class="step-icon">✅</div>
-        <div class="step-label">Listo</div>
-      </div>
+    <div class="loading-bar">
+      <div class="loading-progress" id="loading-progress"></div>
     </div>
   </div>
 
@@ -841,64 +750,68 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    // Cargar primero la IA
+    let aiReady = false;
+    let appReady = false;
+    
+    // Simulación de carga de IA
+    function loadAI() {
+      return new Promise((resolve) => {
+        // Simular carga de modelo IA (en una implementación real, esto sería la descarga del modelo)
+        let progress = 0;
+        const loadingProgress = document.getElementById('loading-progress');
+        
+        function updateProgress() {
+          progress += Math.random() * 5;
+          if (progress >= 100) {
+            progress = 100;
+            loadingProgress.style.width = '100%';
+            aiReady = true;
+            resolve();
+            return;
+          }
+          
+          loadingProgress.style.width = `${progress}%`;
+          requestAnimationFrame(updateProgress);
+        }
+        
+        requestAnimationFrame(updateProgress);
+      });
+    }
+    
+    // Inicializar la aplicación después de que la IA esté lista
+    async function initApp() {
       const launcher = document.getElementById('launcher');
-      const loadingBar = document.getElementById('loading-bar');
-      const loadingText = document.getElementById('loading-text');
       const appContainer = document.getElementById('app-container');
       const panelsContainer = document.getElementById('panels-container');
       
-      // Elementos de pasos
-      const stepApp = document.getElementById('step-app');
-      const stepData = document.getElementById('step-data');
-      const stepAI = document.getElementById('step-ai');
-      const stepReady = document.getElementById('step-ready');
+      // Cargar la IA primero
+      await loadAI();
       
-      // Función para actualizar el progreso
-      function updateProgress(percentage, text, activeStep) {
-        loadingBar.style.width = `${percentage}%`;
-        loadingText.textContent = text;
-        
-        // Actualizar pasos activos
-        stepApp.classList.toggle('active', activeStep === 'app');
-        stepData.classList.toggle('active', activeStep === 'data');
-        stepAI.classList.toggle('active', activeStep === 'ai');
-        stepReady.classList.toggle('active', activeStep === 'ready');
-      }
+      // Ahora inicializar la aplicación
+      loadAllDataFromStorage();
+      renderProducts();
+      renderCart();
+      renderNotes();
       
-      // Simular carga progresiva
-      let progress = 0;
+      // Mostrar la aplicación
+      setTimeout(() => {
+        launcher.classList.add('hidden');
+        appContainer.classList.add('visible');
+        panelsContainer.style.transform = 'translateX(-100vw)';
+      }, 300);
       
-      function simulateLoading() {
-        if (progress < 100) {
-          progress += Math.random() * 5;
-          if (progress > 100) progress = 100;
-          
-          // Actualizar texto y pasos según el progreso
-          if (progress < 30) {
-            updateProgress(progress, "Inicializando aplicación...", 'app');
-          } else if (progress < 60) {
-            updateProgress(progress, "Cargando datos del usuario...", 'data');
-          } else if (progress < 90) {
-            updateProgress(progress, "Activando inteligencia artificial...", 'ai');
-          } else {
-            updateProgress(progress, "¡Todo listo!", 'ready');
-          }
-          
-          requestAnimationFrame(simulateLoading);
-        } else {
-          // Carga completada
-          setTimeout(() => {
-            launcher.classList.add('hidden');
-            appContainer.classList.add('visible');
-            panelsContainer.style.transform = 'translateX(-100vw)';
-            initApp();
-          }, 500);
-        }
-      }
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
+      window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
+      window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
+      window.addEventListener('SuperAppAIReady', handleAIReady);
       
-      // Iniciar simulación de carga
-      simulateLoading();
+      setupSwipe();
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      initApp();
     });
 
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
@@ -1071,29 +984,6 @@
           .map(([name]) => ({ name, qty: 1 }));
       }
     };
-
-    async function initApp() {
-      showAIIndicator("Cargando datos...");
-      
-      loadAllDataFromStorage();
-      renderProducts();
-      renderCart();
-      renderNotes();
-      
-      // Simular carga de IA
-      setTimeout(() => {
-        hideAIIndicator();
-        window.dispatchEvent(new CustomEvent('SuperAppAIReady'));
-      }, 1500);
-      
-      window.addEventListener('storage', handleStorageChange);
-      window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
-      window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
-      window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
-      window.addEventListener('SuperAppAIReady', handleAIReady);
-      
-      setupSwipe();
-    }
 
     function showAIIndicator(message) {
       const indicator = document.getElementById('ai-indicator');
