@@ -64,6 +64,7 @@
       border-radius: 2px;
       overflow: hidden;
       position: relative;
+      margin-bottom: 20px;
     }
 
     .loading-progress {
@@ -75,6 +76,14 @@
       background: white;
       border-radius: 2px;
       transition: width 0.1s linear;
+    }
+
+    .loading-text {
+      color: var(--text-muted);
+      font-size: 14px;
+      text-align: center;
+      margin-top: 10px;
+      min-height: 20px;
     }
 
     .app-container {
@@ -658,6 +667,7 @@
     <div class="loading-bar">
       <div class="loading-progress" id="loading-progress"></div>
     </div>
+    <div class="loading-text" id="loading-text">Inicializando aplicación...</div>
   </div>
 
   <div class="app-container" id="app-container">
@@ -749,71 +759,24 @@
     </div>
   </div>
 
-  <script>
-    // Cargar primero la IA
-    let aiReady = false;
-    let appReady = false;
-    
-    // Simulación de carga de IA
-    function loadAI() {
-      return new Promise((resolve) => {
-        // Simular carga de modelo IA (en una implementación real, esto sería la descarga del modelo)
-        let progress = 0;
-        const loadingProgress = document.getElementById('loading-progress');
-        
-        function updateProgress() {
-          progress += Math.random() * 5;
-          if (progress >= 100) {
-            progress = 100;
-            loadingProgress.style.width = '100%';
-            aiReady = true;
-            resolve();
-            return;
-          }
-          
-          loadingProgress.style.width = `${progress}%`;
-          requestAnimationFrame(updateProgress);
-        }
-        
-        requestAnimationFrame(updateProgress);
-      });
-    }
-    
-    // Inicializar la aplicación después de que la IA esté lista
-    async function initApp() {
-      const launcher = document.getElementById('launcher');
-      const appContainer = document.getElementById('app-container');
-      const panelsContainer = document.getElementById('panels-container');
-      
-      // Cargar la IA primero
-      await loadAI();
-      
-      // Ahora inicializar la aplicación
-      loadAllDataFromStorage();
-      renderProducts();
-      renderCart();
-      renderNotes();
-      
-      // Mostrar la aplicación
-      setTimeout(() => {
-        launcher.classList.add('hidden');
-        appContainer.classList.add('visible');
-        panelsContainer.style.transform = 'translateX(-100vw)';
-      }, 300);
-      
-      window.addEventListener('storage', handleStorageChange);
-      window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
-      window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
-      window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
-      window.addEventListener('SuperAppAIReady', handleAIReady);
-      
-      setupSwipe();
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      initApp();
-    });
+  <script type="module">
+    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
+    // Variables globales
+    let engine = null;
+    let products = [];
+    let cartItems = [];
+    let notes = [];
+    let userPreferences = {};
+    let historicalLists = [];
+    let currentPanel = 1;
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+    let currentNote = null;
+    let isGenerating = false;
+
+    // Constantes de almacenamiento
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
     const CART_STORAGE_KEY = 'superapp_cart';
     const NOTES_STORAGE_KEY = 'superapp_notes';
@@ -877,17 +840,6 @@
       "Pasta de dientes", "Patata 5 kg", "Perejil", "Pimienta", "Pimiento rojo", "Sal yodada fina",
       "Tomate frito artesán", "Yogur bolitas", "Zanahorias"
     ];
-
-    let products = [];
-    let cartItems = [];
-    let notes = [];
-    let userPreferences = {};
-    let historicalLists = [];
-    let currentPanel = 1;
-    let startX = 0;
-    let currentX = 0;
-    let isSwiping = false;
-    let currentNote = null;
 
     // Simulación de IA - en una implementación real, esto sería una llamada a un modelo
     const AI = {
@@ -982,20 +934,52 @@
           .sort((a, b) => b[1] - a[1])
           .slice(0, 10)
           .map(([name]) => ({ name, qty: 1 }));
+      },
+      
+      // Procesar con IA real
+      processWithAI: async function(prompt) {
+        if (!engine) return "IA no disponible";
+        
+        try {
+          isGenerating = true;
+          const chunks = await engine.chat.completions.create({
+            messages: [
+              { role: "system", content: "Eres un asistente de compras inteligente. Responde en español." },
+              { role: "user", content: prompt }
+            ],
+            stream: true
+          });
+          
+          let respuesta = "";
+          for await (const chunk of chunks) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            respuesta += content;
+          }
+          
+          return respuesta;
+        } catch (error) {
+          console.error("Error en IA:", error);
+          return "Error al procesar con IA";
+        } finally {
+          isGenerating = false;
+        }
       }
     };
 
+    // Función para mostrar indicador de IA
     function showAIIndicator(message) {
       const indicator = document.getElementById('ai-indicator');
       indicator.querySelector('span').textContent = message;
       indicator.classList.add('visible');
     }
 
+    // Función para ocultar indicador de IA
     function hideAIIndicator() {
       const indicator = document.getElementById('ai-indicator');
       indicator.classList.remove('visible');
     }
 
+    // Función para cargar datos desde localStorage
     function loadAllDataFromStorage() {
       // Cargar productos
       products = loadProductsFromStorage();
@@ -1038,6 +1022,72 @@
       }
     }
 
+    // Función para inicializar el modelo de IA
+    async function iniciarModelo() {
+      const status = document.getElementById("loading-text");
+      const loadingProgress = document.getElementById("loading-progress");
+      
+      try {
+        if (!navigator.gpu) throw new Error("WebGPU no disponible.");
+        
+        engine = await webllm.CreateMLCEngine("Qwen2.5-1.5B-Instruct-q4f16_1-MLC", {
+          initProgressCallback: (progress) => {
+            // Actualizar barra de progreso
+            const percent = Math.round(progress.progress * 100);
+            loadingProgress.style.width = `${percent}%`;
+            
+            // Actualizar texto de estado
+            status.innerHTML = progress.text;
+          }
+        });
+        
+        status.innerHTML = "✅ Modelo listo!";
+        return true;
+      } catch (error) {
+        status.innerHTML = `❌ Error: ${error.message}`;
+        return false;
+      }
+    }
+
+    // Función para inicializar la aplicación
+    async function initApp() {
+      const launcher = document.getElementById('launcher');
+      const appContainer = document.getElementById('app-container');
+      const panelsContainer = document.getElementById('panels-container');
+      
+      // Cargar primero la IA
+      const aiLoaded = await iniciarModelo();
+      
+      if (!aiLoaded) {
+        // Si la IA no se carga, mostrar mensaje y continuar
+        document.getElementById("loading-text").innerHTML = "⚠️ Continuando sin IA...";
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      
+      // Cargar datos de la aplicación
+      loadAllDataFromStorage();
+      renderProducts();
+      renderCart();
+      renderNotes();
+      
+      // Mostrar la aplicación
+      setTimeout(() => {
+        launcher.classList.add('hidden');
+        appContainer.classList.add('visible');
+        panelsContainer.style.transform = 'translateX(-100vw)';
+      }, 500);
+      
+      // Configurar eventos
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
+      window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
+      window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
+      window.addEventListener('SuperAppAIReady', handleAIReady);
+      
+      setupSwipe();
+    }
+
+    // Eventos de cambio de datos
     function handleStorageChange(e) {
       if (e.key === PRODUCTS_STORAGE_KEY) {
         products = loadProductsFromStorage();
@@ -1074,6 +1124,7 @@
       }, 1000);
     }
 
+    // Configuración de gestos de deslizamiento
     function setupSwipe() {
       const panelsContainer = document.getElementById('panels-container');
       
@@ -1145,6 +1196,7 @@
       });
     }
 
+    // Cambiar panel
     function switchPanel(index) {
       if (index < 0 || index > 2) return;
       
@@ -1153,6 +1205,7 @@
       panelsContainer.style.transform = `translateX(-${index * 100}vw)`;
     }
 
+    // Renderizar productos
     function renderProducts(query = "") {
       const filtered = query
         ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
@@ -1203,6 +1256,7 @@
       }
     }
 
+    // Mostrar sugerencias de productos
     function showProductSuggestions(query) {
       const suggestions = AI.suggestComplementary(query);
       const section = document.getElementById('suggestions-section');
@@ -1235,6 +1289,7 @@
       }
     }
 
+    // Sugerir lista automática
     function suggestAutomaticList() {
       if (cartItems.length === 0 && historicalLists.length > 0) {
         const suggestedList = AI.createAutomaticList(historicalLists);
@@ -1246,6 +1301,7 @@
       }
     }
 
+    // Sugerir equilibrio dietético
     function suggestDietBalance() {
       if (cartItems.length > 0) {
         const suggestions = AI.suggestDietBalance(cartItems);
@@ -1270,6 +1326,7 @@
       }
     }
 
+    // Añadir producto al carrito
     async function addToCart(name) {
       // Corregir ortografía antes de añadir
       const correctedName = AI.correctSpelling(name);
@@ -1287,6 +1344,7 @@
       saveListToHistory();
     }
 
+    // Guardar lista en historial
     function saveListToHistory() {
       // Guardar lista actual en historial si tiene productos
       if (cartItems.length > 0) {
@@ -1309,6 +1367,7 @@
       }
     }
 
+    // Evento de búsqueda
     document.getElementById('search').addEventListener('input', (e) => {
       renderProducts(e.target.value);
       const val = e.target.value;
@@ -1316,6 +1375,7 @@
       document.getElementById('add-btn').style.display = val && !exists ? 'block' : 'none';
     });
 
+    // Añadir producto
     document.getElementById('add-btn').addEventListener('click', async () => {
       const input = document.getElementById('search');
       const name = input.value.trim();
@@ -1341,6 +1401,7 @@
       }
     });
 
+    // Renderizar carrito
     function renderCart() {
       const list = document.getElementById('cart-list');
       const footer = document.getElementById('list-footer');
@@ -1411,12 +1472,14 @@
       suggestDietBalance();
     }
 
+    // Escapar HTML
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
 
+    // Eliminar item
     async function deleteItem(id) {
       cartItems = cartItems.filter(i => i.id !== id);
       saveCartToStorage(cartItems);
@@ -1424,6 +1487,7 @@
       syncWithExplore();
     }
 
+    // Vaciar carrito
     document.getElementById('clear-all').addEventListener('click', async () => {
       if (cartItems.length === 0) return;
       if (!confirm('¿Vaciar toda la lista?')) return;
@@ -1433,6 +1497,7 @@
       syncWithExplore();
     });
 
+    // Sincronizar con explorar
     function syncWithExplore() {
       if (window.opener) {
         window.opener.postMessage({ type: 'CART_UPDATED' }, '*');
@@ -1440,6 +1505,7 @@
       window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
     }
 
+    // Renderizar notas
     function renderNotes(query = "") {
       const filtered = query
         ? notes.filter(note => 
@@ -1492,6 +1558,7 @@
       document.getElementById('add-note-btn').style.display = 'block';
     }
 
+    // Abrir modal de nota
     function openNoteModal(note = null) {
       currentNote = note;
       const modal = document.getElementById('note-modal');
@@ -1512,11 +1579,13 @@
       modal.classList.add('active');
     }
 
+    // Cerrar modal de nota
     function closeNoteModal() {
       document.getElementById('note-modal').classList.remove('active');
       currentNote = null;
     }
 
+    // Guardar nota
     function saveNote(title, content) {
       // Corregir ortografía en notas
       const correctedTitle = AI.correctSpelling(title);
@@ -1544,6 +1613,7 @@
       window.dispatchEvent(new CustomEvent('SuperAppNotesUpdated'));
     }
 
+    // Eliminar nota
     function deleteNote(id) {
       if (confirm('¿Eliminar esta nota?')) {
         notes = notes.filter(note => note.id !== id);
@@ -1553,6 +1623,7 @@
       }
     }
 
+    // Formatear fecha
     function formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleDateString('es-ES', {
@@ -1562,6 +1633,7 @@
       });
     }
 
+    // Funciones de almacenamiento
     function loadProductsFromStorage() {
       try {
         const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
@@ -1631,17 +1703,21 @@
       }
     }
 
+    // Eventos de búsqueda de notas
     document.getElementById('search-notes').addEventListener('input', (e) => {
       renderNotes(e.target.value);
     });
 
+    // Añadir nota
     document.getElementById('add-note-btn').addEventListener('click', () => {
       openNoteModal();
     });
 
+    // Cerrar modal
     document.getElementById('close-modal').addEventListener('click', closeNoteModal);
     document.getElementById('cancel-note').addEventListener('click', closeNoteModal);
 
+    // Guardar nota
     document.getElementById('note-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const title = document.getElementById('note-title').value.trim();
@@ -1652,10 +1728,16 @@
       }
     });
 
+    // Cerrar modal al hacer clic fuera
     document.getElementById('note-modal').addEventListener('click', (e) => {
       if (e.target.id === 'note-modal') {
         closeNoteModal();
       }
+    });
+
+    // Iniciar la aplicación cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+      initApp();
     });
   </script>
 </body>
