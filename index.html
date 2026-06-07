@@ -1022,9 +1022,12 @@
         
         engine = await webllm.CreateMLCEngine("Qwen2.5-1.5B-Instruct-q4f16_1-MLC", {
           initProgressCallback: (progress) => {
-            // Actualizar barra de progreso
+            // Actualizar barra de progreso con valores reales
             const percent = Math.round(progress.progress * 100);
             loadingProgress.style.width = `${percent}%`;
+            
+            // Mostrar información adicional en consola
+            console.log(`Descargando IA: ${percent}% - ${progress.text}`);
           }
         });
         
