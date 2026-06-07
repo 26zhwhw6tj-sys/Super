@@ -64,7 +64,6 @@
       border-radius: 2px;
       overflow: hidden;
       position: relative;
-      margin-bottom: 20px;
     }
 
     .loading-progress {
@@ -76,14 +75,6 @@
       background: white;
       border-radius: 2px;
       transition: width 0.1s linear;
-    }
-
-    .loading-text {
-      color: var(--text-muted);
-      font-size: 14px;
-      text-align: center;
-      margin-top: 10px;
-      min-height: 20px;
     }
 
     .app-container {
@@ -667,7 +658,6 @@
     <div class="loading-bar">
       <div class="loading-progress" id="loading-progress"></div>
     </div>
-    <div class="loading-text" id="loading-text">Inicializando aplicación...</div>
   </div>
 
   <div class="app-container" id="app-container">
@@ -775,6 +765,7 @@
     let isSwiping = false;
     let currentNote = null;
     let isGenerating = false;
+    let aiReady = false;
 
     // Constantes de almacenamiento
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
@@ -938,7 +929,7 @@
       
       // Procesar con IA real
       processWithAI: async function(prompt) {
-        if (!engine) return "IA no disponible";
+        if (!engine || !aiReady) return "IA no disponible";
         
         try {
           isGenerating = true;
@@ -1022,9 +1013,8 @@
       }
     }
 
-    // Función para inicializar el modelo de IA
-    async function iniciarModelo() {
-      const status = document.getElementById("loading-text");
+    // Función para inicializar el modelo de IA en segundo plano
+    async function iniciarModeloEnSegundoPlano() {
       const loadingProgress = document.getElementById("loading-progress");
       
       try {
@@ -1035,47 +1025,46 @@
             // Actualizar barra de progreso
             const percent = Math.round(progress.progress * 100);
             loadingProgress.style.width = `${percent}%`;
-            
-            // Actualizar texto de estado
-            status.innerHTML = progress.text;
           }
         });
         
-        status.innerHTML = "✅ Modelo listo!";
+        aiReady = true;
+        console.log("✅ Modelo IA listo");
+        
+        // Ocultar launcher después de un breve retraso
+        setTimeout(() => {
+          const launcher = document.getElementById('launcher');
+          launcher.classList.add('hidden');
+        }, 500);
+        
         return true;
       } catch (error) {
-        status.innerHTML = `❌ Error: ${error.message}`;
+        console.error("❌ Error cargando IA:", error);
+        
+        // Ocultar launcher incluso si hay error
+        setTimeout(() => {
+          const launcher = document.getElementById('launcher');
+          launcher.classList.add('hidden');
+        }, 500);
+        
         return false;
       }
     }
 
     // Función para inicializar la aplicación
     async function initApp() {
-      const launcher = document.getElementById('launcher');
       const appContainer = document.getElementById('app-container');
       const panelsContainer = document.getElementById('panels-container');
       
-      // Cargar primero la IA
-      const aiLoaded = await iniciarModelo();
-      
-      if (!aiLoaded) {
-        // Si la IA no se carga, mostrar mensaje y continuar
-        document.getElementById("loading-text").innerHTML = "⚠️ Continuando sin IA...";
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-      
-      // Cargar datos de la aplicación
+      // Cargar datos de la aplicación inmediatamente
       loadAllDataFromStorage();
       renderProducts();
       renderCart();
       renderNotes();
       
-      // Mostrar la aplicación
-      setTimeout(() => {
-        launcher.classList.add('hidden');
-        appContainer.classList.add('visible');
-        panelsContainer.style.transform = 'translateX(-100vw)';
-      }, 500);
+      // Mostrar la aplicación inmediatamente
+      appContainer.classList.add('visible');
+      panelsContainer.style.transform = 'translateX(-100vw)';
       
       // Configurar eventos
       window.addEventListener('storage', handleStorageChange);
@@ -1085,6 +1074,11 @@
       window.addEventListener('SuperAppAIReady', handleAIReady);
       
       setupSwipe();
+      
+      // Iniciar descarga de IA en segundo plano
+      setTimeout(() => {
+        iniciarModeloEnSegundoPlano();
+      }, 100);
     }
 
     // Eventos de cambio de datos
