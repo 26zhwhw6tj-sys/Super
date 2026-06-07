@@ -17,6 +17,7 @@
       --shadow: 0 4px 20px rgba(0,0,0,0.3);
       --note-bg: #1a1a1a;
       --note-border: #333;
+      --ai-suggestion: #00cc6a;
     }
 
     *, *::before, *::after {
@@ -147,7 +148,7 @@
       padding: 8px 16px;
       font-weight: bold;
       font-size: 12px;
-      display: block; /* Cambiado de none a block */
+      display: block;
     }
 
     .scroll-container {
@@ -209,6 +210,16 @@
       color: var(--accent);
     }
 
+    .ai-suggestion {
+      background: rgba(0, 204, 106, 0.15);
+      border-color: var(--ai-suggestion);
+      color: var(--ai-suggestion);
+    }
+
+    .ai-suggestion:active {
+      background: rgba(0, 204, 106, 0.3);
+    }
+
     .empty-state {
       text-align: center;
       color: var(--text-muted);
@@ -236,6 +247,10 @@
 
     .cart-item:active {
       border-color: var(--accent);
+    }
+
+    .cart-item.perecedero {
+      border-left: 4px solid var(--accent);
     }
 
     .item-info {
@@ -364,8 +379,8 @@
       font-size: 14px;
       color: var(--text-main);
       flex: 1;
-      white-space: pre-wrap; /* Mantiene los saltos de línea */
-      word-wrap: break-word; /* Rompe palabras largas */
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
 
     .note-date {
@@ -535,6 +550,106 @@
     .btn-delete:active {
       background: #e03e34;
     }
+
+    .ai-indicator {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--ai-suggestion);
+      color: #000;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .ai-indicator.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .ai-indicator .loading {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top: 2px solid #000;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .suggestions-section {
+      margin-top: 20px;
+      padding: 10px;
+      background: rgba(0, 204, 106, 0.1);
+      border-radius: var(--radius);
+    }
+
+    .suggestions-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--ai-suggestion);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .suggestions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+
+    .suggestion-card {
+      background: rgba(0, 204, 106, 0.2);
+      border: 1px solid var(--ai-suggestion);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ai-suggestion);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .suggestion-card:active {
+      background: rgba(0, 204, 106, 0.4);
+    }
+
+    .eco-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #4CAF50;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    .healthy-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #2196F3;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -558,6 +673,12 @@
           <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="grid" id="products-grid"></div>
+            <div class="suggestions-section" id="suggestions-section" style="display: none;">
+              <div class="suggestions-title">
+                <span>✨ Recomendaciones IA</span>
+              </div>
+              <div class="suggestions-grid" id="suggestions-grid"></div>
+            </div>
           </div>
           <div class="fade-overlay bottom-fade"></div>
         </div>
@@ -571,6 +692,12 @@
           <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="cart-list" id="cart-list"></div>
+            <div class="suggestions-section" id="diet-suggestions" style="display: none;">
+              <div class="suggestions-title">
+                <span>⚖️ Sugerencias para equilibrar tu dieta</span>
+              </div>
+              <div class="suggestions-grid" id="diet-suggestions-grid"></div>
+            </div>
           </div>
           <div class="fade-overlay bottom-fade"></div>
         </div>
@@ -613,6 +740,11 @@
           </div>
         </form>
       </div>
+    </div>
+
+    <div class="ai-indicator" id="ai-indicator">
+      <div class="loading"></div>
+      <span>IA procesando...</span>
     </div>
   </div>
 
@@ -683,112 +815,248 @@
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
     const CART_STORAGE_KEY = 'superapp_cart';
     const NOTES_STORAGE_KEY = 'superapp_notes';
+    const USER_PREFERENCES_KEY = 'superapp_user_preferences';
+    const HISTORICAL_LISTS_KEY = 'superapp_historical_lists';
 
-    function loadProductsFromStorage() {
-      try {
-        const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing products from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
+    // Base de datos de productos con atributos para IA
+    const PRODUCT_DATABASE = {
+      "Aceite de oliva 0.4": { perecedero: false, ecologico: true, saludable: true, complementos: ["Vinagre", "Pan"] },
+      "Aguadoy 8L": { perecedero: false, ecologico: true, saludable: true, complementos: [] },
+      "Alubia roja": { perecedero: false, ecologico: true, saludable: true, complementos: ["Cebolla", "Pimiento"] },
+      "Arroz largo": { perecedero: false, ecologico: false, saludable: true, complementos: ["Aceite de oliva", "Ajo"] },
+      "Atún aceite oliva": { perecedero: false, ecologico: true, saludable: true, complementos: ["Pan", "Tomate"] },
+      "Bacon cocido ahumado": { perecedero: true, ecologico: false, saludable: false, complementos: ["Pan", "Lechuga"] },
+      "Bolsa rafia": { perecedero: false, ecologico: true, saludable: false, complementos: [] },
+      "Cebolla 1 kg": { perecedero: true, ecologico: true, saludable: true, complementos: ["Tomate", "Pimiento"] },
+      "Champú Curl Perfect": { perecedero: false, ecologico: false, saludable: false, complementos: [] },
+      "Cola Zero 0,5L": { perecedero: false, ecologico: false, saludable: false, complementos: [] },
+      "Coliflor": { perecedero: true, ecologico: true, saludable: true, complementos: ["Queso", "Salsa"] },
+      "Detergente color": { perecedero: false, ecologico: false, saludable: false, complementos: [] },
+      "Galletas": { perecedero: true, ecologico: false, saludable: false, complementos: ["Leche"] },
+      "Harina de trigo": { perecedero: false, ecologico: true, saludable: true, complementos: ["Huevos", "Leche"] },
+      "Huevos M gallinas suelo": { perecedero: true, ecologico: true, saludable: true, complementos: ["Pan", "Leche"] },
+      "Jamón serrano": { perecedero: true, ecologico: true, saludable: false, complementos: ["Pan", "Tomate"] },
+      "Leche fresca entera": { perecedero: true, ecologico: true, saludable: true, complementos: ["Cereales", "Café"] },
+      "Manzana roja 1kg": { perecedero: true, ecologico: true, saludable: true, complementos: ["Yogur", "Nueces"] },
+      "Miel stars": { perecedero: false, ecologico: true, saludable: false, complementos: ["Pan", "Té"] },
+      "Pan blanco": { perecedero: true, ecologico: true, saludable: true, complementos: ["Mantequilla", "Jamón"] },
+      "Pasta de dientes": { perecedero: false, ecologico: false, saludable: false, complementos: [] },
+      "Patata 5 kg": { perecedero: true, ecologico: true, saludable: true, complementos: ["Cebolla", "Aceite de oliva"] },
+      "Perejil": { perecedero: true, ecologico: true, saludable: true, complementos: ["Limón", "Ajo"] },
+      "Pimienta": { perecedero: false, ecologico: true, saludable: true, complementos: [] },
+      "Pimiento rojo": { perecedero: true, ecologico: true, saludable: true, complementos: ["Cebolla", "Tomate"] },
+      "Sal yodada fina": { perecedero: false, ecologico: true, saludable: true, complementos: [] },
+      "Tomate frito artesán": { perecedero: true, ecologico: true, saludable: false, complementos: ["Pan", "Queso"] },
+      "Yogur bolitas": { perecedero: true, ecologico: true, saludable: true, complementos: ["Frutas", "Cereales"] },
+      "Zanahorias": { perecedero: true, ecologico: true, saludable: true, complementos: ["Mayonesa", "Lechuga"] }
+    };
 
-    function saveProductsToStorage(productsArray) {
-      try {
-        localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(productsArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving products to localStorage:", e);
-        return false;
-      }
-    }
+    // Relaciones de productos complementarios
+    const PRODUCT_RELATIONS = {
+      "pan": ["mantequilla", "jamón", "tomate", "queso"],
+      "tomate": ["cebolla", "aceite", "pan"],
+      "arroz": ["pollo", "verduras", "salsa de soja"],
+      "pasta": ["salsa", "queso", "carne molida"],
+      "lechuga": ["tomate", "pepino", "vinagreta"],
+      "huevo": ["pan", "leche", "mantequilla"],
+      "pollo": ["arroz", "patata", "verduras"],
+      "carne": ["patata", "cebolla", "vino"],
+      "pescado": ["limón", "patata", "ensalada"],
+      "café": ["leche", "azúcar", "galletas"],
+      "té": ["miel", "limón", "galletas"]
+    };
 
-    function loadCartFromStorage() {
-      try {
-        const stored = localStorage.getItem(CART_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing cart from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
-
-    function saveCartToStorage(cartArray) {
-      try {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving cart to localStorage:", e);
-        return false;
-      }
-    }
-
-    function loadNotesFromStorage() {
-      try {
-        const stored = localStorage.getItem(NOTES_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing notes from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
-
-    function saveNotesToStorage(notesArray) {
-      try {
-        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving notes to localStorage:", e);
-        return false;
-      }
-    }
-
-    const defaultProducts = [
-      "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural", "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja", "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva", "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate", "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas", "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo", "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido", "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg", "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello", "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar", "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate", "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles", "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquilares", "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno", "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado", "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano", "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña", "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti", "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24", "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva", "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfec", "Leche condensada entera", "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera", "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja", "Limbiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca", "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji", "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche", "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal", "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia", "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta", "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano", "Pack Cola Zero", "Pan blanco", "Pan bocadillo", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr", "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo", "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo", "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate", "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce", "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas", "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni", "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Pure de patatas", "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage", "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido", "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichon", "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas", "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés", "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo", "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet", "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa", "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas", "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
+    // Productos perecederos comunes
+    const PERECEDEROS = [
+      "Aceite de oliva 0.4", "Aguadoy 8L", "Alubia roja", "Arroz largo", "Atún aceite oliva",
+      "Bacon cocido ahumado", "Bolsa rafia", "Cebolla 1 kg", "Champú Curl Perfect", "Cola Zero 0,5L",
+      "Coliflor", "Detergente color", "Galletas", "Harina de trigo", "Huevos M gallinas suelo",
+      "Jamón serrano", "Leche fresca entera", "Manzana roja 1kg", "Miel stars", "Pan blanco",
+      "Pasta de dientes", "Patata 5 kg", "Perejil", "Pimienta", "Pimiento rojo", "Sal yodada fina",
+      "Tomate frito artesán", "Yogur bolitas", "Zanahorias"
     ];
 
     let products = [];
     let cartItems = [];
     let notes = [];
+    let userPreferences = {};
+    let historicalLists = [];
     let currentPanel = 1;
     let startX = 0;
     let currentX = 0;
     let isSwiping = false;
     let currentNote = null;
 
+    // Simulación de IA - en una implementación real, esto sería una llamada a un modelo
+    const AI = {
+      // Corrección ortográfica básica
+      correctSpelling: function(text) {
+        // En una implementación real, usaríamos un modelo de lenguaje
+        // Aquí simulamos correcciones comunes
+        const corrections = {
+          "tomatee": "tomate",
+          "patataa": "patata",
+          "lechuga ": "lechuga",
+          "pan ": "pan",
+          "arros": "arroz",
+          "pastaa": "pasta"
+        };
+        
+        return corrections[text.toLowerCase().trim()] || text;
+      },
+      
+      // Sugerir productos complementarios
+      suggestComplementary: function(productName) {
+        const normalized = productName.toLowerCase().trim();
+        const suggestions = [];
+        
+        // Buscar en relaciones predefinidas
+        for (const [key, values] of Object.entries(PRODUCT_RELATIONS)) {
+          if (normalized.includes(key)) {
+            suggestions.push(...values);
+          }
+        }
+        
+        // Buscar en base de datos de productos
+        if (PRODUCT_DATABASE[normalized] && PRODUCT_DATABASE[normalized].complementos) {
+          suggestions.push(...PRODUCT_DATABASE[normalized].complementos);
+        }
+        
+        // Eliminar duplicados y limitar a 5 sugerencias
+        return [...new Set(suggestions)].slice(0, 5);
+      },
+      
+      // Sugerir productos saludables
+      suggestHealthy: function() {
+        return Object.keys(PRODUCT_DATABASE)
+          .filter(name => PRODUCT_DATABASE[name].saludable)
+          .slice(0, 6);
+      },
+      
+      // Sugerir productos ecológicos
+      suggestEco: function() {
+        return Object.keys(PRODUCT_DATABASE)
+          .filter(name => PRODUCT_DATABASE[name].ecologico)
+          .slice(0, 6);
+      },
+      
+      // Sugerir para equilibrar dieta
+      suggestDietBalance: function(currentCart) {
+        const cartItems = currentCart.map(item => item.name.toLowerCase());
+        const suggestions = [];
+        
+        // Si no hay frutas, sugerir frutas
+        if (!cartItems.some(item => item.includes("manzana") || item.includes("fruta"))) {
+          suggestions.push("Manzana roja 1kg", "Plátano");
+        }
+        
+        // Si no hay proteínas, sugerir proteínas
+        if (!cartItems.some(item => item.includes("pollo") || item.includes("carne") || item.includes("pescado"))) {
+          suggestions.push("Pollo entero", "Salmón al natural");
+        }
+        
+        // Si no hay verduras, sugerir verduras
+        if (!cartItems.some(item => item.includes("lechuga") || item.includes("tomate") || item.includes("cebolla"))) {
+          suggestions.push("Lechuga", "Tomate", "Cebolla");
+        }
+        
+        return suggestions.slice(0, 4);
+      },
+      
+      // Crear lista automática basada en historial
+      createAutomaticList: function(historicalLists) {
+        if (historicalLists.length === 0) return [];
+        
+        // Contar frecuencia de productos
+        const productFrequency = {};
+        historicalLists.forEach(list => {
+          list.forEach(item => {
+            productFrequency[item.name] = (productFrequency[item.name] || 0) + 1;
+          });
+        });
+        
+        // Ordenar por frecuencia y tomar los 10 más comunes
+        return Object.entries(productFrequency)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([name]) => ({ name, qty: 1 }));
+      }
+    };
+
     async function initApp() {
+      showAIIndicator("Cargando datos...");
+      
       loadAllDataFromStorage();
       renderProducts();
       renderCart();
       renderNotes();
       
+      // Simular carga de IA
+      setTimeout(() => {
+        hideAIIndicator();
+        window.dispatchEvent(new CustomEvent('SuperAppAIReady'));
+      }, 1500);
+      
       window.addEventListener('storage', handleStorageChange);
       window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
       window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
       window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
+      window.addEventListener('SuperAppAIReady', handleAIReady);
       
       setupSwipe();
     }
 
+    function showAIIndicator(message) {
+      const indicator = document.getElementById('ai-indicator');
+      indicator.querySelector('span').textContent = message;
+      indicator.classList.add('visible');
+    }
+
+    function hideAIIndicator() {
+      const indicator = document.getElementById('ai-indicator');
+      indicator.classList.remove('visible');
+    }
+
     function loadAllDataFromStorage() {
+      // Cargar productos
       products = loadProductsFromStorage();
       if (products.length === 0) {
-        products = defaultProducts.map(name => ({ name }));
+        products = Object.keys(PRODUCT_DATABASE).map(name => ({ 
+          name, 
+          perecedero: PRODUCT_DATABASE[name].perecedero,
+          ecologico: PRODUCT_DATABASE[name].ecologico,
+          saludable: PRODUCT_DATABASE[name].saludable
+        }));
         saveProductsToStorage(products);
       }
 
+      // Cargar carrito
       cartItems = loadCartFromStorage();
+      
+      // Cargar notas
       notes = loadNotesFromStorage();
+      
+      // Cargar preferencias del usuario
+      try {
+        const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+        if (stored) {
+          userPreferences = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error("Error parsing user preferences:", e);
+        userPreferences = {};
+      }
+      
+      // Cargar listas históricas
+      try {
+        const stored = localStorage.getItem(HISTORICAL_LISTS_KEY);
+        if (stored) {
+          historicalLists = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error("Error parsing historical lists:", e);
+        historicalLists = [];
+      }
     }
 
     function handleStorageChange(e) {
@@ -817,6 +1085,14 @@
     function handleNotesUpdate() {
       notes = loadNotesFromStorage();
       renderNotes();
+    }
+
+    function handleAIReady() {
+      // La IA está lista, podemos realizar sugerencias
+      setTimeout(() => {
+        suggestAutomaticList();
+        suggestDietBalance();
+      }, 1000);
     }
 
     function setupSwipe() {
@@ -911,24 +1187,147 @@
         return;
       }
 
-      filtered.forEach(item => {
+      // Priorizar productos ecológicos y saludables
+      const ecoProducts = filtered.filter(p => p.ecologico);
+      const healthyProducts = filtered.filter(p => p.saludable && !p.ecologico);
+      const otherProducts = filtered.filter(p => !p.ecologico && !p.saludable);
+      
+      const sortedProducts = [...ecoProducts, ...healthyProducts, ...otherProducts];
+
+      sortedProducts.forEach(item => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        card.textContent = item.name;
+        
+        if (item.ecologico) {
+          card.classList.add('ai-suggestion');
+          card.innerHTML = `
+            <div class="eco-badge">🌿</div>
+            ${item.name}
+          `;
+        } else if (item.saludable) {
+          card.classList.add('ai-suggestion');
+          card.innerHTML = `
+            <div class="healthy-badge">🥗</div>
+            ${item.name}
+          `;
+        } else {
+          card.textContent = item.name;
+        }
+        
         card.onclick = () => addToCart(item.name);
         grid.appendChild(card);
       });
+
+      // Mostrar sugerencias de productos complementarios si hay una búsqueda
+      if (query) {
+        showProductSuggestions(query);
+      }
+    }
+
+    function showProductSuggestions(query) {
+      const suggestions = AI.suggestComplementary(query);
+      const section = document.getElementById('suggestions-section');
+      const grid = document.getElementById('suggestions-grid');
+      
+      if (suggestions.length > 0) {
+        grid.innerHTML = '';
+        suggestions.forEach(suggestion => {
+          const card = document.createElement('div');
+          card.className = 'suggestion-card';
+          card.textContent = suggestion;
+          card.onclick = () => {
+            // Añadir al catálogo si no existe
+            if (!products.some(p => p.name === suggestion)) {
+              products.push({ 
+                name: suggestion, 
+                perecedero: PERECEDEROS.includes(suggestion),
+                ecologico: PRODUCT_DATABASE[suggestion]?.ecologico || false,
+                saludable: PRODUCT_DATABASE[suggestion]?.saludable || false
+              });
+              saveProductsToStorage(products);
+            }
+            addToCart(suggestion);
+          };
+          grid.appendChild(card);
+        });
+        section.style.display = 'block';
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+    function suggestAutomaticList() {
+      if (cartItems.length === 0 && historicalLists.length > 0) {
+        const suggestedList = AI.createAutomaticList(historicalLists);
+        if (suggestedList.length > 0) {
+          // Mostrar sugerencia de lista automática
+          console.log("Sugerencia de lista automática:", suggestedList);
+          // En una implementación real, mostraríamos esto al usuario
+        }
+      }
+    }
+
+    function suggestDietBalance() {
+      if (cartItems.length > 0) {
+        const suggestions = AI.suggestDietBalance(cartItems);
+        const section = document.getElementById('diet-suggestions');
+        const grid = document.getElementById('diet-suggestions-grid');
+        
+        if (suggestions.length > 0) {
+          grid.innerHTML = '';
+          suggestions.forEach(suggestion => {
+            const card = document.createElement('div');
+            card.className = 'suggestion-card';
+            card.textContent = suggestion;
+            card.onclick = () => addToCart(suggestion);
+            grid.appendChild(card);
+          });
+          section.style.display = 'block';
+        } else {
+          section.style.display = 'none';
+        }
+      } else {
+        document.getElementById('diet-suggestions').style.display = 'none';
+      }
     }
 
     async function addToCart(name) {
-      const existing = cartItems.find(item => item.name === name);
+      // Corregir ortografía antes de añadir
+      const correctedName = AI.correctSpelling(name);
+      
+      const existing = cartItems.find(item => item.name === correctedName);
       if (existing) {
         existing.qty++;
       } else {
-        cartItems.push({ name, qty: 1 });
+        cartItems.push({ name: correctedName, qty: 1 });
       }
       saveCartToStorage(cartItems);
       window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
+      
+      // Guardar lista en historial
+      saveListToHistory();
+    }
+
+    function saveListToHistory() {
+      // Guardar lista actual en historial si tiene productos
+      if (cartItems.length > 0) {
+        const timestamp = new Date().toISOString();
+        historicalLists.push({
+          timestamp,
+          items: [...cartItems]
+        });
+        
+        // Limitar a las últimas 10 listas
+        if (historicalLists.length > 10) {
+          historicalLists = historicalLists.slice(-10);
+        }
+        
+        try {
+          localStorage.setItem(HISTORICAL_LISTS_KEY, JSON.stringify(historicalLists));
+        } catch (e) {
+          console.error("Error saving historical lists:", e);
+        }
+      }
     }
 
     document.getElementById('search').addEventListener('input', (e) => {
@@ -944,7 +1343,15 @@
       if (name) {
         const exists = products.some(p => p.name.toLowerCase() === name.toLowerCase());
         if (!exists) {
-            products.push({ name });
+            // Corregir ortografía antes de añadir
+            const correctedName = AI.correctSpelling(name);
+            
+            products.push({ 
+              name: correctedName,
+              perecedero: PERECEDEROS.includes(correctedName),
+              ecologico: PRODUCT_DATABASE[correctedName]?.ecologico || false,
+              saludable: PRODUCT_DATABASE[correctedName]?.saludable || false
+            });
             saveProductsToStorage(products);
             input.value = '';
             document.getElementById('add-btn').style.display = 'none';
@@ -968,19 +1375,39 @@
           </div>
         `;
         footer.style.display = 'none';
+        document.getElementById('diet-suggestions').style.display = 'none';
         return;
       }
 
       footer.style.display = 'flex';
-      const sorted = [...cartItems].sort((a, b) => a.name.localeCompare(b.name));
+      
+      // Priorizar productos perecederos
+      const perecederos = cartItems.filter(item => 
+        PERECEDEROS.includes(item.name) || 
+        (PRODUCT_DATABASE[item.name] && PRODUCT_DATABASE[item.name].perecedero)
+      );
+      
+      const noPerecederos = cartItems.filter(item => 
+        !PERECEDEROS.includes(item.name) && 
+        (!PRODUCT_DATABASE[item.name] || !PRODUCT_DATABASE[item.name].perecedero)
+      );
+      
+      const sorted = [...perecederos, ...noPerecederos];
 
-      sorted.forEach((item, index) => {
+      sorted.forEach((item, index) {
         if (!item.id) {
           item.id = Date.now() + index;
         }
         
         const el = document.createElement('div');
         el.className = 'cart-item';
+        
+        // Marcar productos perecederos
+        if (PERECEDEROS.includes(item.name) || 
+            (PRODUCT_DATABASE[item.name] && PRODUCT_DATABASE[item.name].perecedero)) {
+          el.classList.add('perecedero');
+        }
+        
         el.innerHTML = `
           <div class="item-info">
             <span class="item-name">${escapeHtml(item.name)}</span>
@@ -1000,6 +1427,9 @@
           syncWithExplore();
         });
       });
+      
+      // Actualizar sugerencias de dieta
+      suggestDietBalance();
     }
 
     function escapeHtml(text) {
@@ -1049,7 +1479,6 @@
             <p class="empty-state-text">No hay notas.<br>¡Crea tu primera nota!</p>
           </div>
         `;
-        // Mostrar el botón de añadir nota cuando no hay notas
         document.getElementById('add-note-btn').style.display = 'block';
         return;
       }
@@ -1081,7 +1510,6 @@
         });
       });
       
-      // Mostrar el botón de añadir nota cuando hay notas
       document.getElementById('add-note-btn').style.display = 'block';
     }
 
@@ -1111,17 +1539,21 @@
     }
 
     function saveNote(title, content) {
+      // Corregir ortografía en notas
+      const correctedTitle = AI.correctSpelling(title);
+      const correctedContent = AI.correctSpelling(content);
+      
       const now = new Date().toISOString();
       
       if (currentNote) {
-        currentNote.title = title;
-        currentNote.content = content;
+        currentNote.title = correctedTitle;
+        currentNote.content = correctedContent;
         currentNote.date = now;
       } else {
         const newNote = {
           id: Date.now(),
-          title,
-          content,
+          title: correctedTitle,
+          content: correctedContent,
           date: now
         };
         notes.push(newNote);
@@ -1149,6 +1581,75 @@
         month: 'short',
         year: 'numeric'
       });
+    }
+
+    function loadProductsFromStorage() {
+      try {
+        const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error("Error parsing products from localStorage:", e);
+        return [];
+      }
+      return [];
+    }
+
+    function saveProductsToStorage(productsArray) {
+      try {
+        localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(productsArray));
+        return true;
+      } catch (e) {
+        console.error("Error saving products to localStorage:", e);
+        return false;
+      }
+    }
+
+    function loadCartFromStorage() {
+      try {
+        const stored = localStorage.getItem(CART_STORAGE_KEY);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error("Error parsing cart from localStorage:", e);
+        return [];
+      }
+      return [];
+    }
+
+    function saveCartToStorage(cartArray) {
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartArray));
+        return true;
+      } catch (e) {
+        console.error("Error saving cart to localStorage:", e);
+        return false;
+      }
+    }
+
+    function loadNotesFromStorage() {
+      try {
+        const stored = localStorage.getItem(NOTES_STORAGE_KEY);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error("Error parsing notes from localStorage:", e);
+        return [];
+      }
+      return [];
+    }
+
+    function saveNotesToStorage(notesArray) {
+      try {
+        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesArray));
+        return true;
+      } catch (e) {
+        console.error("Error saving notes to localStorage:", e);
+        return false;
+      }
     }
 
     document.getElementById('search-notes').addEventListener('input', (e) => {
