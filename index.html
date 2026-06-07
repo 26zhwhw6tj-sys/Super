@@ -18,6 +18,7 @@
       --note-bg: #1a1a1a;
       --note-border: #333;
       --ai-suggestion: #00cc6a;
+      --ai-progress: #00cc6a;
     }
 
     *, *::before, *::after {
@@ -57,24 +58,90 @@
       pointer-events: none;
     }
 
-    .loading-bar {
-      width: 200px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
+    .logo {
+      font-size: 48px;
+      margin-bottom: 30px;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .loading-section {
+      width: 80%;
+      max-width: 300px;
+      margin-bottom: 20px;
+    }
+
+    .loading-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
       overflow: hidden;
+      margin-bottom: 15px;
       position: relative;
     }
 
-    .loading-progress {
+    .loading-bar {
       position: absolute;
       top: 0;
       left: 0;
       height: 100%;
       width: 0%;
-      background: white;
-      border-radius: 2px;
-      transition: width 0.1s linear;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .loading-text {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .loading-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0.4;
+      transition: opacity 0.3s;
+    }
+
+    .step.active {
+      opacity: 1;
+    }
+
+    .step-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 5px;
+      font-size: 12px;
+    }
+
+    .step.active .step-icon {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .step-label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .step.active .step-label {
+      color: var(--accent);
     }
 
     .app-container {
@@ -203,6 +270,7 @@
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
     }
 
     .product-card:active {
@@ -654,8 +722,32 @@
 </head>
 <body>
   <div class="launcher" id="launcher">
-    <div class="loading-bar">
-      <div class="loading-progress" id="loading-progress"></div>
+    <div class="logo">🛒 Súper</div>
+    
+    <div class="loading-section">
+      <div class="loading-bar-container">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+      <div class="loading-text" id="loading-text">Inicializando aplicación...</div>
+    </div>
+    
+    <div class="loading-steps">
+      <div class="step active" id="step-app">
+        <div class="step-icon">📱</div>
+        <div class="step-label">App</div>
+      </div>
+      <div class="step" id="step-data">
+        <div class="step-icon">💾</div>
+        <div class="step-label">Datos</div>
+      </div>
+      <div class="step" id="step-ai">
+        <div class="step-icon">🤖</div>
+        <div class="step-label">IA</div>
+      </div>
+      <div class="step" id="step-ready">
+        <div class="step-icon">✅</div>
+        <div class="step-label">Listo</div>
+      </div>
     </div>
   </div>
 
@@ -751,65 +843,62 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const launcher = document.getElementById('launcher');
-      const loadingProgress = document.getElementById('loading-progress');
+      const loadingBar = document.getElementById('loading-bar');
+      const loadingText = document.getElementById('loading-text');
       const appContainer = document.getElementById('app-container');
       const panelsContainer = document.getElementById('panels-container');
       
+      // Elementos de pasos
+      const stepApp = document.getElementById('step-app');
+      const stepData = document.getElementById('step-data');
+      const stepAI = document.getElementById('step-ai');
+      const stepReady = document.getElementById('step-ready');
+      
+      // Función para actualizar el progreso
+      function updateProgress(percentage, text, activeStep) {
+        loadingBar.style.width = `${percentage}%`;
+        loadingText.textContent = text;
+        
+        // Actualizar pasos activos
+        stepApp.classList.toggle('active', activeStep === 'app');
+        stepData.classList.toggle('active', activeStep === 'data');
+        stepAI.classList.toggle('active', activeStep === 'ai');
+        stepReady.classList.toggle('active', activeStep === 'ready');
+      }
+      
+      // Simular carga progresiva
       let progress = 0;
-      let stallPoints = [];
-      let speeds = [];
       
-      for(let i = 0; i < 360; i++) {
-        speeds.push(Math.random() * 10 + 1);
-      }
-      
-      const stallCount = Math.floor(Math.random() * 5) + 3;
-      for(let i = 0; i < stallCount; i++) {
-        stallPoints.push(Math.random() * 90);
-      }
-      
-      let speedIndex = 0;
-      
-      function updateProgress() {
-        let isStalling = false;
-        for(let i = 0; i < stallPoints.length; i++) {
-          if (stallPoints[i] > 0 && Math.abs(progress - stallPoints[i]) < 1) {
-            stallPoints[i] = -stallPoints[i];
-            isStalling = true;
-            const stallDuration = Math.random() * 800 + 200;
-            
-            setTimeout(() => {
-              updateProgress();
-            }, stallDuration);
-            
-            return;
-          }
-        }
-        
-        const currentSpeed = speeds[speedIndex] || (Math.random() * 3 + 0.5);
-        speedIndex = (speedIndex + 1) % speeds.length;
-        
-        progress += currentSpeed * 0.3;
-        
-        if (progress >= 100) {
-          progress = 100;
-          loadingProgress.style.width = '100%';
+      function simulateLoading() {
+        if (progress < 100) {
+          progress += Math.random() * 5;
+          if (progress > 100) progress = 100;
           
+          // Actualizar texto y pasos según el progreso
+          if (progress < 30) {
+            updateProgress(progress, "Inicializando aplicación...", 'app');
+          } else if (progress < 60) {
+            updateProgress(progress, "Cargando datos del usuario...", 'data');
+          } else if (progress < 90) {
+            updateProgress(progress, "Activando inteligencia artificial...", 'ai');
+          } else {
+            updateProgress(progress, "¡Todo listo!", 'ready');
+          }
+          
+          requestAnimationFrame(simulateLoading);
+        } else {
+          // Carga completada
           setTimeout(() => {
             launcher.classList.add('hidden');
             appContainer.classList.add('visible');
             panelsContainer.style.transform = 'translateX(-100vw)';
             initApp();
-          }, 300);
-          
-          return;
+          }, 500);
         }
-        
-        loadingProgress.style.width = `${progress}%`;
-        requestAnimationFrame(updateProgress);
       }
       
-      requestAnimationFrame(updateProgress);
+      // Iniciar simulación de carga
+      simulateLoading();
     });
 
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
