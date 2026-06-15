@@ -3,27 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>🛒 SuperApp Mejorada</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>🛒 Súper</title>
   <style>
     :root {
-      --accent: #4CAF50;
-      --accent-dark: #388E3C;
-      --bg: #f5f7fa;
-      --surface: #ffffff;
-      --text-main: #212121;
-      --text-muted: #757575;
-      --border: #e0e0e0;
-      --danger: #f44336;
-      --warning: #FF9800;
-      --success: #4CAF50;
-      --radius: 12px;
-      --shadow: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-hover: 0 6px 16px rgba(0,0,0,0.12);
-      --note-bg: #f9f9f9;
-      --note-border: #e0e0e0;
-      --header-height: 60px;
-      --footer-height: 70px;
+      --accent: #00ff88;
+      --bg: #000;
+      --surface: #111;
+      --text-main: #fff;
+      --text-muted: #aaa;
+      --border: #333;
+      --danger: #ff453a;
+      --radius: 16px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      --note-bg: #1a1a1a;
+      --note-border: #333;
     }
 
     *, *::before, *::after {
@@ -36,7 +29,7 @@
     body {
       background: var(--bg);
       color: var(--text-main);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       overflow: hidden;
       height: 100vh;
       position: fixed;
@@ -49,42 +42,27 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      background: var(--bg);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      transition: opacity 0.5s ease, transform 0.5s ease;
+      transition: opacity 0.5s ease;
     }
 
     .launcher.hidden {
       opacity: 0;
-      transform: scale(1.1);
       pointer-events: none;
     }
 
-    .logo {
-      font-size: 48px;
-      margin-bottom: 20px;
-      color: white;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-
     .loading-bar {
-      width: 250px;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 3px;
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
       overflow: hidden;
       position: relative;
-      margin-top: 30px;
     }
 
     .loading-progress {
@@ -94,7 +72,7 @@
       height: 100%;
       width: 0%;
       background: white;
-      border-radius: 3px;
+      border-radius: 2px;
       transition: width 0.1s linear;
     }
 
@@ -112,67 +90,11 @@
       opacity: 1;
     }
 
-    .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: var(--header-height);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      z-index: 100;
-    }
-
-    .app-title {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--accent);
-      flex: 1;
-    }
-
-    .tabs {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: var(--footer-height);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      display: flex;
-      z-index: 100;
-    }
-
-    .tab {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .tab.active {
-      color: var(--accent);
-    }
-
-    .tab i {
-      font-size: 20px;
-      margin-bottom: 4px;
-    }
-
     .panels-container {
       display: flex;
       width: 300vw;
-      height: calc(100vh - var(--header-height) - var(--footer-height));
-      margin-top: var(--header-height);
-      transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      height: 100vh;
+      transition: transform 0.3s ease;
     }
 
     .panel {
@@ -181,8 +103,9 @@
       display: flex;
       flex-direction: column;
       padding: 20px;
+      padding-top: 50px;
+      padding-bottom: 80px;
       position: relative;
-      overflow: hidden;
     }
 
     .panel-header {
@@ -194,8 +117,7 @@
 
     .panel-title {
       font-size: 24px;
-      font-weight: 700;
-      color: var(--text-main);
+      font-weight: bold;
     }
 
     .search-container {
@@ -205,29 +127,12 @@
 
     .search-input {
       width: 100%;
-      padding: 14px 16px 14px 48px;
+      padding: 16px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       color: var(--text-main);
       font-size: 16px;
-      box-shadow: var(--shadow);
-      transition: all 0.3s ease;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 18px;
     }
 
     .add-btn {
@@ -236,20 +141,13 @@
       top: 50%;
       transform: translateY(-50%);
       background: var(--accent);
-      color: white;
+      color: #000;
       border: none;
       border-radius: 8px;
       padding: 8px 16px;
-      font-weight: 600;
+      font-weight: bold;
       font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .add-btn:hover {
-      background: var(--accent-dark);
-      transform: translateY(-50%) scale(1.05);
+      display: none;
     }
 
     .scroll-container {
@@ -265,19 +163,7 @@
       margin: 0;
     }
 
-    .scroll-area::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .scroll-area::-webkit-scrollbar-track {
-      background: rgba(0,0,0,0.05);
-      border-radius: 3px;
-    }
-
-    .scroll-area::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.2);
-      border-radius: 3px;
-    }
+    .scroll-area::-webkit-scrollbar { display: none; }
 
     .fade-overlay {
       position: absolute;
@@ -290,32 +176,18 @@
 
     .top-fade {
       top: 0;
-      background: linear-gradient(to bottom, var(--bg), transparent);
+      background: linear-gradient(to bottom, #000, transparent);
     }
 
     .bottom-fade {
       bottom: 0;
-      background: linear-gradient(to top, var(--bg), transparent);
-    }
-
-    .category-header {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 20px 0 12px 10px;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-    }
-
-    .category-header i {
-      margin-right: 10px;
-      color: var(--accent);
+      background: linear-gradient(to top, #000, transparent);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
       padding: 10px;
     }
 
@@ -323,34 +195,17 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px 12px;
+      padding: 16px;
       text-align: center;
       font-size: 14px;
       font-weight: 500;
-      color: var(--text-main);
+      color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 120px;
-    }
-
-    .product-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-hover);
     }
 
     .product-card:active {
-      background: rgba(76, 175, 80, 0.1);
-      transform: scale(0.98);
-    }
-
-    .product-icon {
-      font-size: 28px;
-      margin-bottom: 10px;
+      background: rgba(0, 255, 136, 0.2);
       color: var(--accent);
     }
 
@@ -363,7 +218,7 @@
     .cart-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       padding: 10px;
     }
 
@@ -371,18 +226,16 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 14px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      transition: all 0.2s;
-      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
     }
 
-    .cart-item:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
+    .cart-item:active {
+      border-color: var(--accent);
     }
 
     .item-info {
@@ -390,16 +243,11 @@
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: 12px;
-    }
-
-    .item-icon {
-      font-size: 24px;
-      color: var(--accent);
+      gap: 10px;
     }
 
     .item-name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 500;
       color: var(--text-main);
       white-space: nowrap;
@@ -407,51 +255,20 @@
       text-overflow: ellipsis;
     }
 
-    .item-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .quantity-control {
-      display: flex;
-      align-items: center;
-      background: #f0f0f0;
-      border-radius: 20px;
-      overflow: hidden;
-    }
-
-    .qty-btn {
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      font-size: 18px;
-      color: var(--text-main);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .qty-btn:active {
-      background: rgba(0,0,0,0.1);
-    }
-
     .item-qty {
-      font-size: 16px;
-      font-weight: 600;
-      min-width: 30px;
-      text-align: center;
-      color: var(--text-main);
+      font-size: 13px;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: 10px;
+      flex-shrink: 0;
     }
 
     .delete-btn {
       width: 36px;
       height: 36px;
       border: none;
-      background: #ffebee;
+      background: transparent;
       color: var(--danger);
       border-radius: 10px;
       font-size: 20px;
@@ -459,17 +276,12 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.2s;
       flex-shrink: 0;
     }
 
-    .delete-btn:hover {
-      background: #ffcdd2;
-      transform: scale(1.1);
-    }
-
     .delete-btn:active {
-      background: #ef9a9a;
+      background: rgba(255, 69, 58, 0.15);
     }
 
     .empty-state {
@@ -479,55 +291,45 @@
     }
 
     .empty-state-icon {
-      font-size: 64px;
+      font-size: 48px;
       margin-bottom: 16px;
       opacity: 0.5;
-      color: var(--accent);
     }
 
     .empty-state-text {
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.5;
-      margin-bottom: 20px;
     }
 
     .list-footer {
-      padding: 16px 20px;
+      padding-top: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-main);
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+      font-size: 14px;
+      color: var(--text-muted);
+      border-top: none;
     }
 
     .clear-all {
       color: var(--danger);
       background: none;
       border: none;
-      font-size: 15px;
+      font-size: 14px;
       cursor: pointer;
       padding: 8px 12px;
       border-radius: 8px;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-
-    .clear-all:hover {
-      background: rgba(244, 67, 54, 0.1);
+      transition: background 0.2s;
     }
 
     .clear-all:active {
-      background: rgba(244, 67, 54, 0.2);
+      background: rgba(255, 69, 58, 0.15);
     }
 
     .notes-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
+      gap: 16px;
       padding: 10px;
     }
 
@@ -535,30 +337,24 @@
       background: var(--note-bg);
       border: 1px solid var(--note-border);
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 16px;
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
-      min-height: 160px;
+      min-height: 150px;
       display: flex;
       flex-direction: column;
-      box-shadow: var(--shadow);
-    }
-
-    .note-card:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-hover);
     }
 
     .note-card:active {
-      background: rgba(76, 175, 80, 0.05);
-      transform: scale(0.99);
+      background: rgba(0, 255, 136, 0.1);
+      border-color: var(--accent);
     }
 
     .note-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
       color: var(--accent);
       white-space: nowrap;
       overflow: hidden;
@@ -566,53 +362,47 @@
     }
 
     .note-content {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-main);
       flex: 1;
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 4;
       -webkit-box-orient: vertical;
-      line-height: 1.5;
     }
 
     .note-date {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-muted);
-      margin-top: 15px;
+      margin-top: 12px;
       text-align: right;
-      font-weight: 500;
     }
 
     .delete-note {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(244, 67, 54, 0.1);
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 69, 58, 0.2);
       color: var(--danger);
       border: none;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       opacity: 0;
-      transition: all 0.2s;
+      transition: opacity 0.2s;
     }
 
     .note-card:hover .delete-note {
       opacity: 1;
     }
 
-    .delete-note:hover {
-      background: rgba(244, 67, 54, 0.2);
-    }
-
     .delete-note:active {
-      background: rgba(244, 67, 54, 0.3);
+      background: rgba(255, 69, 58, 0.3);
     }
 
     .modal {
@@ -621,7 +411,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -638,18 +428,14 @@
 
     .modal-content {
       background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       width: 90%;
       max-width: 500px;
-      max-height: 90vh;
-      padding: 25px;
+      padding: 20px;
       position: relative;
       transform: translateY(20px);
       transition: transform 0.3s;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .modal.active .modal-content {
@@ -660,220 +446,115 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      flex-shrink: 0;
+      margin-bottom: 16px;
     }
 
     .modal-title {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-main);
+      font-size: 18px;
+      font-weight: bold;
     }
 
     .close-modal {
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 28px;
+      font-size: 24px;
       cursor: pointer;
-      width: 36px;
-      height: 36px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      transition: all 0.2s;
-    }
-
-    .close-modal:hover {
-      background: rgba(0,0,0,0.05);
     }
 
     .close-modal:active {
-      background: rgba(0,0,0,0.1);
-    }
-
-    .note-form {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .note-form input,
     .note-form textarea {
       width: 100%;
-      padding: 14px;
-      margin-bottom: 20px;
-      background: #f9f9f9;
+      padding: 12px;
+      margin-bottom: 16px;
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       color: var(--text-main);
       font-family: inherit;
-      font-size: 16px;
-      box-sizing: border-box;
-      transition: all 0.2s;
+      font-size: 15px;
+    }
+
+    .note-form textarea {
+      min-height: 150px;
+      resize: vertical;
     }
 
     .note-form input:focus,
     .note-form textarea:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
-    }
-
-    .note-form textarea {
-      min-height: 120px;
-      flex: 1;
-      resize: none;
-      overflow-y: auto;
     }
 
     .modal-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
-      margin-top: auto;
-      flex-shrink: 0;
+      gap: 10px;
     }
 
     .btn {
-      padding: 12px 24px;
+      padding: 10px 20px;
       border-radius: var(--radius);
       border: none;
-      font-weight: 600;
+      font-weight: bold;
       cursor: pointer;
-      font-size: 15px;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 14px;
     }
 
     .btn-cancel {
-      background: #f5f5f5;
+      background: var(--surface);
       color: var(--text-muted);
-    }
-
-    .btn-cancel:hover {
-      background: #e0e0e0;
+      border: 1px solid var(--border);
     }
 
     .btn-cancel:active {
-      background: #bdbdbd;
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .btn-save {
       background: var(--accent);
-      color: white;
-    }
-
-    .btn-save:hover {
-      background: var(--accent-dark);
+      color: #000;
     }
 
     .btn-save:active {
-      background: #2E7D32;
+      background: #00cc6a;
     }
 
     .btn-delete {
       background: var(--danger);
-      color: white;
-    }
-
-    .btn-delete:hover {
-      background: #d32f2f;
+      color: #fff;
     }
 
     .btn-delete:active {
-      background: #b71c1c;
-    }
-
-    .stats-bar {
-      display: flex;
-      justify-content: space-around;
-      background: var(--surface);
-      padding: 12px 0;
-      border-radius: var(--radius);
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-    }
-
-    .stat-item {
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .stat-label {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    @media (max-width: 600px) {
-      .grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 10px;
-      }
-      
-      .product-card {
-        padding: 12px 8px;
-        min-height: 100px;
-      }
-      
-      .product-icon {
-        font-size: 24px;
-      }
-      
-      .notes-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .btn {
-        padding: 10px 16px;
-        font-size: 14px;
-      }
+      background: #e03e34;
     }
   </style>
 </head>
 <body>
   <div class="launcher" id="launcher">
-    <div class="logo">🛒</div>
-    <h1 style="color: white; font-size: 28px; margin-bottom: 10px;">SuperApp</h1>
-    <p style="color: rgba(255,255,255,0.8); margin-bottom: 30px;">Organiza tu vida en un solo lugar</p>
     <div class="loading-bar">
       <div class="loading-progress" id="loading-progress"></div>
     </div>
   </div>
 
   <div class="app-container" id="app-container">
-    <div class="header">
-      <div class="app-title">SuperApp</div>
-      <div class="stats-bar">
-        <div class="stat-item">
-          <div class="stat-value" id="cart-count">0</div>
-          <div class="stat-label">Productos</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="notes-count">0</div>
-          <div class="stat-label">Notas</div>
-        </div>
-      </div>
-    </div>
-
     <div class="panels-container" id="panels-container">
       <div class="panel" id="explore-panel">
         <div class="panel-header">
           <h1 class="panel-title">Explorar</h1>
         </div>
         <div class="search-container">
-          <i class="fas fa-search search-icon"></i>
-          <input type="text" class="search-input" id="search" placeholder="Buscar productos...">
+          <input type="text" class="search-input" id="search" placeholder="Buscar...">
           <button class="add-btn" id="add-btn">AÑADIR</button>
         </div>
         <div class="scroll-container">
@@ -887,7 +568,7 @@
 
       <div class="panel" id="list-panel">
         <div class="panel-header">
-          <h1 class="panel-title">Lista de Compras</h1>
+          <h1 class="panel-title">Lista</h1>
         </div>
         <div class="scroll-container">
           <div class="fade-overlay top-fade"></div>
@@ -897,8 +578,8 @@
           <div class="fade-overlay bottom-fade"></div>
         </div>
         <div class="list-footer" id="list-footer" style="display: none;">
-          <span id="total-text">Total: 0 productos</span>
-          <button class="clear-all" id="clear-all">Vaciar lista</button>
+          <span id="total-text"></span>
+          <button class="clear-all" id="clear-all">Vaciar</button>
         </div>
       </div>
 
@@ -907,7 +588,6 @@
           <h1 class="panel-title">Notas</h1>
         </div>
         <div class="search-container">
-          <i class="fas fa-search search-icon"></i>
           <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas...">
           <button class="add-btn" id="add-note-btn">NUEVA NOTA</button>
         </div>
@@ -921,21 +601,6 @@
       </div>
     </div>
 
-    <div class="tabs">
-      <div class="tab active" data-panel="0">
-        <i class="fas fa-store"></i>
-        <span>Explorar</span>
-      </div>
-      <div class="tab" data-panel="1">
-        <i class="fas fa-shopping-cart"></i>
-        <span>Lista</span>
-      </div>
-      <div class="tab" data-panel="2">
-        <i class="fas fa-sticky-note"></i>
-        <span>Notas</span>
-      </div>
-    </div>
-
     <div class="modal" id="note-modal">
       <div class="modal-content">
         <div class="modal-header">
@@ -946,12 +611,8 @@
           <input type="text" id="note-title" placeholder="Título de la nota" required>
           <textarea id="note-content" placeholder="Contenido de la nota" required></textarea>
           <div class="modal-actions">
-            <button type="button" class="btn btn-cancel" id="cancel-note">
-              <i class="fas fa-times"></i> Cancelar
-            </button>
-            <button type="submit" class="btn btn-save">
-              <i class="fas fa-save"></i> Guardar
-            </button>
+            <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
+            <button type="submit" class="btn btn-save">Guardar</button>
           </div>
         </form>
       </div>
@@ -964,7 +625,6 @@
       const loadingProgress = document.getElementById('loading-progress');
       const appContainer = document.getElementById('app-container');
       const panelsContainer = document.getElementById('panels-container');
-      const tabs = document.querySelectorAll('.tab');
       
       let progress = 0;
       let stallPoints = [];
@@ -1011,7 +671,7 @@
             appContainer.classList.add('visible');
             panelsContainer.style.transform = 'translateX(-100vw)';
             initApp();
-          }, 500);
+          }, 300);
           
           return;
         }
@@ -1021,18 +681,6 @@
       }
       
       requestAnimationFrame(updateProgress);
-      
-      // Tab navigation
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          const panelIndex = parseInt(tab.getAttribute('data-panel'));
-          switchPanel(panelIndex);
-          
-          // Update active tab
-          tabs.forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-        });
-      });
     });
 
     const PRODUCTS_STORAGE_KEY = 'superapp_products';
@@ -1108,16 +756,8 @@
       }
     }
 
-    // Categorías de productos con iconos
-    const productCategories = [
-      { name: "Frutas y Verduras", icon: "🍎", products: ["Manzana", "Plátano", "Zanahoria", "Tomate", "Lechuga", "Pepino", "Naranja", "Uva", "Cebolla", "Pimiento"] },
-      { name: "Carnes y Pescados", icon: "🥩", products: ["Pollo", "Carne de res", "Salmón", "Atún", "Cerdo", "Merluza", "Sardinas", "Bacalao"] },
-      { name: "Lácteos", icon: "🥛", products: ["Leche", "Queso", "Yogur", "Mantequilla", "Crema", "Nata", "Requesón"] },
-      { name: "Panadería", icon: "🍞", products: ["Pan", "Baguette", "Croissant", "Tostadas", "Galletas", "Bizcochos"] },
-      { name: "Bebidas", icon: "🥤", products: ["Agua", "Refresco", "Zumo", "Café", "Té", "Vino", "Cerveza"] },
-      { name: "Congelados", icon: "❄️", products: ["Pizza", "Hamburguesa", "Helado", "Patatas fritas", "Verduras congeladas"] },
-      { name: "Dulces", icon: "🍬", products: ["Chocolate", "Caramelos", "Pasteles", "Frutos secos", "Miel"] },
-      { name: "Higiene", icon: "🧴", products: ["Champú", "Jabón", "Pasta de dientes", "Desodorante", "Cepillo de dientes"] }
+    const defaultProducts = [
+      "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural", "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja", "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva", "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate", "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas", "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo", "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido", "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg", "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello", "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar", "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate", "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles", "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquilares", "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno", "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado", "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano", "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña", "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti", "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24", "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva", "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfec", "Leche condensada entera", "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera", "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja", "Limbiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca", "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji", "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche", "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal", "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia", "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta", "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano", "Pack Cola Zero", "Pan blanco", "Pan bocadillo", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr", "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo", "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo", "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate", "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce", "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas", "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni", "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Pure de patatas", "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage", "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido", "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichon", "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas", "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés", "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo", "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet", "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa", "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas", "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
     ];
 
     let products = [];
@@ -1134,7 +774,6 @@
       renderProducts();
       renderCart();
       renderNotes();
-      updateStats();
       
       window.addEventListener('storage', handleStorageChange);
       window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
@@ -1142,61 +781,12 @@
       window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
       
       setupSwipe();
-      
-      // Inicializar el ajuste de altura del textarea
-      initTextareaAutoResize();
-    }
-
-    function initTextareaAutoResize() {
-      const noteContent = document.getElementById('note-content');
-      
-      // Función para ajustar la altura del textarea
-      function adjustTextareaHeight() {
-        noteContent.style.height = 'auto';
-        noteContent.style.height = noteContent.scrollHeight + 'px';
-      }
-      
-      // Ajustar altura inicial
-      if (noteContent) {
-        adjustTextareaHeight();
-        
-        // Ajustar altura cuando el usuario escribe
-        noteContent.addEventListener('input', adjustTextareaHeight);
-        
-        // Ajustar altura cuando se pega contenido
-        noteContent.addEventListener('paste', function() {
-          setTimeout(adjustTextareaHeight, 10);
-        });
-        
-        // Ajustar altura cuando se abre el modal
-        const noteModal = document.getElementById('note-modal');
-        const observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-              if (noteModal.classList.contains('active')) {
-                setTimeout(adjustTextareaHeight, 50);
-              }
-            }
-          });
-        });
-        
-        observer.observe(noteModal, { attributes: true });
-      }
     }
 
     function loadAllDataFromStorage() {
       products = loadProductsFromStorage();
       if (products.length === 0) {
-        // Generar productos de ejemplo basados en categorías
-        productCategories.forEach(category => {
-          category.products.forEach(product => {
-            products.push({ 
-              name: product, 
-              category: category.name,
-              icon: category.icon
-            });
-          });
-        });
+        products = defaultProducts.map(name => ({ name }));
         saveProductsToStorage(products);
       }
 
@@ -1211,18 +801,15 @@
       } else if (e.key === CART_STORAGE_KEY) {
         cartItems = loadCartFromStorage();
         renderCart();
-        updateStats();
       } else if (e.key === NOTES_STORAGE_KEY) {
         notes = loadNotesFromStorage();
         renderNotes(document.getElementById('search-notes').value);
-        updateStats();
       }
     }
 
     function handleCartUpdate() {
       cartItems = loadCartFromStorage();
       renderCart();
-      updateStats();
     }
 
     function handleProductsUpdate() {
@@ -1233,12 +820,6 @@
     function handleNotesUpdate() {
       notes = loadNotesFromStorage();
       renderNotes();
-      updateStats();
-    }
-
-    function updateStats() {
-      document.getElementById('cart-count').textContent = cartItems.length;
-      document.getElementById('notes-count').textContent = notes.length;
     }
 
     function setupSwipe() {
@@ -1318,87 +899,28 @@
       currentPanel = index;
       const panelsContainer = document.getElementById('panels-container');
       panelsContainer.style.transform = `translateX(-${index * 100}vw)`;
-      
-      // Update active tab
-      const tabs = document.querySelectorAll('.tab');
-      tabs.forEach(tab => tab.classList.remove('active'));
-      tabs[index].classList.add('active');
     }
 
     function renderProducts(query = "") {
+      const filtered = query
+        ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
+        : products;
+
       const grid = document.getElementById('products-grid');
       grid.innerHTML = '';
 
-      if (query) {
-        // Búsqueda simple
-        const filtered = products.filter(p => 
-          p.name.toLowerCase().includes(query.toLowerCase())
-        );
-        
-        if (filtered.length === 0) {
-          grid.innerHTML = '<div class="empty-state">No se encontraron productos</div>';
-          return;
-        }
-        
-        // Mostrar resultados de búsqueda
-        const resultsContainer = document.createElement('div');
-        resultsContainer.className = 'grid';
-        
-        filtered.forEach(item => {
-          const card = document.createElement('div');
-          card.className = 'product-card';
-          card.innerHTML = `
-            <div class="product-icon">${item.icon || '🛒'}</div>
-            <div>${item.name}</div>
-          `;
-          card.onclick = () => addToCart(item.name);
-          resultsContainer.appendChild(card);
-        });
-        
-        grid.appendChild(resultsContainer);
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="empty-state">No hay productos</div>';
         return;
       }
-      
-      // Mostrar productos por categorías
-      productCategories.forEach(category => {
-        const categoryHeader = document.createElement('div');
-        categoryHeader.className = 'category-header';
-        categoryHeader.innerHTML = `<i class="fas fa-${getCategoryIcon(category.name)}"></i> ${category.name}`;
-        grid.appendChild(categoryHeader);
-        
-        const categoryGrid = document.createElement('div');
-        categoryGrid.className = 'grid';
-        
-        category.products.forEach(productName => {
-          const product = products.find(p => p.name === productName);
-          if (product) {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.innerHTML = `
-              <div class="product-icon">${product.icon || '🛒'}</div>
-              <div>${product.name}</div>
-            `;
-            card.onclick = () => addToCart(product.name);
-            categoryGrid.appendChild(card);
-          }
-        });
-        
-        grid.appendChild(categoryGrid);
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.textContent = item.name;
+        card.onclick = () => addToCart(item.name);
+        grid.appendChild(card);
       });
-    }
-    
-    function getCategoryIcon(categoryName) {
-      const iconMap = {
-        "Frutas y Verduras": "apple-alt",
-        "Carnes y Pescados": "fish",
-        "Lácteos": "glass-whiskey",
-        "Panadería": "bread-slice",
-        "Bebidas": "wine-bottle",
-        "Congelados": "snowflake",
-        "Dulces": "candy-cane",
-        "Higiene": "soap"
-      };
-      return iconMap[categoryName] || "shopping-basket";
     }
 
     async function addToCart(name) {
@@ -1425,7 +947,7 @@
       if (name) {
         const exists = products.some(p => p.name.toLowerCase() === name.toLowerCase());
         if (!exists) {
-            products.push({ name, category: "Personalizado", icon: "➕" });
+            products.push({ name });
             saveProductsToStorage(products);
             input.value = '';
             document.getElementById('add-btn').style.display = 'none';
@@ -1454,8 +976,6 @@
 
       footer.style.display = 'flex';
       const sorted = [...cartItems].sort((a, b) => a.name.localeCompare(b.name));
-      const totalItems = sorted.reduce((sum, item) => sum + item.qty, 0);
-      document.getElementById('total-text').textContent = `Total: ${totalItems} productos`;
 
       sorted.forEach((item, index) => {
         if (!item.id) {
@@ -1466,37 +986,15 @@
         el.className = 'cart-item';
         el.innerHTML = `
           <div class="item-info">
-            <div class="item-icon">🛒</div>
             <span class="item-name">${escapeHtml(item.name)}</span>
+            <span class="item-qty">×${item.qty}</span>
           </div>
-          <div class="item-controls">
-            <div class="quantity-control">
-              <button class="qty-btn minus" data-id="${item.id}">-</button>
-              <span class="item-qty">${item.qty}</span>
-              <button class="qty-btn plus" data-id="${item.id}">+</button>
-            </div>
-            <button class="delete-btn" data-id="${item.id}" aria-label="Eliminar">×</button>
-          </div>
+          <button class="delete-btn" data-id="${item.id}" aria-label="Eliminar">×</button>
         `;
         list.appendChild(el);
       });
 
-      // Event listeners para botones de cantidad
-      document.querySelectorAll('.qty-btn.minus').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = parseInt(btn.dataset.id);
-          updateQuantity(id, -1);
-        });
-      });
-      
-      document.querySelectorAll('.qty-btn.plus').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = parseInt(btn.dataset.id);
-          updateQuantity(id, 1);
-        });
-      });
-      
-      document.querySelectorAll('.delete-btn').forEach(btn => {
+      list.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id = parseInt(btn.dataset.id);
           cartItems = cartItems.filter(i => i.id !== id);
@@ -1505,19 +1003,6 @@
           syncWithExplore();
         });
       });
-    }
-
-    function updateQuantity(id, change) {
-      const item = cartItems.find(i => i.id === id);
-      if (item) {
-        item.qty += change;
-        if (item.qty <= 0) {
-          cartItems = cartItems.filter(i => i.id !== id);
-        }
-        saveCartToStorage(cartItems);
-        renderCart();
-        syncWithExplore();
-      }
     }
 
     function escapeHtml(text) {
@@ -1616,19 +1101,11 @@
       }
       
       modal.classList.add('active');
-      // Ajustar altura después de que el modal sea visible
-      setTimeout(() => {
-          adjustTextareaHeight(contentInput);
-          // Ocultar botón mientras el modal está abierto
-          document.getElementById('add-note-btn').style.display = 'none';
-      }, 10); // Pequeño delay para asegurar visibilidad
     }
 
     function closeNoteModal() {
       document.getElementById('note-modal').classList.remove('active');
       currentNote = null;
-      // Mostrar botón nuevamente al cerrar
-      document.getElementById('add-note-btn').style.display = 'block';
     }
 
     function saveNote(title, content) {
@@ -1672,43 +1149,19 @@
       });
     }
 
-    // Función mejorada para ajustar la altura del textarea
-    function adjustTextareaHeight(textareaElement) {
-      textareaElement.style.height = 'auto';
-      textareaElement.style.height = textareaElement.scrollHeight + 'px';
-    }
-
-    // Event listener para ajustar altura al escribir
-    document.getElementById('note-content').addEventListener('input', function() {
-      adjustTextareaHeight(this);
-    });
-
-    // Event listener para ajustar altura al abrir el modal
-    document.getElementById('note-modal').addEventListener('transitionend', function(e) {
-      if (e.propertyName === 'opacity' && this.classList.contains('active')) {
-        const contentTextarea = document.getElementById('note-content');
-        adjustTextareaHeight(contentTextarea);
-      }
-    });
-
-    // Controlar visibilidad del botón basado en búsqueda y estado del modal
     document.getElementById('search-notes').addEventListener('input', (e) => {
       renderNotes(e.target.value);
       const val = e.target.value;
-      const modalActive = document.getElementById('note-modal').classList.contains('active');
-      document.getElementById('add-note-btn').style.display = (val || modalActive) ? 'none' : 'block';
+      document.getElementById('add-note-btn').style.display = val ? 'none' : 'block';
     });
 
-    // Botón de "Nueva Nota"
     document.getElementById('add-note-btn').addEventListener('click', () => {
-      openNoteModal(null);
+      openNoteModal();
     });
 
-    // Cerrar modal
     document.getElementById('close-modal').addEventListener('click', closeNoteModal);
     document.getElementById('cancel-note').addEventListener('click', closeNoteModal);
 
-    // Guardar nota
     document.getElementById('note-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const title = document.getElementById('note-title').value.trim();
@@ -1719,7 +1172,6 @@
       }
     });
 
-    // Cerrar modal al hacer clic fuera
     document.getElementById('note-modal').addEventListener('click', (e) => {
       if (e.target.id === 'note-modal') {
         closeNoteModal();
