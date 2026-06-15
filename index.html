@@ -2,1272 +2,602 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>🛒 Súper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AppWeb 🌐</title>
   <style>
     :root {
-      --accent: #00ff88;
-      --bg: #000;
-      --surface: #111;
-      --text-main: #fff;
-      --text-muted: #aaa;
-      --border: #333;
-      --danger: #ff453a;
-      --radius: 16px;
-      --shadow: 0 4px 20px rgba(0,0,0,0.3);
-      --note-bg: #1a1a1a;
-      --note-border: #333;
+      --primary: #4a6fa5;
+      --primary-light: #607d8b;
+      --secondary: #e91e63;
+      --accent: #00bcd4;
+      --background: #f5f5f5;
+      --surface: #ffffff;
+      --text-primary: #212121;
+      --text-secondary: #757575;
+      --border: #e0e0e0;
+      --success: #4caf50;
+      --warning: #ff9800;
+      --error: #f44336;
+      --shadow: 0 2px 10px rgba(0,0,0,0.1);
+      --radius: 12px;
+      --padding: 16px;
+      --header-height: 60px;
+      --nav-height: 60px;
     }
 
-    *, *::before, *::after {
-      box-sizing: border-box;
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #90a4ae;
+        --primary-light: #b0bec5;
+        --background: #121212;
+        --surface: #1e1e1e;
+        --text-primary: #ffffff;
+        --text-secondary: #bdbdbd;
+        --border: #424242;
+      }
+    }
+
+    * {
       margin: 0;
       padding: 0;
-      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
     }
 
     body {
-      background: var(--bg);
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding-top: var(--header-height);
+      padding-bottom: var(--nav-height);
+      height: calc(100vh - var(--header-height) - var(--nav-height));
       overflow: hidden;
-      height: 100vh;
-      position: fixed;
-      width: 100%;
     }
 
-    .launcher {
+    header {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 100%;
-      background: var(--bg);
+      height: var(--header-height);
+      background-color: var(--primary);
+      color: white;
       display: flex;
-      flex-direction: column;
+      align-items: center;
       justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      transition: opacity 0.5s ease;
+      box-shadow: var(--shadow);
+      z-index: 100;
     }
 
-    .launcher.hidden {
-      opacity: 0;
-      pointer-events: none;
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 500;
     }
 
-    .loading-bar {
-      width: 200px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .loading-progress {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 0%;
-      background: white;
-      border-radius: 2px;
-      transition: width 0.1s linear;
-    }
-
-    .app-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    .app-container.visible {
-      opacity: 1;
-    }
-
-    .panels-container {
-      display: flex;
-      width: 300vw;
-      height: 100vh;
-      transition: transform 0.3s ease;
-    }
-
-    .panel {
-      width: 100vw;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      padding-top: 50px;
-      padding-bottom: 80px;
-      position: relative;
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .panel-title {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .search-container {
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text-main);
-      font-size: 16px;
-    }
-
-    .add-btn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-weight: bold;
-      font-size: 12px;
-      /* Eliminado display: none; */
-    }
-
-    .scroll-container {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .scroll-area {
+    main {
+      padding: var(--padding);
       height: 100%;
       overflow-y: auto;
-      padding: 0;
-      margin: 0;
     }
 
-    .scroll-area::-webkit-scrollbar { display: none; }
-
-    .fade-overlay {
-      position: absolute;
-      left: 0;
-      width: 100%;
-      height: 30px;
-      z-index: 10;
-      pointer-events: none;
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease-out forwards;
     }
 
-    .top-fade {
-      top: 0;
-      background: linear-gradient(to bottom, #000, transparent);
+    .section.active {
+      display: block;
     }
 
-    .bottom-fade {
-      bottom: 0;
-      background: linear-gradient(to top, #000, transparent);
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 12px;
-      padding: 10px;
-    }
-
-    .product-card {
-      background: var(--surface);
+    .card {
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--padding);
+      margin-bottom: var(--padding);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
     }
 
-    .product-card:active {
-      background: rgba(0, 255, 136, 0.2);
-      color: var(--accent);
+    .input-group {
+      margin-bottom: var(--padding);
     }
 
-    .empty-state {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 40px 0;
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
     }
 
-    .cart-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding: 10px;
-    }
-
-    .cart-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      transition: border-color 0.2s;
-    }
-
-    .cart-item:active {
-      border-color: var(--accent);
-    }
-
-    .item-info {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .item-name {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text-main);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .item-qty {
-      font-size: 13px;
-      color: var(--text-muted);
-      background: var(--bg);
-      padding: 2px 8px;
-      border-radius: 10px;
-      flex-shrink: 0;
-    }
-
-    .delete-btn {
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: transparent;
-      color: var(--danger);
-      border-radius: 10px;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-
-    .delete-btn:active {
-      background: rgba(255, 69, 58, 0.15);
-    }
-
-    .empty-state {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 60px 20px;
-    }
-
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .empty-state-text {
-      font-size: 15px;
-      line-height: 1.5;
-    }
-
-    .list-footer {
-      padding-top: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-      color: var(--text-muted);
-      border-top: none;
-    }
-
-    .clear-all {
-      color: var(--danger);
-      background: none;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 8px;
-      transition: background 0.2s;
-    }
-
-    .clear-all:active {
-      background: rgba(255, 69, 58, 0.15);
-    }
-
-    .notes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-      padding: 10px;
-    }
-
-    .note-card {
-      background: var(--note-bg);
-      border: 1px solid var(--note-border);
-      border-radius: var(--radius);
-      padding: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      min-height: 150px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .note-card:active {
-      background: rgba(0, 255, 136, 0.1);
-      border-color: var(--accent);
-    }
-
-    .note-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: var(--accent);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .note-content {
-      font-size: 14px;
-      color: var(--text-main);
-      flex: 1;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      -webkit-box-orient: vertical;
-    }
-
-    .note-date {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 12px;
-      text-align: right;
-    }
-
-    .delete-note {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255, 69, 58, 0.2);
-      color: var(--danger);
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .note-card:hover .delete-note {
-      opacity: 1;
-    }
-
-    .delete-note:active {
-      background: rgba(255, 69, 58, 0.3);
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-    }
-
-    .modal.active {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .modal-content {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      width: 90%;
-      max-width: 500px;
-      max-height: 90vh;
-      padding: 20px;
-      position: relative;
-      transform: translateY(20px);
-      transition: transform 0.3s;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .modal.active .modal-content {
-      transform: translateY(0);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      flex-shrink: 0;
-    }
-
-    .modal-title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .close-modal {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 24px;
-      cursor: pointer;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-    }
-
-    .close-modal:active {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .note-form {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .note-form input,
-    .note-form textarea {
+    input, select, textarea {
       width: 100%;
       padding: 12px;
-      margin-bottom: 16px;
-      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      color: var(--text-main);
-      font-family: inherit;
-      font-size: 15px;
-      box-sizing: border-box;
+      background-color: var(--surface);
+      color: var(--text-primary);
+      font-size: 1rem;
     }
 
-    .note-form textarea {
-      min-height: 100px;
-      flex: 1;
-      resize: none;
-      overflow-y: hidden; /* Cambiado para mejor experiencia */
-      transition: height 0.2s ease; /* Transición suave */
-    }
-
-    .note-form input:focus,
-    .note-form textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: auto;
-      flex-shrink: 0;
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border-radius: var(--radius);
+    button {
+      background-color: var(--primary);
+      color: white;
       border: none;
-      font-weight: bold;
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 500;
       cursor: pointer;
-      font-size: 14px;
+      transition: background-color 0.2s;
     }
 
-    .btn-cancel {
-      background: var(--surface);
-      color: var(--text-muted);
+    button:hover {
+      background-color: var(--primary-light);
+    }
+
+    button.secondary {
+      background-color: var(--secondary);
+    }
+
+    button.accent {
+      background-color: var(--accent);
+    }
+
+    button.success {
+      background-color: var(--success);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: var(--padding);
+    }
+
+    .btn-group button {
+      flex: 1;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-online { background-color: var(--success); }
+    .status-offline { background-color: var(--error); }
+    .status-pending { background-color: var(--warning); }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: var(--padding);
+    }
+
+    .data-table th, .data-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table th {
+      background-color: var(--background);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .chart-container {
+      height: 200px;
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      padding: var(--padding);
+      margin: var(--padding) 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       border: 1px solid var(--border);
     }
 
-    .btn-cancel:active {
-      background: rgba(255, 255, 255, 0.1);
+    .chart-placeholder {
+      color: var(--text-secondary);
+      text-align: center;
     }
 
-    .btn-save {
-      background: var(--accent);
-      color: #000;
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--nav-height);
+      background-color: var(--surface);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      z-index: 100;
     }
 
-    .btn-save:active {
-      background: #00cc6a;
+    .nav-btn {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
     }
 
-    .btn-delete {
-      background: var(--danger);
-      color: #fff;
+    .nav-btn.active, .nav-btn:hover {
+      color: var(--primary);
     }
 
-    .btn-delete:active {
-      background: #e03e34;
+    .nav-icon {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 2px;
+      right: 8px;
+      background-color: var(--error);
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background-color: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--accent);
+      width: 65%; /* Ejemplo de progreso */
+      transition: width 0.3s ease;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary-light);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 12px;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--padding);
+    }
+
+    footer {
+        text-align: center;
+        padding: 10px;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        border-top: 1px solid var(--border);
+        margin-top: var(--padding);
+    }
+
+    @media (min-width: 768px) {
+        body {
+            padding-left: 250px;
+            padding-top: 0;
+            height: 100vh;
+            overflow: visible;
+        }
+
+        header {
+            left: 250px;
+            width: calc(100% - 250px);
+        }
+
+        main {
+            height: calc(100vh - var(--nav-height));
+        }
+
+        nav {
+            left: 0;
+            top: 0;
+            bottom: auto;
+            width: 250px;
+            height: 100%;
+            flex-direction: column;
+            align-items: stretch;
+            border-right: 1px solid var(--border);
+            padding-top: var(--header-height);
+        }
+
+        .nav-btn {
+            justify-content: flex-start;
+            padding-left: 20px;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            margin-bottom: 0;
+        }
+
+        .sidebar-open {
+            padding-left: 250px;
+        }
     }
   </style>
 </head>
 <body>
-  <div class="launcher" id="launcher">
-    <div class="loading-bar">
-      <div class="loading-progress" id="loading-progress"></div>
-    </div>
-  </div>
 
-  <div class="app-container" id="app-container">
-    <div class="panels-container" id="panels-container">
-      <div class="panel" id="explore-panel">
-        <div class="panel-header">
-          <h1 class="panel-title">Explorar</h1>
-        </div>
-        <div class="search-container">
-          <input type="text" class="search-input" id="search" placeholder="Buscar...">
-          <button class="add-btn" id="add-btn">AÑADIR</button>
-        </div>
-        <div class="scroll-container">
-          <div class="fade-overlay top-fade"></div>
-          <div class="scroll-area">
-            <div class="grid" id="products-grid"></div>
-          </div>
-          <div class="fade-overlay bottom-fade"></div>
-        </div>
-      </div>
+    <header>
+        <h1 class="header-title">AppWeb Dashboard</h1>
+    </header>
 
-      <div class="panel" id="list-panel">
-        <div class="panel-header">
-          <h1 class="panel-title">Lista</h1>
-        </div>
-        <div class="scroll-container">
-          <div class="fade-overlay top-fade"></div>
-          <div class="scroll-area">
-            <div class="cart-list" id="cart-list"></div>
-          </div>
-          <div class="fade-overlay bottom-fade"></div>
-        </div>
-        <div class="list-footer" id="list-footer" style="display: none;">
-          <span id="total-text"></span>
-          <button class="clear-all" id="clear-all">Vaciar</button>
-        </div>
-      </div>
+    <main>
+        <!-- Sección Inicio -->
+        <section id="inicio-section" class="section active">
+            <div class="user-card">
+                <div class="avatar">JD</div>
+                <div>
+                    <h2>Bienvenido, Juan Pérez</h2>
+                    <p class="status-indicator status-online"></p> En línea
+                </div>
+            </div>
 
-      <div class="panel" id="notes-panel">
-        <div class="panel-header">
-          <h1 class="panel-title">Notas</h1>
-        </div>
-        <div class="search-container">
-          <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas...">
-          <button class="add-btn" id="add-note-btn">NUEVA NOTA</button>
-        </div>
-        <div class="scroll-container">
-          <div class="fade-overlay top-fade"></div>
-          <div class="scroll-area">
-            <div class="notes-grid" id="notes-grid"></div>
-          </div>
-          <div class="fade-overlay bottom-fade"></div>
-        </div>
-      </div>
-    </div>
+            <div class="card">
+                <h3>Resumen Rápido</h3>
+                <p>Tareas Pendientes: <strong>5</strong></p>
+                <p>Mensajes Sin Leer: <strong>3</strong></p>
+                <p>Próxima Reunión: <strong>Mañana 10:00 AM</strong></p>
+            </div>
 
-    <div class="modal" id="note-modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title" id="modal-title">Nueva Nota</h2>
-          <button class="close-modal" id="close-modal">×</button>
-        </div>
-        <form class="note-form" id="note-form">
-          <input type="text" id="note-title" placeholder="Título de la nota" required>
-          <textarea id="note-content" placeholder="Contenido de la nota" required></textarea>
-          <div class="modal-actions">
-            <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
-            <button type="submit" class="btn btn-save">Guardar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+            <div class="card">
+                <h3>Progreso del Proyecto</h3>
+                <p>Desarrollo API</p>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: 65%;"></div>
+                </div>
+                <p>65% Completado</p>
+            </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const launcher = document.getElementById('launcher');
-      const loadingProgress = document.getElementById('loading-progress');
-      const appContainer = document.getElementById('app-container');
-      const panelsContainer = document.getElementById('panels-container');
-      
-      let progress = 0;
-      let stallPoints = [];
-      let speeds = [];
-      
-      for(let i = 0; i < 360; i++) {
-        speeds.push(Math.random() * 10 + 1);
-      }
-      
-      const stallCount = Math.floor(Math.random() * 5) + 3;
-      for(let i = 0; i < stallCount; i++) {
-        stallPoints.push(Math.random() * 90);
-      }
-      
-      let speedIndex = 0;
-      
-      function updateProgress() {
-        let isStalling = false;
-        for(let i = 0; i < stallPoints.length; i++) {
-          if (stallPoints[i] > 0 && Math.abs(progress - stallPoints[i]) < 1) {
-            stallPoints[i] = -stallPoints[i];
-            isStalling = true;
-            const stallDuration = Math.random() * 800 + 200;
-            
-            setTimeout(() => {
-              updateProgress();
-            }, stallDuration);
-            
-            return;
-          }
-        }
-        
-        const currentSpeed = speeds[speedIndex] || (Math.random() * 3 + 0.5);
-        speedIndex = (speedIndex + 1) % speeds.length;
-        
-        progress += currentSpeed * 0.3;
-        
-        if (progress >= 100) {
-          progress = 100;
-          loadingProgress.style.width = '100%';
-          
-          setTimeout(() => {
-            launcher.classList.add('hidden');
-            appContainer.classList.add('visible');
-            panelsContainer.style.transform = 'translateX(-100vw)';
-            initApp();
-          }, 300);
-          
-          return;
-        }
-        
-        loadingProgress.style.width = `${progress}%`;
-        requestAnimationFrame(updateProgress);
-      }
-      
-      requestAnimationFrame(updateProgress);
-    });
+            <div class="chart-container">
+                <div class="chart-placeholder">Gráfico de Actividad Semanal</div>
+            </div>
+        </section>
 
-    const PRODUCTS_STORAGE_KEY = 'superapp_products';
-    const CART_STORAGE_KEY = 'superapp_cart';
-    const NOTES_STORAGE_KEY = 'superapp_notes';
+        <!-- Sección Datos -->
+        <section id="datos-section" class="section">
+            <div class="card">
+                <h3>Gestión de Usuarios</h3>
+                <div class="input-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" placeholder="Ingrese nombre">
+                </div>
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Ingrese email">
+                </div>
+                <div class="input-group">
+                    <label for="rol">Rol</label>
+                    <select id="rol">
+                        <option value="">Seleccionar Rol</option>
+                        <option value="admin">Administrador</option>
+                        <option value="editor">Editor</option>
+                        <option value="lector">Lector</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button class="success">Agregar</button>
+                    <button class="secondary">Limpiar</button>
+                </div>
+            </div>
 
-    function loadProductsFromStorage() {
-      try {
-        const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing products from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
+            <div class="card">
+                <h3>Listado de Usuarios</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Ana García</td>
+                            <td>ana@example.com</td>
+                            <td>Admin</td>
+                            <td><span class="status-indicator status-online"></span> Activo</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Luis Fernández</td>
+                            <td>luis@example.com</td>
+                            <td>Editor</td>
+                            <td><span class="status-indicator status-offline"></span> Inactivo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-    function saveProductsToStorage(productsArray) {
-      try {
-        localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(productsArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving products to localStorage:", e);
-        return false;
-      }
-    }
+        <!-- Sección Configuración -->
+        <section id="configuracion-section" class="section">
+            <div class="card">
+                <h3>Configuración General</h3>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="notificaciones">
+                        <span>Activar Notificaciones</span>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label>
+                        Modo Oscuro
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="modo-oscuro">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+                <div class="input-group">
+                    <label for="idioma">Idioma</label>
+                    <select id="idioma">
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="fr">Francés</option>
+                    </select>
+                </div>
+                <button class="accent">Guardar Configuración</button>
+            </div>
 
-    function loadCartFromStorage() {
-      try {
-        const stored = localStorage.getItem(CART_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing cart from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
+            <div class="card">
+                <h3>Sobre la Aplicación</h3>
+                <p>Versión: 1.2.0</p>
+                <p>Última Actualización: 15 Jun 2026</p>
+                <p>Desarrollado con HTML5, CSS3 y JavaScript.</p>
+            </div>
+        </section>
+    </main>
 
-    function saveCartToStorage(cartArray) {
-      try {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving cart to localStorage:", e);
-        return false;
-      }
-    }
+    <nav>
+        <a href="#inicio" class="nav-btn active" data-target="inicio-section">
+            <span class="nav-icon">🏠</span>
+            Inicio
+        </a>
+        <a href="#datos" class="nav-btn" data-target="datos-section">
+            <span class="nav-icon">📊</span>
+            Datos
+            <span class="notification-badge">2</span>
+        </a>
+        <a href="#configuracion" class="nav-btn" data-target="configuracion-section">
+            <span class="nav-icon">⚙️</span>
+            Config
+        </a>
+    </nav>
 
-    function loadNotesFromStorage() {
-      try {
-        const stored = localStorage.getItem(NOTES_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing notes from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
+    <footer>
+        <p>&copy; 2026 AppWeb. Todos los derechos reservados.</p>
+    </footer>
 
-    function saveNotesToStorage(notesArray) {
-      try {
-        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving notes to localStorage:", e);
-        return false;
-      }
-    }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-btn');
+            const sections = document.querySelectorAll('.section');
 
-    const defaultProducts = [
-      "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural", "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja", "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva", "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate", "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas", "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo", "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido", "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg", "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello", "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar", "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate", "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles", "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquilares", "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno", "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado", "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano", "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña", "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti", "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24", "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva", "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfec", "Leche condensada entera", "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera", "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja", "Limbiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca", "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji", "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche", "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal", "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia", "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta", "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano", "Pack Cola Zero", "Pan blanco", "Pan bocadillo", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr", "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo", "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo", "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate", "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce", "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas", "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni", "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Pure de patatas", "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage", "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido", "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichon", "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas", "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés", "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo", "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet", "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa", "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas", "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
-    ];
+            // Función para cambiar de sección
+            function showSection(targetId) {
+                // Ocultar todas las secciones
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                // Mostrar la sección objetivo
+                document.getElementById(targetId).classList.add('active');
 
-    let products = [];
-    let cartItems = [];
-    let notes = [];
-    let currentPanel = 1;
-    let startX = 0;
-    let currentX = 0;
-    let isSwiping = false;
-    let currentNote = null;
-
-    async function initApp() {
-      loadAllDataFromStorage();
-      renderProducts();
-      renderCart();
-      renderNotes();
-      
-      window.addEventListener('storage', handleStorageChange);
-      window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
-      window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
-      window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
-      
-      setupSwipe();
-      
-      // Inicializar el ajuste de altura del textarea
-      initTextareaAutoResize();
-    }
-
-    function initTextareaAutoResize() {
-      const noteContent = document.getElementById('note-content');
-      
-      // Función para ajustar la altura del textarea
-      function adjustTextareaHeight() {
-        noteContent.style.height = 'auto';
-        noteContent.style.height = noteContent.scrollHeight + 'px';
-      }
-      
-      // Ajustar altura inicial
-      if (noteContent) {
-        adjustTextareaHeight();
-        
-        // Ajustar altura cuando el usuario escribe
-        noteContent.addEventListener('input', adjustTextareaHeight);
-        
-        // Ajustar altura cuando se pega contenido
-        noteContent.addEventListener('paste', function() {
-          setTimeout(adjustTextareaHeight, 10);
-        });
-        
-        // Ajustar altura cuando se abre el modal
-        const noteModal = document.getElementById('note-modal');
-        const observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-              if (noteModal.classList.contains('active')) {
-                setTimeout(adjustTextareaHeight, 50);
-              }
+                // Actualizar navegación activa
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-target') === targetId) {
+                        link.classList.add('active');
+                    }
+                });
             }
-          });
+
+            // Event listeners para los enlaces de navegación
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevenir comportamiento por defecto del enlace
+                    const targetId = this.getAttribute('data-target');
+                    showSection(targetId);
+                });
+            });
+
+            // Manejo del interruptor de modo oscuro
+            const darkModeToggle = document.getElementById('modo-oscuro');
+            darkModeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            });
+
+            // Simular carga de datos
+            console.log("AppWeb cargada correctamente.");
         });
-        
-        observer.observe(noteModal, { attributes: true });
-      }
-    }
-
-    function loadAllDataFromStorage() {
-      products = loadProductsFromStorage();
-      if (products.length === 0) {
-        products = defaultProducts.map(name => ({ name }));
-        saveProductsToStorage(products);
-      }
-
-      cartItems = loadCartFromStorage();
-      notes = loadNotesFromStorage();
-    }
-
-    function handleStorageChange(e) {
-      if (e.key === PRODUCTS_STORAGE_KEY) {
-        products = loadProductsFromStorage();
-        renderProducts(document.getElementById('search').value);
-      } else if (e.key === CART_STORAGE_KEY) {
-        cartItems = loadCartFromStorage();
-        renderCart();
-      } else if (e.key === NOTES_STORAGE_KEY) {
-        notes = loadNotesFromStorage();
-        renderNotes(document.getElementById('search-notes').value);
-      }
-    }
-
-    function handleCartUpdate() {
-      cartItems = loadCartFromStorage();
-      renderCart();
-    }
-
-    function handleProductsUpdate() {
-      products = loadProductsFromStorage();
-      renderProducts();
-    }
-
-    function handleNotesUpdate() {
-      notes = loadNotesFromStorage();
-      renderNotes();
-    }
-
-    function setupSwipe() {
-      const panelsContainer = document.getElementById('panels-container');
-      
-      panelsContainer.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isSwiping = true;
-      });
-      
-      panelsContainer.addEventListener('touchmove', (e) => {
-        if (!isSwiping) return;
-        currentX = e.touches[0].clientX;
-        const diff = currentX - startX;
-        
-        const translateX = -currentPanel * 100 + (diff / window.innerWidth) * 100;
-        panelsContainer.style.transform = `translateX(${translateX}vw)`;
-      });
-      
-      panelsContainer.addEventListener('touchend', () => {
-        if (!isSwiping) return;
-        isSwiping = false;
-        
-        const diff = currentX - startX;
-        const threshold = window.innerWidth / 4;
-        
-        if (diff > threshold && currentPanel > 0) {
-          switchPanel(currentPanel - 1);
-        } else if (diff < -threshold && currentPanel < 2) {
-          switchPanel(currentPanel + 1);
-        } else {
-          switchPanel(currentPanel);
-        }
-      });
-      
-      panelsContainer.addEventListener('mousedown', (e) => {
-        startX = e.clientX;
-        isSwiping = true;
-      });
-      
-      panelsContainer.addEventListener('mousemove', (e) => {
-        if (!isSwiping) return;
-        currentX = e.clientX;
-        const diff = currentX - startX;
-        
-        const translateX = -currentPanel * 100 + (diff / window.innerWidth) * 100;
-        panelsContainer.style.transform = `translateX(${translateX}vw)`;
-      });
-      
-      panelsContainer.addEventListener('mouseup', () => {
-        if (!isSwiping) return;
-        isSwiping = false;
-        
-        const diff = currentX - startX;
-        const threshold = window.innerWidth / 4;
-        
-        if (diff > threshold && currentPanel > 0) {
-          switchPanel(currentPanel - 1);
-        } else if (diff < -threshold && currentPanel < 2) {
-          switchPanel(currentPanel + 1);
-        } else {
-          switchPanel(currentPanel);
-        }
-      });
-      
-      panelsContainer.addEventListener('mouseleave', () => {
-        if (isSwiping) {
-          isSwiping = false;
-          switchPanel(currentPanel);
-        }
-      });
-    }
-
-    function switchPanel(index) {
-      if (index < 0 || index > 2) return;
-      
-      currentPanel = index;
-      const panelsContainer = document.getElementById('panels-container');
-      panelsContainer.style.transform = `translateX(-${index * 100}vw)`;
-    }
-
-    function renderProducts(query = "") {
-      const filtered = query
-        ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
-        : products;
-
-      const grid = document.getElementById('products-grid');
-      grid.innerHTML = '';
-
-      if (filtered.length === 0) {
-        grid.innerHTML = '<div class="empty-state">No hay productos</div>';
-        return;
-      }
-
-      filtered.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.textContent = item.name;
-        card.onclick = () => addToCart(item.name);
-        grid.appendChild(card);
-      });
-    }
-
-    async function addToCart(name) {
-      const existing = cartItems.find(item => item.name === name);
-      if (existing) {
-        existing.qty++;
-      } else {
-        cartItems.push({ name, qty: 1 });
-      }
-      saveCartToStorage(cartItems);
-      window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
-    }
-
-    document.getElementById('search').addEventListener('input', (e) => {
-      renderProducts(e.target.value);
-      const val = e.target.value;
-      const exists = products.some(p => p.name.toLowerCase() === val.toLowerCase());
-      document.getElementById('add-btn').style.display = val && !exists ? 'block' : 'none';
-    });
-
-    document.getElementById('add-btn').addEventListener('click', async () => {
-      const input = document.getElementById('search');
-      const name = input.value.trim();
-      if (name) {
-        const exists = products.some(p => p.name.toLowerCase() === name.toLowerCase());
-        if (!exists) {
-            products.push({ name });
-            saveProductsToStorage(products);
-            input.value = '';
-            document.getElementById('add-btn').style.display = 'none';
-            renderProducts();
-        } else {
-            alert("El producto ya existe.");
-        }
-      }
-    });
-
-    function renderCart() {
-      const list = document.getElementById('cart-list');
-      const footer = document.getElementById('list-footer');
-      list.innerHTML = '';
-
-      if (cartItems.length === 0) {
-        list.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">🛒</div>
-            <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
-          </div>
-        `;
-        footer.style.display = 'none';
-        return;
-      }
-
-      footer.style.display = 'flex';
-      const sorted = [...cartItems].sort((a, b) => a.name.localeCompare(b.name));
-
-      sorted.forEach((item, index) => {
-        if (!item.id) {
-          item.id = Date.now() + index;
-        }
-        
-        const el = document.createElement('div');
-        el.className = 'cart-item';
-        el.innerHTML = `
-          <div class="item-info">
-            <span class="item-name">${escapeHtml(item.name)}</span>
-            <span class="item-qty">×${item.qty}</span>
-          </div>
-          <button class="delete-btn" data-id="${item.id}" aria-label="Eliminar">×</button>
-        `;
-        list.appendChild(el);
-      });
-
-      list.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = parseInt(btn.dataset.id);
-          cartItems = cartItems.filter(i => i.id !== id);
-          saveCartToStorage(cartItems);
-          renderCart();
-          syncWithExplore();
-        });
-      });
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    async function deleteItem(id) {
-      cartItems = cartItems.filter(i => i.id !== id);
-      saveCartToStorage(cartItems);
-      renderCart();
-      syncWithExplore();
-    }
-
-    document.getElementById('clear-all').addEventListener('click', async () => {
-      if (cartItems.length === 0) return;
-      if (!confirm('¿Vaciar toda la lista?')) return;
-      cartItems = [];
-      saveCartToStorage(cartItems);
-      renderCart();
-      syncWithExplore();
-    });
-
-    function syncWithExplore() {
-      if (window.opener) {
-        window.opener.postMessage({ type: 'CART_UPDATED' }, '*');
-      }
-      window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
-    }
-
-    function renderNotes(query = "") {
-      const filtered = query
-        ? notes.filter(note => 
-            note.title.toLowerCase().includes(query.toLowerCase()) || 
-            note.content.toLowerCase().includes(query.toLowerCase())
-          )
-        : notes;
-
-      const grid = document.getElementById('notes-grid');
-      grid.innerHTML = '';
-
-      if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">📝</div>
-            <p class="empty-state-text">No hay notas.<br>¡Crea tu primera nota!</p>
-          </div>
-        `;
-        return;
-      }
-
-      filtered.forEach(note => {
-        const card = document.createElement('div');
-        card.className = 'note-card';
-        card.innerHTML = `
-          <button class="delete-note" data-id="${note.id}" aria-label="Eliminar">×</button>
-          <div class="note-title">${escapeHtml(note.title)}</div>
-          <div class="note-content">${escapeHtml(note.content)}</div>
-          <div class="note-date">${formatDate(note.date)}</div>
-        `;
-        
-        card.addEventListener('click', (e) => {
-          if (!e.target.classList.contains('delete-note')) {
-            openNoteModal(note);
-          }
-        });
-        
-        grid.appendChild(card);
-      });
-
-      document.querySelectorAll('.delete-note').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = parseInt(btn.dataset.id);
-          deleteNote(id);
-        });
-      });
-    }
-
-    function openNoteModal(note = null) {
-      currentNote = note;
-      const modal = document.getElementById('note-modal');
-      const titleInput = document.getElementById('note-title');
-      const contentInput = document.getElementById('note-content');
-      const modalTitle = document.getElementById('modal-title');
-      
-      if (note) {
-        modalTitle.textContent = 'Editar Nota';
-        titleInput.value = note.title;
-        contentInput.value = note.content;
-      } else {
-        modalTitle.textContent = 'Nueva Nota';
-        titleInput.value = '';
-        contentInput.value = '';
-      }
-      
-      modal.classList.add('active');
-      // Ajustar altura después de que el modal sea visible
-      setTimeout(() => {
-          adjustTextareaHeight(contentInput);
-          // Ocultar botón mientras el modal está abierto
-          document.getElementById('add-note-btn').style.display = 'none';
-      }, 10); // Pequeño delay para asegurar visibilidad
-    }
-
-    function closeNoteModal() {
-      document.getElementById('note-modal').classList.remove('active');
-      currentNote = null;
-      // Mostrar botón nuevamente al cerrar
-      document.getElementById('add-note-btn').style.display = 'block';
-    }
-
-    function saveNote(title, content) {
-      const now = new Date().toISOString();
-      
-      if (currentNote) {
-        currentNote.title = title;
-        currentNote.content = content;
-        currentNote.date = now;
-      } else {
-        const newNote = {
-          id: Date.now(),
-          title,
-          content,
-          date: now
-        };
-        notes.push(newNote);
-      }
-      
-      saveNotesToStorage(notes);
-      renderNotes(document.getElementById('search-notes').value);
-      closeNoteModal();
-      window.dispatchEvent(new CustomEvent('SuperAppNotesUpdated'));
-    }
-
-    function deleteNote(id) {
-      if (confirm('¿Eliminar esta nota?')) {
-        notes = notes.filter(note => note.id !== id);
-        saveNotesToStorage(notes);
-        renderNotes(document.getElementById('search-notes').value);
-        window.dispatchEvent(new CustomEvent('SuperAppNotesUpdated'));
-      }
-    }
-
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      });
-    }
-
-    // Función mejorada para ajustar la altura del textarea
-    function adjustTextareaHeight(textareaElement) {
-      textareaElement.style.height = 'auto';
-      textareaElement.style.height = textareaElement.scrollHeight + 'px';
-    }
-
-    // Event listener para ajustar altura al escribir
-    document.getElementById('note-content').addEventListener('input', function() {
-      adjustTextareaHeight(this);
-    });
-
-    // Event listener para ajustar altura al abrir el modal
-    document.getElementById('note-modal').addEventListener('transitionend', function(e) {
-      if (e.propertyName === 'opacity' && this.classList.contains('active')) {
-        const contentTextarea = document.getElementById('note-content');
-        adjustTextareaHeight(contentTextarea);
-      }
-    });
-
-    // Controlar visibilidad del botón basado en búsqueda y estado del modal
-    document.getElementById('search-notes').addEventListener('input', (e) => {
-      renderNotes(e.target.value);
-      const val = e.target.value;
-      const modalActive = document.getElementById('note-modal').classList.contains('active');
-      document.getElementById('add-note-btn').style.display = (val || modalActive) ? 'none' : 'block';
-    });
-
-    // Botón de "Nueva Nota"
-    document.getElementById('add-note-btn').addEventListener('click', () => {
-      openNoteModal(null);
-    });
-
-    // Cerrar modal
-    document.getElementById('close-modal').addEventListener('click', closeNoteModal);
-    document.getElementById('cancel-note').addEventListener('click', closeNoteModal);
-
-    // Guardar nota
-    document.getElementById('note-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = document.getElementById('note-title').value.trim();
-      const content = document.getElementById('note-content').value.trim();
-      
-      if (title && content) {
-        saveNote(title, content);
-      }
-    });
-
-    // Cerrar modal al hacer clic fuera
-    document.getElementById('note-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'note-modal') {
-        closeNoteModal();
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
