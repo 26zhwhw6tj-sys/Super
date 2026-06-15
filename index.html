@@ -432,14 +432,14 @@
       border-radius: var(--radius);
       width: 90%;
       max-width: 500px;
-      max-height: 90vh; /* Limitar altura máxima */
+      max-height: 90vh;
       padding: 20px;
       position: relative;
       transform: translateY(20px);
       transition: transform 0.3s;
       display: flex;
       flex-direction: column;
-      overflow: hidden; /* Ocultar desbordamiento */
+      overflow: hidden;
     }
 
     .modal.active .modal-content {
@@ -451,7 +451,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      flex-shrink: 0; /* Evitar que se contraiga */
+      flex-shrink: 0;
     }
 
     .modal-title {
@@ -480,8 +480,8 @@
     .note-form {
       display: flex;
       flex-direction: column;
-      flex: 1; /* Permitir que el formulario crezca */
-      overflow: hidden; /* Ocultar desbordamiento interno */
+      flex: 1;
+      overflow: hidden;
     }
 
     .note-form input,
@@ -495,14 +495,15 @@
       color: var(--text-main);
       font-family: inherit;
       font-size: 15px;
-      box-sizing: border-box; /* Incluir padding en el cálculo del tamaño */
+      box-sizing: border-box;
     }
 
     .note-form textarea {
-      min-height: 100px; /* Altura mínima */
-      flex: 1; /* Crecer para llenar el espacio disponible */
-      resize: none; /* Deshabilitar redimensionamiento manual */
-      overflow-y: auto; /* Barra de desplazamiento vertical si es necesario */
+      min-height: 100px;
+      flex: 1;
+      resize: none;
+      overflow-y: hidden; /* Cambiado para mejor experiencia */
+      transition: height 0.2s ease; /* Transición suave */
     }
 
     .note-form input:focus,
@@ -515,8 +516,8 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-top: auto; /* Empujar acciones hacia abajo */
-      flex-shrink: 0; /* Evitar que se contraiga */
+      margin-top: auto;
+      flex-shrink: 0;
     }
 
     .btn {
@@ -798,6 +799,46 @@
       window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
       
       setupSwipe();
+      
+      // Inicializar el ajuste de altura del textarea
+      initTextareaAutoResize();
+    }
+
+    function initTextareaAutoResize() {
+      const noteContent = document.getElementById('note-content');
+      
+      // Función para ajustar la altura del textarea
+      function adjustTextareaHeight() {
+        noteContent.style.height = 'auto';
+        noteContent.style.height = noteContent.scrollHeight + 'px';
+      }
+      
+      // Ajustar altura inicial
+      if (noteContent) {
+        adjustTextareaHeight();
+        
+        // Ajustar altura cuando el usuario escribe
+        noteContent.addEventListener('input', adjustTextareaHeight);
+        
+        // Ajustar altura cuando se pega contenido
+        noteContent.addEventListener('paste', function() {
+          setTimeout(adjustTextareaHeight, 10);
+        });
+        
+        // Ajustar altura cuando se abre el modal
+        const noteModal = document.getElementById('note-modal');
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+              if (noteModal.classList.contains('active')) {
+                setTimeout(adjustTextareaHeight, 50);
+              }
+            }
+          });
+        });
+        
+        observer.observe(noteModal, { attributes: true });
+      }
     }
 
     function loadAllDataFromStorage() {
@@ -1174,10 +1215,10 @@
       });
     }
 
-    // Función para ajustar la altura del textarea
+    // Función mejorada para ajustar la altura del textarea
     function adjustTextareaHeight(textareaElement) {
       textareaElement.style.height = 'auto';
-      textareaElement.style.height = Math.min(textareaElement.scrollHeight, 300) + 'px'; // Limitar altura máxima
+      textareaElement.style.height = textareaElement.scrollHeight + 'px';
     }
 
     // Event listener para ajustar altura al escribir
