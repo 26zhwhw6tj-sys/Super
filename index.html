@@ -147,7 +147,7 @@
       padding: 8px 16px;
       font-weight: bold;
       font-size: 12px;
-      /* Removed display: none; */
+      /* Eliminado display: none; */
     }
 
     .scroll-container {
@@ -432,13 +432,14 @@
       border-radius: var(--radius);
       width: 90%;
       max-width: 500px;
+      max-height: 90vh; /* Limitar altura máxima */
       padding: 20px;
       position: relative;
       transform: translateY(20px);
       transition: transform 0.3s;
-      /* Make modal content flexible */
       display: flex;
       flex-direction: column;
+      overflow: hidden; /* Ocultar desbordamiento */
     }
 
     .modal.active .modal-content {
@@ -450,6 +451,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
+      flex-shrink: 0; /* Evitar que se contraiga */
     }
 
     .modal-title {
@@ -478,7 +480,8 @@
     .note-form {
       display: flex;
       flex-direction: column;
-      flex: 1;
+      flex: 1; /* Permitir que el formulario crezca */
+      overflow: hidden; /* Ocultar desbordamiento interno */
     }
 
     .note-form input,
@@ -492,13 +495,14 @@
       color: var(--text-main);
       font-family: inherit;
       font-size: 15px;
+      box-sizing: border-box; /* Incluir padding en el cálculo del tamaño */
     }
 
     .note-form textarea {
-      /* Remove min-height and make it grow automatically */
-      min-height: 100px; /* Set a smaller minimum height */
-      flex: 1; /* Allow it to grow within the form */
-      resize: none; /* Disable manual resizing as it's handled automatically now */
+      min-height: 100px; /* Altura mínima */
+      flex: 1; /* Crecer para llenar el espacio disponible */
+      resize: none; /* Deshabilitar redimensionamiento manual */
+      overflow-y: auto; /* Barra de desplazamiento vertical si es necesario */
     }
 
     .note-form input:focus,
@@ -511,7 +515,8 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-top: auto; /* Push actions to the bottom */
+      margin-top: auto; /* Empujar acciones hacia abajo */
+      flex-shrink: 0; /* Evitar que se contraiga */
     }
 
     .btn {
@@ -1112,15 +1117,20 @@
         contentInput.value = '';
       }
       
-      // Adjust textarea height based on content
-      adjustTextareaHeight(contentInput);
-      
       modal.classList.add('active');
+      // Ajustar altura después de que el modal sea visible
+      setTimeout(() => {
+          adjustTextareaHeight(contentInput);
+          // Ocultar botón mientras el modal está abierto
+          document.getElementById('add-note-btn').style.display = 'none';
+      }, 10); // Pequeño delay para asegurar visibilidad
     }
 
     function closeNoteModal() {
       document.getElementById('note-modal').classList.remove('active');
       currentNote = null;
+      // Mostrar botón nuevamente al cerrar
+      document.getElementById('add-note-btn').style.display = 'block';
     }
 
     function saveNote(title, content) {
@@ -1164,18 +1174,18 @@
       });
     }
 
-    // Function to adjust textarea height dynamically
+    // Función para ajustar la altura del textarea
     function adjustTextareaHeight(textareaElement) {
-      textareaElement.style.height = 'auto'; // Reset height first
-      textareaElement.style.height = textareaElement.scrollHeight + 'px';
+      textareaElement.style.height = 'auto';
+      textareaElement.style.height = Math.min(textareaElement.scrollHeight, 300) + 'px'; // Limitar altura máxima
     }
 
-    // Event listener for textarea input to adjust height
+    // Event listener para ajustar altura al escribir
     document.getElementById('note-content').addEventListener('input', function() {
       adjustTextareaHeight(this);
     });
 
-    // Also adjust when the modal is opened (for editing)
+    // Event listener para ajustar altura al abrir el modal
     document.getElementById('note-modal').addEventListener('transitionend', function(e) {
       if (e.propertyName === 'opacity' && this.classList.contains('active')) {
         const contentTextarea = document.getElementById('note-content');
@@ -1183,31 +1193,24 @@
       }
     });
 
+    // Controlar visibilidad del botón basado en búsqueda y estado del modal
     document.getElementById('search-notes').addEventListener('input', (e) => {
       renderNotes(e.target.value);
-      // Show/hide button based on search input AND whether modal is active
       const val = e.target.value;
       const modalActive = document.getElementById('note-modal').classList.contains('active');
-      document.getElementById('add-note-btn').style.display = val || modalActive ? 'none' : 'block';
+      document.getElementById('add-note-btn').style.display = (val || modalActive) ? 'none' : 'block';
     });
 
-    // Hide button when modal opens, show when it closes
-    document.getElementById('note-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'note-modal') {
-         document.getElementById('add-note-btn').style.display = 'block';
-      }
+    // Botón de "Nueva Nota"
+    document.getElementById('add-note-btn').addEventListener('click', () => {
+      openNoteModal(null);
     });
 
-    document.getElementById('close-modal').addEventListener('click', function() {
-        document.getElementById('add-note-btn').style.display = 'block';
-        closeNoteModal();
-    });
+    // Cerrar modal
+    document.getElementById('close-modal').addEventListener('click', closeNoteModal);
+    document.getElementById('cancel-note').addEventListener('click', closeNoteModal);
 
-    document.getElementById('cancel-note').addEventListener('click', function() {
-        document.getElementById('add-note-btn').style.display = 'block';
-        closeNoteModal();
-    });
-
+    // Guardar nota
     document.getElementById('note-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const title = document.getElementById('note-title').value.trim();
@@ -1218,6 +1221,7 @@
       }
     });
 
+    // Cerrar modal al hacer clic fuera
     document.getElementById('note-modal').addEventListener('click', (e) => {
       if (e.target.id === 'note-modal') {
         closeNoteModal();
