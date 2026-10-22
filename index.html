@@ -14,9 +14,7 @@
       --border: #333;
       --danger: #ff453a;
       --radius: 16px;
-      --shadow: 0 4px 20px rgba(0,0,0,0.3);
       --note-bg: #1a1a1a;
-      --note-border: #333;
     }
 
     *, *::before, *::after {
@@ -24,6 +22,11 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input, textarea {
+      user-select: auto;
     }
 
     body {
@@ -31,24 +34,20 @@
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       overflow: hidden;
-      height: 100vh;
+      height: 100dvh;
       position: fixed;
       width: 100%;
     }
 
     .launcher {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: var(--bg);
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.4s ease;
     }
 
     .launcher.hidden {
@@ -62,28 +61,20 @@
       background: rgba(255, 255, 255, 0.2);
       border-radius: 2px;
       overflow: hidden;
-      position: relative;
     }
 
     .loading-progress {
-      position: absolute;
-      top: 0;
-      left: 0;
       height: 100%;
       width: 0%;
-      background: white;
-      border-radius: 2px;
+      background: #fff;
       transition: width 0.1s linear;
     }
 
     .app-container {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.4s ease;
     }
 
     .app-container.visible {
@@ -93,8 +84,9 @@
     .panels-container {
       display: flex;
       width: 300vw;
-      height: 100vh;
-      transition: transform 0.3s ease;
+      height: 100dvh;
+      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      will-change: transform;
     }
 
     .panel {
@@ -102,17 +94,11 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      padding: 20px;
-      padding-top: 50px;
-      padding-bottom: 80px;
-      position: relative;
+      padding: calc(env(safe-area-inset-top, 20px) + 20px) 20px calc(env(safe-area-inset-bottom, 20px) + 20px);
     }
 
     .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .panel-title {
@@ -122,7 +108,7 @@
 
     .search-container {
       position: relative;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .search-input {
@@ -135,6 +121,11 @@
       font-size: 16px;
     }
 
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
     .add-btn {
       position: absolute;
       right: 10px;
@@ -144,10 +135,14 @@
       color: #000;
       border: none;
       border-radius: 8px;
-      padding: 8px 16px;
+      padding: 8px 14px;
       font-weight: bold;
       font-size: 12px;
       display: none;
+    }
+
+    #add-note-btn {
+      display: block;
     }
 
     .scroll-container {
@@ -159,17 +154,18 @@
     .scroll-area {
       height: 100%;
       overflow-y: auto;
-      padding: 0;
-      margin: 0;
+      -webkit-overflow-scrolling: touch;
     }
 
-    .scroll-area::-webkit-scrollbar { display: none; }
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
 
     .fade-overlay {
       position: absolute;
       left: 0;
       width: 100%;
-      height: 30px;
+      height: 24px;
       z-index: 10;
       pointer-events: none;
     }
@@ -186,22 +182,21 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 12px;
-      padding: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 10px;
+      padding: 10px 4px;
     }
 
     .product-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 16px 10px;
       text-align: center;
       font-size: 14px;
       font-weight: 500;
       color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.15s, color 0.15s;
     }
 
     .product-card:active {
@@ -209,17 +204,11 @@
       color: var(--accent);
     }
 
-    .empty-state {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 40px 0;
-    }
-
     .cart-list {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding: 10px;
+      padding: 10px 4px;
     }
 
     .cart-item {
@@ -231,7 +220,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      transition: border-color 0.2s;
     }
 
     .cart-item:active {
@@ -249,7 +237,6 @@
     .item-name {
       font-size: 15px;
       font-weight: 500;
-      color: var(--text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -271,12 +258,10 @@
       background: transparent;
       color: var(--danger);
       border-radius: 10px;
-      font-size: 20px;
+      font-size: 22px;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
       flex-shrink: 0;
     }
 
@@ -288,6 +273,7 @@
       text-align: center;
       color: var(--text-muted);
       padding: 60px 20px;
+      grid-column: 1 / -1;
     }
 
     .empty-state-icon {
@@ -302,13 +288,10 @@
     }
 
     .list-footer {
-      padding-top: 16px;
-      display: flex;
-      justify-content: space-between;
+      padding-top: 12px;
+      display: none;
+      justify-content: flex-end;
       align-items: center;
-      font-size: 14px;
-      color: var(--text-muted);
-      border-top: none;
     }
 
     .clear-all {
@@ -316,109 +299,93 @@
       background: none;
       border: none;
       font-size: 14px;
-      cursor: pointer;
       padding: 8px 12px;
       border-radius: 8px;
-      transition: background 0.2s;
     }
 
     .clear-all:active {
       background: rgba(255, 69, 58, 0.15);
     }
 
+    /* Notas modulares y autoajustables */
     .notes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 10px 4px;
     }
 
     .note-card {
       background: var(--note-bg);
-      border: 1px solid var(--note-border);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
       position: relative;
-      min-height: 150px;
       display: flex;
       flex-direction: column;
+      height: auto;
     }
 
     .note-card:active {
-      background: rgba(0, 255, 136, 0.1);
+      background: rgba(0, 255, 136, 0.08);
       border-color: var(--accent);
     }
 
-    .note-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: var(--accent);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .note-body {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-main);
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding-right: 34px;
     }
 
-    .note-content {
-      font-size: 14px;
-      color: var(--text-main);
-      flex: 1;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      -webkit-box-orient: vertical;
+    .note-body::first-line {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--accent);
     }
 
     .note-date {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
-      margin-top: 12px;
+      margin-top: 10px;
       text-align: right;
     }
 
     .delete-note {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 12px;
+      right: 12px;
       background: rgba(255, 69, 58, 0.2);
       color: var(--danger);
       border: none;
       border-radius: 50%;
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .note-card:hover .delete-note {
-      opacity: 1;
+      font-size: 16px;
     }
 
     .delete-note:active {
-      background: rgba(255, 69, 58, 0.3);
+      background: rgba(255, 69, 58, 0.4);
     }
 
+    /* Modal de nota unificado con scroll para textos largos */
     .modal {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s;
+      transition: opacity 0.25s;
+      padding: 20px;
     }
 
     .modal.active {
@@ -430,68 +397,46 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      width: 90%;
-      max-width: 500px;
-      padding: 20px;
-      position: relative;
+      width: 100%;
+      max-height: 85dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
       transform: translateY(20px);
-      transition: transform 0.3s;
+      transition: transform 0.25s;
     }
 
     .modal.active .modal-content {
       transform: translateY(0);
     }
 
-    .modal-header {
+    .note-form {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
     }
 
-    .modal-title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .close-modal {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 24px;
-      cursor: pointer;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-    }
-
-    .close-modal:active {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .note-form input,
-    .note-form textarea {
+    .unified-note-input {
       width: 100%;
-      padding: 12px;
-      margin-bottom: 16px;
+      min-height: 64px;
+      max-height: 55dvh;
+      padding: 14px;
+      margin-bottom: 14px;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       color: var(--text-main);
       font-family: inherit;
-      font-size: 15px;
+      font-size: 16px;
+      line-height: 1.5;
+      resize: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
-    .note-form textarea {
-      min-height: 150px;
-      resize: vertical;
-    }
-
-    .note-form input:focus,
-    .note-form textarea:focus {
+    .unified-note-input:focus {
       outline: none;
       border-color: var(--accent);
     }
@@ -500,6 +445,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
+      flex-shrink: 0;
     }
 
     .btn {
@@ -507,7 +453,6 @@
       border-radius: var(--radius);
       border: none;
       font-weight: bold;
-      cursor: pointer;
       font-size: 14px;
     }
 
@@ -517,26 +462,9 @@
       border: 1px solid var(--border);
     }
 
-    .btn-cancel:active {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
     .btn-save {
       background: var(--accent);
       color: #000;
-    }
-
-    .btn-save:active {
-      background: #00cc6a;
-    }
-
-    .btn-delete {
-      background: var(--danger);
-      color: #fff;
-    }
-
-    .btn-delete:active {
-      background: #e03e34;
     }
   </style>
 </head>
@@ -549,7 +477,8 @@
 
   <div class="app-container" id="app-container">
     <div class="panels-container" id="panels-container">
-      <div class="panel" id="explore-panel">
+      <!-- Panel Explorar -->
+      <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Explorar</h1>
         </div>
@@ -566,7 +495,8 @@
         </div>
       </div>
 
-      <div class="panel" id="list-panel">
+      <!-- Panel Lista -->
+      <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Lista</h1>
         </div>
@@ -577,13 +507,13 @@
           </div>
           <div class="fade-overlay bottom-fade"></div>
         </div>
-        <div class="list-footer" id="list-footer" style="display: none;">
-          <span id="total-text"></span>
+        <div class="list-footer" id="list-footer">
           <button class="clear-all" id="clear-all">Vaciar</button>
         </div>
       </div>
 
-      <div class="panel" id="notes-panel">
+      <!-- Panel Notas -->
+      <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Notas</h1>
         </div>
@@ -601,15 +531,17 @@
       </div>
     </div>
 
+    <!-- Modal Nota Unificada -->
     <div class="modal" id="note-modal">
       <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title" id="modal-title">Nueva Nota</h2>
-          <button class="close-modal" id="close-modal">×</button>
-        </div>
         <form class="note-form" id="note-form">
-          <input type="text" id="note-title" placeholder="Título de la nota" required>
-          <textarea id="note-content" placeholder="Contenido de la nota" required></textarea>
+          <textarea
+            id="note-text"
+            class="unified-note-input"
+            placeholder="Escribe tu nota aquí..."
+            rows="1"
+            required
+          ></textarea>
           <div class="modal-actions">
             <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
             <button type="submit" class="btn btn-save">Guardar</button>
@@ -620,356 +552,219 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const launcher = document.getElementById('launcher');
-      const loadingProgress = document.getElementById('loading-progress');
-      const appContainer = document.getElementById('app-container');
-      const panelsContainer = document.getElementById('panels-container');
-      
-      let progress = 0;
-      let stallPoints = [];
-      let speeds = [];
-      
-      for(let i = 0; i < 360; i++) {
-        speeds.push(Math.random() * 10 + 1);
-      }
-      
-      const stallCount = Math.floor(Math.random() * 5) + 3;
-      for(let i = 0; i < stallCount; i++) {
-        stallPoints.push(Math.random() * 90);
-      }
-      
-      let speedIndex = 0;
-      
-      function updateProgress() {
-        let isStalling = false;
-        for(let i = 0; i < stallPoints.length; i++) {
-          if (stallPoints[i] > 0 && Math.abs(progress - stallPoints[i]) < 1) {
-            stallPoints[i] = -stallPoints[i];
-            isStalling = true;
-            const stallDuration = Math.random() * 800 + 200;
-            
-            setTimeout(() => {
-              updateProgress();
-            }, stallDuration);
-            
-            return;
-          }
-        }
-        
-        const currentSpeed = speeds[speedIndex] || (Math.random() * 3 + 0.5);
-        speedIndex = (speedIndex + 1) % speeds.length;
-        
-        progress += currentSpeed * 0.3;
-        
-        if (progress >= 100) {
-          progress = 100;
-          loadingProgress.style.width = '100%';
-          
-          setTimeout(() => {
-            launcher.classList.add('hidden');
-            appContainer.classList.add('visible');
-            panelsContainer.style.transform = 'translateX(-100vw)';
-            initApp();
-          }, 300);
-          
-          return;
-        }
-        
-        loadingProgress.style.width = `${progress}%`;
-        requestAnimationFrame(updateProgress);
-      }
-      
-      requestAnimationFrame(updateProgress);
-    });
-
-    const PRODUCTS_STORAGE_KEY = 'superapp_products';
-    const CART_STORAGE_KEY = 'superapp_cart';
-    const NOTES_STORAGE_KEY = 'superapp_notes';
-
-    function loadProductsFromStorage() {
-      try {
-        const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing products from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
-
-    function saveProductsToStorage(productsArray) {
-      try {
-        localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(productsArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving products to localStorage:", e);
-        return false;
-      }
-    }
-
-    function loadCartFromStorage() {
-      try {
-        const stored = localStorage.getItem(CART_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing cart from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
-
-    function saveCartToStorage(cartArray) {
-      try {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving cart to localStorage:", e);
-        return false;
-      }
-    }
-
-    function loadNotesFromStorage() {
-      try {
-        const stored = localStorage.getItem(NOTES_STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored);
-        }
-      } catch (e) {
-        console.error("Error parsing notes from localStorage:", e);
-        return [];
-      }
-      return [];
-    }
-
-    function saveNotesToStorage(notesArray) {
-      try {
-        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notesArray));
-        return true;
-      } catch (e) {
-        console.error("Error saving notes to localStorage:", e);
-        return false;
-      }
-    }
+    const KEYS = {
+      PRODUCTS: 'superapp_products',
+      CART: 'superapp_cart',
+      NOTES: 'superapp_notes'
+    };
 
     const defaultProducts = [
       "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural", "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja", "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva", "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate", "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas", "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo", "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido", "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg", "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello", "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar", "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate", "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles", "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquilares", "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno", "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado", "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano", "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña", "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti", "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24", "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva", "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfec", "Leche condensada entera", "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera", "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja", "Limbiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca", "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji", "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche", "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal", "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia", "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta", "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano", "Pack Cola Zero", "Pan blanco", "Pan bocadillo", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr", "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo", "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo", "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate", "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce", "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas", "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni", "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Pure de patatas", "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage", "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido", "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichon", "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas", "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés", "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo", "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet", "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa", "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas", "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
     ];
 
+    const $ = id => document.getElementById(id);
+    const panelsContainer = $('panels-container');
+    const searchInput = $('search');
+    const addBtn = $('add-btn');
+    const searchNotesInput = $('search-notes');
+    const addNoteBtn = $('add-note-btn');
+    const noteModal = $('note-modal');
+    const noteTextInput = $('note-text');
+
     let products = [];
     let cartItems = [];
     let notes = [];
     let currentPanel = 1;
-    let startX = 0;
-    let currentX = 0;
-    let isSwiping = false;
     let currentNote = null;
 
-    async function initApp() {
-      loadAllDataFromStorage();
-      renderProducts();
-      renderCart();
-      renderNotes();
-      
-      window.addEventListener('storage', handleStorageChange);
-      window.addEventListener('SuperAppCartUpdated', handleCartUpdate);
-      window.addEventListener('SuperAppProductsUpdated', handleProductsUpdate);
-      window.addEventListener('SuperAppNotesUpdated', handleNotesUpdate);
-      
-      setupSwipe();
+    const getStore = (key) => {
+      try {
+        return JSON.parse(localStorage.getItem(key)) || [];
+      } catch {
+        return [];
+      }
+    };
+
+    const setStore = (key, data) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    const escapeHtml = (text) => {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    };
+
+    // Autoajuste dinámico que mantiene la posición del scroll en notas largas
+    function autoResizeTextarea() {
+      const prevScroll = noteTextInput.scrollTop;
+      noteTextInput.style.height = 'auto';
+      noteTextInput.style.height = noteTextInput.scrollHeight + 'px';
+      noteTextInput.scrollTop = prevScroll;
     }
 
-    function loadAllDataFromStorage() {
-      products = loadProductsFromStorage();
-      if (products.length === 0) {
+    noteTextInput.addEventListener('input', autoResizeTextarea);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const loadingProgress = $('loading-progress');
+      let progress = 0;
+
+      function updateProgress() {
+        progress += Math.random() * 8 + 2;
+        if (progress >= 100) {
+          loadingProgress.style.width = '100%';
+          setTimeout(() => {
+            $('launcher').classList.add('hidden');
+            $('app-container').classList.add('visible');
+            panelsContainer.style.transform = 'translateX(-100vw)';
+            initApp();
+          }, 250);
+          return;
+        }
+        loadingProgress.style.width = `${progress}%`;
+        requestAnimationFrame(updateProgress);
+      }
+      requestAnimationFrame(updateProgress);
+    });
+
+    function initApp() {
+      products = getStore(KEYS.PRODUCTS);
+      if (!products.length) {
         products = defaultProducts.map(name => ({ name }));
-        saveProductsToStorage(products);
+        setStore(KEYS.PRODUCTS, products);
       }
+      cartItems = getStore(KEYS.CART);
 
-      cartItems = loadCartFromStorage();
-      notes = loadNotesFromStorage();
-    }
+      notes = getStore(KEYS.NOTES).map(n => ({
+        id: n.id,
+        text: n.text ?? [n.title, n.content].filter(Boolean).join('\n'),
+        date: n.date
+      }));
 
-    function handleStorageChange(e) {
-      if (e.key === PRODUCTS_STORAGE_KEY) {
-        products = loadProductsFromStorage();
-        renderProducts(document.getElementById('search').value);
-      } else if (e.key === CART_STORAGE_KEY) {
-        cartItems = loadCartFromStorage();
-        renderCart();
-      } else if (e.key === NOTES_STORAGE_KEY) {
-        notes = loadNotesFromStorage();
-        renderNotes(document.getElementById('search-notes').value);
-      }
-    }
-
-    function handleCartUpdate() {
-      cartItems = loadCartFromStorage();
-      renderCart();
-    }
-
-    function handleProductsUpdate() {
-      products = loadProductsFromStorage();
       renderProducts();
-    }
-
-    function handleNotesUpdate() {
-      notes = loadNotesFromStorage();
+      renderCart();
       renderNotes();
+      setupTouchSwipe();
     }
 
-    function setupSwipe() {
-      const panelsContainer = document.getElementById('panels-container');
-      
+    function setupTouchSwipe() {
+      let startX = 0;
+      let startY = 0;
+      let currentX = 0;
+      let isDragging = false;
+      let isHorizontal = null;
+
       panelsContainer.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isSwiping = true;
-      });
-      
+        if (noteModal.classList.contains('active')) return;
+        startX = currentX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isDragging = true;
+        isHorizontal = null;
+        panelsContainer.style.transition = 'none';
+      }, { passive: true });
+
       panelsContainer.addEventListener('touchmove', (e) => {
-        if (!isSwiping) return;
-        currentX = e.touches[0].clientX;
-        const diff = currentX - startX;
-        
-        const translateX = -currentPanel * 100 + (diff / window.innerWidth) * 100;
+        if (!isDragging) return;
+        const x = e.touches[0].clientX;
+        const y = e.touches[0].clientY;
+        const diffX = x - startX;
+        const diffY = y - startY;
+
+        if (isHorizontal === null) {
+          if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
+            isHorizontal = Math.abs(diffX) > Math.abs(diffY);
+          }
+        }
+
+        if (!isHorizontal) return;
+        currentX = x;
+
+        if ((currentPanel === 0 && diffX > 0) || (currentPanel === 2 && diffX < 0)) {
+          return;
+        }
+
+        const translateX = -currentPanel * 100 + (diffX / window.innerWidth) * 100;
         panelsContainer.style.transform = `translateX(${translateX}vw)`;
-      });
-      
+      }, { passive: true });
+
       panelsContainer.addEventListener('touchend', () => {
-        if (!isSwiping) return;
-        isSwiping = false;
-        
-        const diff = currentX - startX;
-        const threshold = window.innerWidth / 4;
-        
-        if (diff > threshold && currentPanel > 0) {
-          switchPanel(currentPanel - 1);
-        } else if (diff < -threshold && currentPanel < 2) {
-          switchPanel(currentPanel + 1);
-        } else {
-          switchPanel(currentPanel);
+        if (!isDragging) return;
+        isDragging = false;
+        panelsContainer.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+
+        if (isHorizontal) {
+          const diffX = currentX - startX;
+          const threshold = window.innerWidth / 4;
+          if (diffX > threshold && currentPanel > 0) currentPanel--;
+          else if (diffX < -threshold && currentPanel < 2) currentPanel++;
         }
-      });
-      
-      panelsContainer.addEventListener('mousedown', (e) => {
-        startX = e.clientX;
-        isSwiping = true;
-      });
-      
-      panelsContainer.addEventListener('mousemove', (e) => {
-        if (!isSwiping) return;
-        currentX = e.clientX;
-        const diff = currentX - startX;
-        
-        const translateX = -currentPanel * 100 + (diff / window.innerWidth) * 100;
-        panelsContainer.style.transform = `translateX(${translateX}vw)`;
-      });
-      
-      panelsContainer.addEventListener('mouseup', () => {
-        if (!isSwiping) return;
-        isSwiping = false;
-        
-        const diff = currentX - startX;
-        const threshold = window.innerWidth / 4;
-        
-        if (diff > threshold && currentPanel > 0) {
-          switchPanel(currentPanel - 1);
-        } else if (diff < -threshold && currentPanel < 2) {
-          switchPanel(currentPanel + 1);
-        } else {
-          switchPanel(currentPanel);
-        }
-      });
-      
-      panelsContainer.addEventListener('mouseleave', () => {
-        if (isSwiping) {
-          isSwiping = false;
-          switchPanel(currentPanel);
-        }
+
+        panelsContainer.style.transform = `translateX(-${currentPanel * 100}vw)`;
       });
     }
 
-    function switchPanel(index) {
-      if (index < 0 || index > 2) return;
-      
-      currentPanel = index;
-      const panelsContainer = document.getElementById('panels-container');
-      panelsContainer.style.transform = `translateX(-${index * 100}vw)`;
-    }
-
+    // Productos
     function renderProducts(query = "") {
-      const filtered = query
-        ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
-        : products;
+      const q = query.toLowerCase();
+      const filtered = q ? products.filter(p => p.name.toLowerCase().includes(q)) : products;
+      const grid = $('products-grid');
 
-      const grid = document.getElementById('products-grid');
-      grid.innerHTML = '';
-
-      if (filtered.length === 0) {
+      if (!filtered.length) {
         grid.innerHTML = '<div class="empty-state">No hay productos</div>';
         return;
       }
 
-      filtered.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.textContent = item.name;
-        card.onclick = () => addToCart(item.name);
-        grid.appendChild(card);
-      });
+      grid.innerHTML = filtered
+        .map(p => `<div class="product-card" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>`)
+        .join('');
     }
 
-    async function addToCart(name) {
+    $('products-grid').addEventListener('click', (e) => {
+      const card = e.target.closest('.product-card');
+      if (!card) return;
+      const name = card.dataset.name;
       const existing = cartItems.find(item => item.name === name);
       if (existing) {
         existing.qty++;
       } else {
-        cartItems.push({ name, qty: 1 });
+        cartItems.push({ id: Date.now(), name, qty: 1 });
       }
-      saveCartToStorage(cartItems);
-      window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
-    }
+      setStore(KEYS.CART, cartItems);
+      renderCart();
+    });
 
-    document.getElementById('search').addEventListener('input', (e) => {
-      renderProducts(e.target.value);
-      const val = e.target.value;
+    searchInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      renderProducts(val);
       const exists = products.some(p => p.name.toLowerCase() === val.toLowerCase());
-      document.getElementById('add-btn').style.display = val && !exists ? 'block' : 'none';
+      addBtn.style.display = val && !exists ? 'block' : 'none';
     });
 
-    document.getElementById('add-btn').addEventListener('click', async () => {
-      const input = document.getElementById('search');
-      const name = input.value.trim();
-      if (name) {
-        const exists = products.some(p => p.name.toLowerCase() === name.toLowerCase());
-        if (!exists) {
-            products.push({ name });
-            saveProductsToStorage(products);
-            input.value = '';
-            document.getElementById('add-btn').style.display = 'none';
-            renderProducts();
-        } else {
-            alert("El producto ya existe.");
-        }
-      }
+    addBtn.addEventListener('click', () => {
+      const name = searchInput.value.trim();
+      if (!name) return;
+      products.push({ name });
+      setStore(KEYS.PRODUCTS, products);
+      searchInput.value = '';
+      addBtn.style.display = 'none';
+      renderProducts();
     });
 
+    // Lista de compra
     function renderCart() {
-      const list = document.getElementById('cart-list');
-      const footer = document.getElementById('list-footer');
-      list.innerHTML = '';
+      const list = $('cart-list');
+      const footer = $('list-footer');
 
-      if (cartItems.length === 0) {
+      if (!cartItems.length) {
         list.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">🛒</div>
             <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
-          </div>
-        `;
+          </div>`;
         footer.style.display = 'none';
         return;
       }
@@ -977,205 +772,131 @@
       footer.style.display = 'flex';
       const sorted = [...cartItems].sort((a, b) => a.name.localeCompare(b.name));
 
-      sorted.forEach((item, index) => {
-        if (!item.id) {
-          item.id = Date.now() + index;
-        }
-        
-        const el = document.createElement('div');
-        el.className = 'cart-item';
-        el.innerHTML = `
-          <div class="item-info">
-            <span class="item-name">${escapeHtml(item.name)}</span>
-            <span class="item-qty">×${item.qty}</span>
-          </div>
-          <button class="delete-btn" data-id="${item.id}" aria-label="Eliminar">×</button>
-        `;
-        list.appendChild(el);
-      });
-
-      list.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = parseInt(btn.dataset.id);
-          cartItems = cartItems.filter(i => i.id !== id);
-          saveCartToStorage(cartItems);
-          renderCart();
-          syncWithExplore();
-        });
-      });
+      list.innerHTML = sorted.map((item, idx) => {
+        if (!item.id) item.id = Date.now() + idx;
+        return `
+          <div class="cart-item">
+            <div class="item-info">
+              <span class="item-name">${escapeHtml(item.name)}</span>
+              <span class="item-qty">×${item.qty}</span>
+            </div>
+            <button class="delete-btn" data-id="${item.id}" aria-label="Eliminar">×</button>
+          </div>`;
+      }).join('');
     }
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    async function deleteItem(id) {
+    $('cart-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('.delete-btn');
+      if (!btn) return;
+      const id = Number(btn.dataset.id);
       cartItems = cartItems.filter(i => i.id !== id);
-      saveCartToStorage(cartItems);
+      setStore(KEYS.CART, cartItems);
       renderCart();
-      syncWithExplore();
-    }
-
-    document.getElementById('clear-all').addEventListener('click', async () => {
-      if (cartItems.length === 0) return;
-      if (!confirm('¿Vaciar toda la lista?')) return;
-      cartItems = [];
-      saveCartToStorage(cartItems);
-      renderCart();
-      syncWithExplore();
     });
 
-    function syncWithExplore() {
-      if (window.opener) {
-        window.opener.postMessage({ type: 'CART_UPDATED' }, '*');
+    $('clear-all').addEventListener('click', () => {
+      if (cartItems.length && confirm('¿Vaciar toda la lista?')) {
+        cartItems = [];
+        setStore(KEYS.CART, cartItems);
+        renderCart();
       }
-      window.dispatchEvent(new CustomEvent('SuperAppCartUpdated'));
-    }
+    });
 
+    // Notas unificadas
     function renderNotes(query = "") {
-      const filtered = query
-        ? notes.filter(note => 
-            note.title.toLowerCase().includes(query.toLowerCase()) || 
-            note.content.toLowerCase().includes(query.toLowerCase())
-          )
+      const q = query.toLowerCase();
+      const filtered = q
+        ? notes.filter(n => n.text.toLowerCase().includes(q))
         : notes;
+      const grid = $('notes-grid');
 
-      const grid = document.getElementById('notes-grid');
-      grid.innerHTML = '';
-
-      if (filtered.length === 0) {
+      if (!filtered.length) {
         grid.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">📝</div>
             <p class="empty-state-text">No hay notas.<br>¡Crea tu primera nota!</p>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
-      filtered.forEach(note => {
-        const card = document.createElement('div');
-        card.className = 'note-card';
-        card.innerHTML = `
-          <button class="delete-note" data-id="${note.id}" aria-label="Eliminar">×</button>
-          <div class="note-title">${escapeHtml(note.title)}</div>
-          <div class="note-content">${escapeHtml(note.content)}</div>
-          <div class="note-date">${formatDate(note.date)}</div>
-        `;
-        
-        card.addEventListener('click', (e) => {
-          if (!e.target.classList.contains('delete-note')) {
-            openNoteModal(note);
-          }
+      grid.innerHTML = filtered.map(note => {
+        const dateStr = new Date(note.date).toLocaleDateString('es-ES', {
+          day: '2-digit', month: 'short', year: 'numeric'
         });
-        
-        grid.appendChild(card);
-      });
-
-      document.querySelectorAll('.delete-note').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = parseInt(btn.dataset.id);
-          deleteNote(id);
-        });
-      });
+        return `
+          <div class="note-card" data-id="${note.id}">
+            <button class="delete-note" data-delete-id="${note.id}" aria-label="Eliminar">×</button>
+            <div class="note-body">${escapeHtml(note.text)}</div>
+            <div class="note-date">${dateStr}</div>
+          </div>`;
+      }).join('');
     }
+
+    $('notes-grid').addEventListener('click', (e) => {
+      const delBtn = e.target.closest('.delete-note');
+      if (delBtn) {
+        const id = Number(delBtn.dataset.deleteId);
+        if (confirm('¿Eliminar esta nota?')) {
+          notes = notes.filter(n => n.id !== id);
+          setStore(KEYS.NOTES, notes);
+          renderNotes(searchNotesInput.value);
+        }
+        return;
+      }
+
+      const card = e.target.closest('.note-card');
+      if (card) {
+        const note = notes.find(n => n.id === Number(card.dataset.id));
+        if (note) openNoteModal(note);
+      }
+    });
 
     function openNoteModal(note = null) {
       currentNote = note;
-      const modal = document.getElementById('note-modal');
-      const titleInput = document.getElementById('note-title');
-      const contentInput = document.getElementById('note-content');
-      const modalTitle = document.getElementById('modal-title');
-      
-      if (note) {
-        modalTitle.textContent = 'Editar Nota';
-        titleInput.value = note.title;
-        contentInput.value = note.content;
-      } else {
-        modalTitle.textContent = 'Nueva Nota';
-        titleInput.value = '';
-        contentInput.value = '';
-      }
-      
-      modal.classList.add('active');
-    }
-
-    function closeNoteModal() {
-      document.getElementById('note-modal').classList.remove('active');
-      currentNote = null;
-    }
-
-    function saveNote(title, content) {
-      const now = new Date().toISOString();
-      
-      if (currentNote) {
-        currentNote.title = title;
-        currentNote.content = content;
-        currentNote.date = now;
-      } else {
-        const newNote = {
-          id: Date.now(),
-          title,
-          content,
-          date: now
-        };
-        notes.push(newNote);
-      }
-      
-      saveNotesToStorage(notes);
-      renderNotes(document.getElementById('search-notes').value);
-      closeNoteModal();
-      window.dispatchEvent(new CustomEvent('SuperAppNotesUpdated'));
-    }
-
-    function deleteNote(id) {
-      if (confirm('¿Eliminar esta nota?')) {
-        notes = notes.filter(note => note.id !== id);
-        saveNotesToStorage(notes);
-        renderNotes(document.getElementById('search-notes').value);
-        window.dispatchEvent(new CustomEvent('SuperAppNotesUpdated'));
-      }
-    }
-
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
+      noteTextInput.value = note ? note.text : '';
+      noteModal.classList.add('active');
+      requestAnimationFrame(() => {
+        autoResizeTextarea();
+        noteTextInput.scrollTop = 0;
+        noteTextInput.focus();
       });
     }
 
-    document.getElementById('search-notes').addEventListener('input', (e) => {
-      renderNotes(e.target.value);
+    function closeNoteModal() {
+      noteModal.classList.remove('active');
+      noteTextInput.blur();
+      currentNote = null;
+    }
+
+    searchNotesInput.addEventListener('input', (e) => {
       const val = e.target.value;
-      document.getElementById('add-note-btn').style.display = val ? 'none' : 'block';
+      renderNotes(val);
+      addNoteBtn.style.display = val ? 'none' : 'block';
     });
 
-    document.getElementById('add-note-btn').addEventListener('click', () => {
-      openNoteModal();
+    addNoteBtn.addEventListener('click', () => openNoteModal());
+    $('cancel-note').addEventListener('click', closeNoteModal);
+
+    noteModal.addEventListener('click', (e) => {
+      if (e.target === noteModal) closeNoteModal();
     });
 
-    document.getElementById('close-modal').addEventListener('click', closeNoteModal);
-    document.getElementById('cancel-note').addEventListener('click', closeNoteModal);
-
-    document.getElementById('note-form').addEventListener('submit', (e) => {
+    $('note-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      const title = document.getElementById('note-title').value.trim();
-      const content = document.getElementById('note-content').value.trim();
-      
-      if (title && content) {
-        saveNote(title, content);
-      }
-    });
+      const text = noteTextInput.value.trim();
+      if (!text) return;
 
-    document.getElementById('note-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'note-modal') {
-        closeNoteModal();
+      const date = new Date().toISOString();
+      if (currentNote) {
+        currentNote.text = text;
+        currentNote.date = date;
+      } else {
+        notes.push({ id: Date.now(), text, date });
       }
+
+      setStore(KEYS.NOTES, notes);
+      renderNotes(searchNotesInput.value);
+      closeNoteModal();
     });
   </script>
 </body>
