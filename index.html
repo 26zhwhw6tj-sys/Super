@@ -52,7 +52,7 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      transition: opacity 0.35s ease;
+      transition: opacity 0.3s ease;
     }
 
     .launcher.hidden {
@@ -79,7 +79,7 @@
       position: absolute;
       inset: 0;
       opacity: 0;
-      transition: opacity 0.35s ease;
+      transition: opacity 0.3s ease;
     }
 
     .app-container.visible {
@@ -94,6 +94,10 @@
       will-change: transform;
       backface-visibility: hidden;
       transform: translate3d(-100vw, 0, 0);
+    }
+
+    .panels-container.is-swiping {
+      pointer-events: none;
     }
 
     .panel {
@@ -158,6 +162,7 @@
       flex: 1;
       position: relative;
       overflow: hidden;
+      contain: content;
     }
 
     .scroll-area {
@@ -276,6 +281,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      cursor: pointer;
     }
 
     .delete-btn:active {
@@ -313,6 +319,7 @@
       font-size: 14px;
       padding: 8px 12px;
       border-radius: 8px;
+      cursor: pointer;
     }
 
     .clear-all:active {
@@ -368,6 +375,7 @@
       align-items: center;
       justify-content: center;
       font-size: 16px;
+      cursor: pointer;
     }
 
     .delete-note:active {
@@ -384,7 +392,7 @@
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s ease;
       padding: 20px;
     }
 
@@ -404,7 +412,7 @@
       flex-direction: column;
       padding: 18px;
       transform: translateY(20px);
-      transition: transform 0.2s;
+      transition: transform 0.2s ease;
     }
 
     .modal.active .modal-content {
@@ -430,7 +438,7 @@
       border-radius: var(--radius);
       color: var(--text);
       font: inherit;
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1.5;
       resize: none;
       overflow-y: auto;
@@ -486,7 +494,7 @@
         </div>
         <div class="search-container">
           <input type="text" class="search-input" id="search" placeholder="Buscar..." autocomplete="off">
-          <button class="add-btn" id="add-btn">AÑADIR</button>
+          <button type="button" class="add-btn" id="add-btn">AÑADIR</button>
         </div>
         <div class="scroll-container">
           <div class="fade-overlay top-fade"></div>
@@ -509,7 +517,7 @@
           <div class="fade-overlay bottom-fade"></div>
         </div>
         <div class="list-footer" id="list-footer">
-          <button class="clear-all" id="clear-all">Vaciar</button>
+          <button type="button" class="clear-all" id="clear-all">Vaciar</button>
         </div>
       </div>
 
@@ -519,7 +527,7 @@
         </div>
         <div class="search-container">
           <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas..." autocomplete="off">
-          <button class="add-btn" id="add-note-btn">NUEVA NOTA</button>
+          <button type="button" class="add-btn" id="add-note-btn">NUEVA NOTA</button>
         </div>
         <div class="scroll-container">
           <div class="fade-overlay top-fade"></div>
@@ -531,7 +539,7 @@
       </div>
     </div>
 
-    <div class="modal" id="note-modal">
+    <div class="modal" id="note-modal" role="dialog" aria-modal="true">
       <div class="modal-content">
         <form class="note-form" id="note-form">
           <textarea id="note-text" class="unified-note-input" placeholder="Escribe tu nota aquí..." rows="2" required></textarea>
@@ -569,6 +577,8 @@
     let currentPanel = 1;
     let currentNote = null;
     let uniqueCounter = 0;
+    let currentContainerX = 0;
+    let suppressClicksUntil = 0;
 
     const generateId = () => Date.now() + (++uniqueCounter);
 
@@ -577,7 +587,7 @@
       set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
     };
 
-    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' }[c]));
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
     function autoResizeTextarea() {
@@ -588,20 +598,33 @@
 
     noteTextInput.addEventListener('input', autoResizeTextarea);
 
+    document.addEventListener('click', e => {
+      if (performance.now() < suppressClicksUntil) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    }, true);
+
     document.addEventListener('DOMContentLoaded', () => {
+      initApp();
+
       const progressEl = $('loading-progress');
+      const launcherEl = $('launcher');
+      const appContainerEl = $('app-container');
       let progress = 0;
 
       const loop = () => {
-        progress += Math.random() * 9 + 4;
+        progress += Math.random() * 12 + 6;
         if (progress >= 100) {
           progressEl.style.width = '100%';
           setTimeout(() => {
-            $('launcher').classList.add('hidden');
-            $('app-container').classList.add('visible');
+            launcherEl.classList.add('hidden');
+            appContainerEl.classList.add('visible');
             snapToPanel(1, 0);
-            initApp();
-          }, 150);
+            launcherEl.addEventListener('transitionend', () => {
+              launcherEl.style.display = 'none';
+            }, { once: true });
+          }, 120);
           return;
         }
         progressEl.style.width = `${progress}%`;
@@ -611,28 +634,33 @@
     });
 
     function initApp() {
-      products = store.get(KEYS.PRODUCTS);
-      if (!products.length) {
-        products = defaultProducts.map(name => ({ name }));
-        store.set(KEYS.PRODUCTS, products);
+      const storedProducts = store.get(KEYS.PRODUCTS);
+      if (!storedProducts.length) {
+        products = defaultProducts.map(name => ({ name, lower: name.toLowerCase() }));
+        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+      } else {
+        products = storedProducts.map(p => ({ name: p.name, lower: p.name.toLowerCase() }));
       }
+
       cartItems = store.get(KEYS.CART);
       notes = store.get(KEYS.NOTES).map(n => ({
-        id: n.id || generateId(),
+        id: String(n.id || generateId()),
         text: n.text ?? [n.title, n.content].filter(Boolean).join('\n'),
-        date: n.date
+        lower: (n.text ?? [n.title, n.content].filter(Boolean).join('\n')).toLowerCase(),
+        date: n.date || new Date().toISOString(),
+        formattedDate: dateFormatter.format(new Date(n.date || Date.now()))
       }));
 
       renderProducts();
       renderCart();
       renderNotes();
       setupTouchSwipe();
+      setupModalKeyboardSync();
     }
 
     function setContainerPosition(offsetPx, durationMs = 0, easing = 'cubic-bezier(0.22, 1, 0.36, 1)') {
-      panelsContainer.style.transition = durationMs > 0
-        ? `transform ${durationMs}ms ${easing}`
-        : 'none';
+      currentContainerX = offsetPx;
+      panelsContainer.style.transition = durationMs > 0 ? `transform ${durationMs}ms ${easing}` : 'none';
       panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
     }
 
@@ -648,9 +676,11 @@
       let dragBaseOffset = 0;
       let rAf = null;
       let velocitySamples = [];
+      let lastWidth = window.innerWidth;
 
       panelsContainer.addEventListener('touchstart', e => {
         if (noteModal.classList.contains('active') || e.touches.length > 1) return;
+        if (e.target.closest('input, textarea')) return;
 
         const t = e.touches[0];
         startX = currentX = t.clientX;
@@ -660,11 +690,7 @@
 
         const now = performance.now();
         velocitySamples = [{ x: startX, t: now }];
-
-        const style = window.getComputedStyle(panelsContainer);
-        const matrix = new DOMMatrixReadOnly(style.transform);
-        dragBaseOffset = matrix.m41;
-
+        dragBaseOffset = currentContainerX;
         setContainerPosition(dragBaseOffset, 0);
       }, { passive: true });
 
@@ -677,6 +703,9 @@
 
         if (isHorizontal === null && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
           isHorizontal = Math.abs(dx) > Math.abs(dy);
+          if (isHorizontal) {
+            panelsContainer.classList.add('is-swiping');
+          }
         }
 
         if (!isHorizontal) return;
@@ -689,16 +718,17 @@
         }
 
         const w = window.innerWidth;
-        const projected = dragBaseOffset + dx;
-        let effectiveDx = dx;
+        let targetX = dragBaseOffset + dx;
 
-        if (projected > 0 || projected < -2 * w) {
-          effectiveDx = dx * 0.25;
+        if (targetX > 0) {
+          targetX = targetX * 0.25;
+        } else if (targetX < -2 * w) {
+          targetX = -2 * w + (targetX - (-2 * w)) * 0.25;
         }
 
         if (!rAf) {
           rAf = requestAnimationFrame(() => {
-            setContainerPosition(dragBaseOffset + effectiveDx, 0);
+            setContainerPosition(targetX, 0);
             rAf = null;
           });
         }
@@ -707,9 +737,11 @@
       const onDragEnd = () => {
         if (!isDragging) return;
         isDragging = false;
+        panelsContainer.classList.remove('is-swiping');
         if (rAf) { cancelAnimationFrame(rAf); rAf = null; }
 
         if (isHorizontal) {
+          suppressClicksUntil = performance.now() + 150;
           const w = window.innerWidth;
           let velocity = 0;
 
@@ -732,13 +764,10 @@
             else if (dx > w * 0.32 && currentPanel > 0) currentPanel--;
           }
 
-          const style = window.getComputedStyle(panelsContainer);
-          const currentVisualX = new DOMMatrixReadOnly(style.transform).m41;
           const targetX = -currentPanel * w;
-          const remainingDistance = Math.abs(targetX - currentVisualX);
+          const remainingDistance = Math.abs(targetX - currentContainerX);
 
           let duration, easing;
-
           if (absV > 0.35) {
             duration = Math.round(remainingDistance / (absV * 1.35));
             duration = Math.max(130, Math.min(230, duration));
@@ -759,25 +788,32 @@
       panelsContainer.addEventListener('touchcancel', onDragEnd);
 
       window.addEventListener('resize', () => {
-        snapToPanel(currentPanel, 0);
+        const w = window.innerWidth;
+        if (w !== lastWidth) {
+          lastWidth = w;
+          snapToPanel(currentPanel, 0);
+        }
       }, { passive: true });
     }
 
     function renderProducts(query = "") {
-      const q = query.toLowerCase();
-      const list = q ? products.filter(p => p.name.toLowerCase().includes(q)) : products;
-
-      if (!list.length) {
-        productsGrid.innerHTML = '<div class="empty-state">No hay productos</div>';
-        return;
-      }
-
+      const q = query.trim().toLowerCase();
       let html = '';
-      for (let i = 0, l = list.length; i < l; i++) {
-        const n = esc(list[i].name);
-        html += `<div class="product-card" data-name="${n}">${n}</div>`;
+      let count = 0;
+      let exactMatch = false;
+
+      for (let i = 0, l = products.length; i < l; i++) {
+        const p = products[i];
+        if (p.lower === q) exactMatch = true;
+        if (!q || p.lower.includes(q)) {
+          count++;
+          const n = esc(p.name);
+          html += `<div class="product-card" data-name="${n}">${n}</div>`;
+        }
       }
-      productsGrid.innerHTML = html;
+
+      productsGrid.innerHTML = count ? html : '<div class="empty-state">No hay productos</div>';
+      addBtn.style.display = (q && !exactMatch) ? 'block' : 'none';
     }
 
     productsGrid.addEventListener('click', e => {
@@ -785,28 +821,27 @@
       if (!card) return;
       const name = card.dataset.name;
       const existing = cartItems.find(i => i.name === name);
-      if (existing) existing.qty++;
-      else cartItems.push({ id: generateId(), name, qty: 1 });
+      if (existing) {
+        existing.qty++;
+      } else {
+        cartItems.push({ id: String(generateId()), name, qty: 1 });
+      }
       store.set(KEYS.CART, cartItems);
       renderCart();
     });
 
     let searchTimer = null;
     searchInput.addEventListener('input', e => {
-      const val = e.target.value.trim();
+      const val = e.target.value;
       cancelAnimationFrame(searchTimer);
-      searchTimer = requestAnimationFrame(() => {
-        renderProducts(val);
-        const exists = products.some(p => p.name.toLowerCase() === val.toLowerCase());
-        addBtn.style.display = val && !exists ? 'block' : 'none';
-      });
+      searchTimer = requestAnimationFrame(() => renderProducts(val));
     });
 
     addBtn.addEventListener('click', () => {
       const name = searchInput.value.trim();
       if (!name) return;
-      products.push({ name });
-      store.set(KEYS.PRODUCTS, products);
+      products.push({ name, lower: name.toLowerCase() });
+      store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
       searchInput.value = '';
       addBtn.style.display = 'none';
       renderProducts();
@@ -829,14 +864,15 @@
       let html = '';
       for (let i = 0, l = sorted.length; i < l; i++) {
         const item = sorted[i];
-        if (!item.id) item.id = generateId();
+        if (!item.id) item.id = String(generateId());
+        const id = esc(item.id);
         html += `
           <div class="cart-item">
             <div class="item-info">
               <span class="item-name">${esc(item.name)}</span>
               <span class="item-qty">×${item.qty}</span>
             </div>
-            <button class="delete-btn" data-id="${item.id}" aria-label="Eliminar">×</button>
+            <button type="button" class="delete-btn" data-id="${id}" aria-label="Eliminar">×</button>
           </div>`;
       }
       cartList.innerHTML = html;
@@ -845,8 +881,8 @@
     cartList.addEventListener('click', e => {
       const btn = e.target.closest('.delete-btn');
       if (!btn) return;
-      const id = Number(btn.dataset.id);
-      cartItems = cartItems.filter(i => i.id !== id);
+      const id = btn.dataset.id;
+      cartItems = cartItems.filter(i => String(i.id) !== id);
       store.set(KEYS.CART, cartItems);
       renderCart();
     });
@@ -860,38 +896,38 @@
     });
 
     function renderNotes(query = "") {
-      const q = query.toLowerCase();
-      const list = q ? notes.filter(n => n.text.toLowerCase().includes(q)) : notes;
-
-      if (!list.length) {
-        notesGrid.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">📝</div>
-            <p class="empty-state-text">No hay notas.<br>¡Crea tu primera nota!</p>
-          </div>`;
-        return;
-      }
-
+      const q = query.trim().toLowerCase();
       let html = '';
-      for (let i = 0, l = list.length; i < l; i++) {
-        const note = list[i];
-        html += `
-          <div class="note-card" data-id="${note.id}">
-            <button class="delete-note" data-delete-id="${note.id}" aria-label="Eliminar">×</button>
-            <div class="note-body">${esc(note.text)}</div>
-            <div class="note-date">${dateFormatter.format(new Date(note.date))}</div>
-          </div>`;
+      let count = 0;
+
+      for (let i = 0, l = notes.length; i < l; i++) {
+        const note = notes[i];
+        if (!q || note.lower.includes(q)) {
+          count++;
+          const id = esc(note.id);
+          html += `
+            <div class="note-card" data-id="${id}">
+              <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar">×</button>
+              <div class="note-body">${esc(note.text)}</div>
+              <div class="note-date">${note.formattedDate}</div>
+            </div>`;
+        }
       }
-      notesGrid.innerHTML = html;
+
+      notesGrid.innerHTML = count ? html : `
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <p class="empty-state-text">${q ? 'No se encontraron notas.' : 'No hay notas.<br>¡Crea tu primera nota!'}</p>
+        </div>`;
     }
 
     notesGrid.addEventListener('click', e => {
       const delBtn = e.target.closest('.delete-note');
       if (delBtn) {
-        const id = Number(delBtn.dataset.deleteId);
+        const id = delBtn.dataset.deleteId;
         if (confirm('¿Eliminar esta nota?')) {
           notes = notes.filter(n => n.id !== id);
-          store.set(KEYS.NOTES, notes);
+          store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
           renderNotes(searchNotesInput.value);
         }
         return;
@@ -899,7 +935,7 @@
 
       const card = e.target.closest('.note-card');
       if (card) {
-        const note = notes.find(n => n.id === Number(card.dataset.id));
+        const note = notes.find(n => n.id === card.dataset.id);
         if (note) openNoteModal(note);
       }
     });
@@ -921,15 +957,40 @@
       currentNote = null;
     }
 
+    function setupModalKeyboardSync() {
+      if (!window.visualViewport) return;
+      const modalContent = noteModal.querySelector('.modal-content');
+
+      const onViewportChange = () => {
+        if (!noteModal.classList.contains('active')) return;
+        const vv = window.visualViewport;
+        const availableHeight = vv.height;
+        modalContent.style.maxHeight = `${Math.min(availableHeight - 32, window.innerHeight * 0.85)}px`;
+      };
+
+      window.visualViewport.addEventListener('resize', onViewportChange);
+      window.visualViewport.addEventListener('scroll', onViewportChange);
+    }
+
+    let searchNotesTimer = null;
     searchNotesInput.addEventListener('input', e => {
       const val = e.target.value;
-      renderNotes(val);
-      addNoteBtn.style.display = val ? 'none' : 'block';
+      cancelAnimationFrame(searchNotesTimer);
+      searchNotesTimer = requestAnimationFrame(() => {
+        renderNotes(val);
+        addNoteBtn.style.display = val.trim() ? 'none' : 'block';
+      });
     });
 
     addNoteBtn.addEventListener('click', () => openNoteModal());
     $('cancel-note').addEventListener('click', closeNoteModal);
     noteModal.addEventListener('click', e => { if (e.target === noteModal) closeNoteModal(); });
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && noteModal.classList.contains('active')) {
+        closeNoteModal();
+      }
+    });
 
     $('note-form').addEventListener('submit', e => {
       e.preventDefault();
@@ -937,14 +998,24 @@
       if (!text) return;
 
       const date = new Date().toISOString();
+      const formattedDate = dateFormatter.format(new Date(date));
+
       if (currentNote) {
         currentNote.text = text;
+        currentNote.lower = text.toLowerCase();
         currentNote.date = date;
+        currentNote.formattedDate = formattedDate;
       } else {
-        notes.push({ id: generateId(), text, date });
+        notes.unshift({
+          id: String(generateId()),
+          text,
+          lower: text.toLowerCase(),
+          date,
+          formattedDate
+        });
       }
 
-      store.set(KEYS.NOTES, notes);
+      store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
       renderNotes(searchNotesInput.value);
       closeNoteModal();
     });
