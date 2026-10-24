@@ -706,7 +706,19 @@
   <script>
     'use strict';
 
-    const KEYS = { PRODUCTS: 'superapp_products_v2', CART: 'superapp_cart_v2', NOTES: 'superapp_notes_v2' };
+    // CLAVES CENTRALIZADAS EN LOCALSTORAGE
+    const KEYS = { 
+      PRODUCTS: 'superapp_products_v2', 
+      CART: 'superapp_cart_v2', 
+      NOTES: 'superapp_notes_v2' 
+    };
+
+    // CLAVES LEGADAS PARA AUTORRECUPERACIÓN
+    const LEGACY_KEYS = {
+      PRODUCTS: ['superapp_products', 'superapp_products_v1', 'products'],
+      CART: ['superapp_cart', 'superapp_cart_v1', 'cart', 'super_cart'],
+      NOTES: ['superapp_notes', 'superapp_notes_v1', 'notes', 'super_notes']
+    };
 
     const defaultProducts = [
       "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural",
@@ -782,7 +794,6 @@
     let suppressClicksUntil = 0;
     let toastTimeout = null;
 
-    // Curva cinemática adaptativa de alta respuesta orgánica
     const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
 
     const normalize = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -792,10 +803,66 @@
       return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
     };
 
+    /* GESTOR DE ALMACENAMIENTO EXCLUSIVO EN LOCALSTORAGE */
     const store = {
-      get: k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } },
-      set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+      get: (k, fallback = []) => {
+        try {
+          const raw = localStorage.getItem(k);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : fallback;
+        } catch (e) {
+          console.error(`Error leyendo ${k} en LocalStorage:`, e);
+          return fallback;
+        }
+      },
+      set: (k, v) => {
+        try {
+          localStorage.setItem(k, JSON.stringify(v));
+          return true;
+        } catch (e) {
+          console.error(`Error guardando ${k} en LocalStorage:`, e);
+          showToast('Aviso: Espacio de almacenamiento lleno');
+          return false;
+        }
+      }
     };
+
+    /* RECUPERACIÓN AUTOMÁTICA DE DATOS ANTERIORES */
+    function recoverLegacyStorage() {
+      // 1. Recuperar Productos si la clave actual no existe
+      if (!localStorage.getItem(KEYS.PRODUCTS)) {
+        for (const oldKey of LEGACY_KEYS.PRODUCTS) {
+          const legacy = store.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            store.set(KEYS.PRODUCTS, legacy);
+            break;
+          }
+        }
+      }
+
+      // 2. Recuperar Carrito si la clave actual no existe
+      if (!localStorage.getItem(KEYS.CART)) {
+        for (const oldKey of LEGACY_KEYS.CART) {
+          const legacy = store.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            store.set(KEYS.CART, legacy);
+            break;
+          }
+        }
+      }
+
+      // 3. Recuperar Notas si la clave actual no existe
+      if (!localStorage.getItem(KEYS.NOTES)) {
+        for (const oldKey of LEGACY_KEYS.NOTES) {
+          const legacy = store.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            store.set(KEYS.NOTES, legacy);
+            break;
+          }
+        }
+      }
+    }
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
       '&': '&amp;',
@@ -832,6 +899,21 @@
       }
     }, true);
 
+    /* SINCRONIZACIÓN AUTOMÁTICA ANTE CAMBIOS EN OTRAS PESTAÑAS O VENTANAS */
+    window.addEventListener('storage', e => {
+      if (!e.key) return;
+      if (e.key === KEYS.CART) {
+        syncCart();
+        renderCart();
+      } else if (e.key === KEYS.NOTES) {
+        syncNotes();
+        renderNotes(searchNotesInput.value);
+      } else if (e.key === KEYS.PRODUCTS) {
+        syncProducts();
+        renderProducts(searchInput.value);
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       initApp();
 
@@ -860,23 +942,33 @@
       requestAnimationFrame(loop);
     });
 
-    function initApp() {
-      const storedProducts = store.get(KEYS.PRODUCTS);
+    /* CARGAS SEGURAS DESDE LOCALSTORAGE */
+    function syncProducts() {
+      const storedProducts = store.get(KEYS.PRODUCTS, []);
       if (!storedProducts.length) {
         products = defaultProducts.map(name => ({ name, norm: normalize(name) }));
         store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
       } else {
-        products = storedProducts.map(p => ({ name: p.name, norm: normalize(p.name) }));
+        products = storedProducts.map(p => {
+          const name = typeof p === 'string' ? p : (p.name || '');
+          return { name, norm: normalize(name) };
+        }).filter(p => p.name);
       }
+    }
 
-      cartItems = (store.get(KEYS.CART) || []).map(i => ({
+    function syncCart() {
+      const storedCart = store.get(KEYS.CART, []);
+      cartItems = storedCart.map(i => ({
         id: i.id || generateId(),
         name: String(i.name || ''),
         qty: Math.max(1, parseInt(i.qty, 10) || 1),
         completed: Boolean(i.completed)
       }));
+    }
 
-      notes = (store.get(KEYS.NOTES) || []).map(n => {
+    function syncNotes() {
+      const storedNotes = store.get(KEYS.NOTES, []);
+      notes = storedNotes.map(n => {
         const text = String(n.text ?? [n.title, n.content].filter(Boolean).join('\n') ?? '');
         const validDate = parseValidDate(n.date);
         return {
@@ -887,6 +979,13 @@
           formattedDate: dateFormatter.format(validDate)
         };
       });
+    }
+
+    function initApp() {
+      recoverLegacyStorage();
+      syncProducts();
+      syncCart();
+      syncNotes();
 
       renderProducts();
       renderCart();
@@ -907,7 +1006,7 @@
       setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
     }
 
-    /* MOTOR DE GESTOS ADAPTATIVO CON FÍSICAS KINÉTICAS */
+    /* MOTOR DE GESTOS ADAPTATIVO */
     function setupTouchSwipe() {
       let startX = 0, startY = 0, currentX = 0;
       let isDragging = false;
@@ -940,7 +1039,6 @@
         const dx = t.clientX - startX;
         const dy = t.clientY - startY;
 
-        // Detección con filtro angular: si el gesto es vertical, se libera el scroll instantáneamente
         if (isHorizontal === null) {
           const absX = Math.abs(dx);
           const absY = Math.abs(dy);
@@ -960,7 +1058,6 @@
 
         const now = performance.now();
         velocitySamples.push({ x: currentX, t: now });
-        // Ventana deslizante para capturar la inercia real del usuario
         while (velocitySamples.length > 1 && now - velocitySamples[0].t > 85) {
           velocitySamples.shift();
         }
@@ -968,7 +1065,6 @@
         const w = window.innerWidth;
         let targetX = dragBaseOffset + dx;
 
-        // Amortiguación elástica progresiva tipo gomilla en límites
         if (targetX > 0) {
           targetX = Math.pow(targetX, 0.82) * 2.8;
         } else if (targetX < -2 * w) {
@@ -998,7 +1094,7 @@
             const first = velocitySamples[0];
             const last = velocitySamples[velocitySamples.length - 1];
             const dt = Math.max(1, last.t - first.t);
-            velocity = (last.x - first.x) / dt; // px por ms
+            velocity = (last.x - first.x) / dt;
           }
 
           const dx = currentX - startX;
@@ -1006,11 +1102,9 @@
           const isFlick = absV > 0.24;
 
           if (isFlick) {
-            // El usuario lanzó la pantalla con inercia rápida
             if (velocity < -0.24 && currentPanel < 2) currentPanel++;
             else if (velocity > 0.24 && currentPanel > 0) currentPanel--;
           } else {
-            // Arrastre pausado: umbral equilibrado del 25% del ancho de pantalla
             if (dx < -w * 0.25 && currentPanel < 2) currentPanel++;
             else if (dx > w * 0.25 && currentPanel > 0) currentPanel--;
           }
@@ -1018,14 +1112,11 @@
           const targetX = -currentPanel * w;
           const remainingDistance = Math.abs(targetX - currentContainerX);
 
-          // Cálculo adaptativo de la duración en milisegundos
           let duration;
           if (isFlick) {
-            // A mayor velocidad de lanzamiento, mayor continuidad con amortiguación sedosa
             duration = Math.round(remainingDistance / (absV * 1.15));
             duration = Math.max(300, Math.min(410, duration));
           } else {
-            // Arrastre manual: ritmo proporcional al trayecto sin ralentizaciones
             const ratio = Math.min(1, remainingDistance / w);
             duration = Math.round(340 + ratio * 90);
           }
@@ -1082,6 +1173,9 @@
       const trimmed = (name || '').trim();
       if (!trimmed) return;
 
+      // Refresco atómico antes de guardar para no sobrescribir cambios externos
+      syncCart();
+
       const norm = normalize(trimmed);
       const existing = cartItems.find(i => normalize(i.name) === norm);
       if (existing) {
@@ -1107,6 +1201,7 @@
       if (!rawName) return;
       const norm = normalize(rawName);
 
+      syncProducts();
       let productToAdd = products.find(p => p.norm === norm);
       if (!productToAdd) {
         productToAdd = { name: rawName, norm };
@@ -1176,6 +1271,9 @@
       const itemEl = e.target.closest('.cart-item');
       if (!itemEl) return;
       const id = itemEl.dataset.id;
+
+      // Lectura fresca para evitar condiciones de carrera
+      syncCart();
       const item = cartItems.find(i => String(i.id) === id);
       if (!item) return;
 
@@ -1211,7 +1309,7 @@
       }
     });
 
-    /* NOTAS (TOTALMENTE VISIBLES) */
+    /* NOTAS */
     function parseNoteParts(rawText) {
       const lines = (rawText || '').trim().split('\n');
       const title = lines[0] || 'Nota';
@@ -1253,6 +1351,7 @@
         e.stopPropagation();
         const id = delBtn.dataset.deleteId;
         if (confirm('¿Eliminar esta nota?')) {
+          syncNotes();
           notes = notes.filter(n => n.id !== id);
           store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
           renderNotes(searchNotesInput.value);
@@ -1323,12 +1422,22 @@
       const formattedDate = dateFormatter.format(new Date(date));
       const norm = normalize(text);
 
+      syncNotes();
+
       if (currentNote) {
-        currentNote.text = text;
-        currentNote.norm = norm;
-        currentNote.date = date;
-        currentNote.formattedDate = formattedDate;
-        notes = [currentNote, ...notes.filter(n => n.id !== currentNote.id)];
+        const idx = notes.findIndex(n => n.id === currentNote.id);
+        const updated = {
+          id: currentNote.id,
+          text,
+          norm,
+          date,
+          formattedDate
+        };
+        if (idx !== -1) {
+          notes[idx] = updated;
+        } else {
+          notes.unshift(updated);
+        }
       } else {
         notes.unshift({
           id: generateId(),
