@@ -33,7 +33,7 @@
       user-select: auto;
     }
 
-    body {
+    html, body {
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -44,6 +44,7 @@
       position: fixed;
       inset: 0;
       overscroll-behavior: none;
+      scroll-behavior: smooth;
     }
 
     /* PANTALLA DE CARGA (LAUNCHER) */
@@ -75,7 +76,7 @@
       height: 100%;
       width: 0%;
       background: #fff;
-      transition: width 0.1s linear;
+      transition: width 0.12s linear;
     }
 
     /* CONTENEDOR DE PANELES MÓVILES */
@@ -101,7 +102,7 @@
     }
 
     .panels-container.is-swiping * {
-      pointer-events: none;
+      pointer-events: none !important;
     }
 
     .panel {
@@ -145,7 +146,7 @@
       color: var(--text);
       font-size: 16px;
       outline: none;
-      transition: border-color 0.15s ease;
+      transition: border-color 0.2s ease;
     }
 
     .search-input:focus {
@@ -173,7 +174,7 @@
       display: block;
     }
 
-    /* CONTENEDOR Y SCROLL */
+    /* CONTENEDOR Y SCROLL ADAPTATIVO */
     .scroll-container {
       flex: 1;
       position: relative;
@@ -186,8 +187,10 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
-      overscroll-behavior: contain;
-      padding-bottom: 24px;
+      overscroll-behavior-y: contain;
+      scroll-behavior: smooth;
+      padding-bottom: 30px;
+      will-change: scroll-position;
     }
 
     .scroll-area::-webkit-scrollbar {
@@ -263,7 +266,7 @@
       justify-content: space-between;
       gap: 12px;
       contain: layout style paint;
-      transition: opacity 0.2s ease, border-color 0.15s;
+      transition: opacity 0.2s ease, border-color 0.15s, background 0.15s;
     }
 
     .cart-item.completed {
@@ -415,13 +418,14 @@
       background: var(--danger-surface);
     }
 
-    /* NOTAS (TOTALMENTE VISIBLES SIN RECORTES) */
+    /* NOTAS (TOTALMENTE VISIBLES Y ADAPTATIVAS) */
     .note-card {
       background: var(--surface-elevated);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 16px;
       position: relative;
+      transition: background 0.18s ease, border-color 0.18s ease;
     }
 
     .note-card:active {
@@ -499,7 +503,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -527,7 +531,7 @@
       flex-direction: column;
       padding: 18px;
       transform: translateY(20px);
-      transition: transform 0.25s cubic-bezier(0.25, 1, 0.4, 1);
+      transition: transform 0.28s cubic-bezier(0.2, 0.95, 0.3, 1);
     }
 
     .modal.active .modal-content {
@@ -543,7 +547,7 @@
 
     .unified-note-input {
       width: 100%;
-      min-height: 100px;
+      min-height: 110px;
       max-height: 50vh;
       max-height: 50dvh;
       padding: 14px;
@@ -559,6 +563,7 @@
       overflow-y: auto;
       outline: none;
       overscroll-behavior: contain;
+      scroll-behavior: smooth;
     }
 
     .unified-note-input:focus {
@@ -777,7 +782,8 @@
     let suppressClicksUntil = 0;
     let toastTimeout = null;
 
-    const SMOOTH_EASE = 'cubic-bezier(0.25, 1, 0.4, 1)';
+    // Curva cinemática adaptativa de alta respuesta orgánica
+    const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
 
     const normalize = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
@@ -835,7 +841,7 @@
       let progress = 0;
 
       const loop = () => {
-        progress += Math.random() * 20 + 15;
+        progress += Math.random() * 22 + 16;
         if (progress >= 100) {
           progressEl.style.width = '100%';
           setTimeout(() => {
@@ -845,7 +851,7 @@
             setTimeout(() => {
               launcherEl.style.display = 'none';
             }, 350);
-          }, 100);
+          }, 120);
           return;
         }
         progressEl.style.width = `${progress}%`;
@@ -890,18 +896,18 @@
       snapToPanel(1, 0);
     }
 
-    function setContainerPosition(offsetPx, durationMs = 0, easing = SMOOTH_EASE) {
+    function setContainerPosition(offsetPx, durationMs = 0, easing = ADAPTIVE_EASING) {
       currentContainerX = offsetPx;
       panelsContainer.style.transition = durationMs > 0 ? `transform ${durationMs}ms ${easing}` : 'none';
       panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
     }
 
-    function snapToPanel(index, duration = 380, easing = SMOOTH_EASE) {
+    function snapToPanel(index, duration = 380, easing = ADAPTIVE_EASING) {
       currentPanel = Math.max(0, Math.min(2, index));
       setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
     }
 
-    /* NAVEGACIÓN MÓVIL SUAVE Y CÓMODA */
+    /* MOTOR DE GESTOS ADAPTATIVO CON FÍSICAS KINÉTICAS */
     function setupTouchSwipe() {
       let startX = 0, startY = 0, currentX = 0;
       let isDragging = false;
@@ -934,10 +940,18 @@
         const dx = t.clientX - startX;
         const dy = t.clientY - startY;
 
-        if (isHorizontal === null && (Math.abs(dx) > 7 || Math.abs(dy) > 7)) {
-          isHorizontal = Math.abs(dx) > Math.abs(dy);
-          if (isHorizontal) {
-            panelsContainer.classList.add('is-swiping');
+        // Detección con filtro angular: si el gesto es vertical, se libera el scroll instantáneamente
+        if (isHorizontal === null) {
+          const absX = Math.abs(dx);
+          const absY = Math.abs(dy);
+          if (absX > 6 || absY > 6) {
+            isHorizontal = absX > absY * 1.15;
+            if (isHorizontal) {
+              panelsContainer.classList.add('is-swiping');
+            } else {
+              isDragging = false;
+              return;
+            }
           }
         }
 
@@ -946,17 +960,20 @@
 
         const now = performance.now();
         velocitySamples.push({ x: currentX, t: now });
-        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 90) {
+        // Ventana deslizante para capturar la inercia real del usuario
+        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 85) {
           velocitySamples.shift();
         }
 
         const w = window.innerWidth;
         let targetX = dragBaseOffset + dx;
 
+        // Amortiguación elástica progresiva tipo gomilla en límites
         if (targetX > 0) {
-          targetX = targetX * 0.22;
+          targetX = Math.pow(targetX, 0.82) * 2.8;
         } else if (targetX < -2 * w) {
-          targetX = -2 * w + (targetX - (-2 * w)) * 0.22;
+          const over = targetX - (-2 * w);
+          targetX = -2 * w - Math.pow(Math.abs(over), 0.82) * 2.8;
         }
 
         if (!rAf) {
@@ -981,40 +998,45 @@
             const first = velocitySamples[0];
             const last = velocitySamples[velocitySamples.length - 1];
             const dt = Math.max(1, last.t - first.t);
-            velocity = (last.x - first.x) / dt;
+            velocity = (last.x - first.x) / dt; // px por ms
           }
 
           const dx = currentX - startX;
           const absV = Math.abs(velocity);
-          const isFlick = absV > 0.22;
+          const isFlick = absV > 0.24;
 
           if (isFlick) {
-            if (velocity < -0.22 && currentPanel < 2) currentPanel++;
-            else if (velocity > 0.22 && currentPanel > 0) currentPanel--;
+            // El usuario lanzó la pantalla con inercia rápida
+            if (velocity < -0.24 && currentPanel < 2) currentPanel++;
+            else if (velocity > 0.24 && currentPanel > 0) currentPanel--;
           } else {
-            if (dx < -w * 0.26 && currentPanel < 2) currentPanel++;
-            else if (dx > w * 0.26 && currentPanel > 0) currentPanel--;
+            // Arrastre pausado: umbral equilibrado del 25% del ancho de pantalla
+            if (dx < -w * 0.25 && currentPanel < 2) currentPanel++;
+            else if (dx > w * 0.25 && currentPanel > 0) currentPanel--;
           }
 
           const targetX = -currentPanel * w;
           const remainingDistance = Math.abs(targetX - currentContainerX);
 
+          // Cálculo adaptativo de la duración en milisegundos
           let duration;
           if (isFlick) {
-            duration = Math.round(remainingDistance / (absV * 0.95));
-            duration = Math.max(340, Math.min(420, duration));
+            // A mayor velocidad de lanzamiento, mayor continuidad con amortiguación sedosa
+            duration = Math.round(remainingDistance / (absV * 1.15));
+            duration = Math.max(300, Math.min(410, duration));
           } else {
+            // Arrastre manual: ritmo proporcional al trayecto sin ralentizaciones
             const ratio = Math.min(1, remainingDistance / w);
-            duration = Math.round(360 + ratio * 80);
+            duration = Math.round(340 + ratio * 90);
           }
 
           suppressClicksUntil = performance.now() + duration;
-          setContainerPosition(targetX, duration, SMOOTH_EASE);
+          setContainerPosition(targetX, duration, ADAPTIVE_EASING);
         }
       };
 
-      panelsContainer.addEventListener('touchend', onDragEnd);
-      panelsContainer.addEventListener('touchcancel', onDragEnd);
+      panelsContainer.addEventListener('touchend', onDragEnd, { passive: true });
+      panelsContainer.addEventListener('touchcancel', onDragEnd, { passive: true });
 
       window.addEventListener('resize', () => {
         const w = window.innerWidth;
@@ -1189,7 +1211,7 @@
       }
     });
 
-    /* NOTAS (SIN RECORTES) */
+    /* NOTAS (TOTALMENTE VISIBLES) */
     function parseNoteParts(rawText) {
       const lines = (rawText || '').trim().split('\n');
       const title = lines[0] || 'Nota';
