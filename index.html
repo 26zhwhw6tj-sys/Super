@@ -7,14 +7,16 @@
   <style>
     :root {
       --accent: #00ff88;
+      --accent-glow: rgba(0, 255, 136, 0.18);
       --bg: #000;
       --surface: #111;
+      --surface-elevated: #1a1a1a;
       --text: #fff;
       --muted: #aaa;
-      --border: #333;
+      --border: #2c2c2e;
       --danger: #ff453a;
+      --danger-surface: rgba(255, 69, 58, 0.15);
       --radius: 16px;
-      --note-bg: #1a1a1a;
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
     }
@@ -44,6 +46,7 @@
       overscroll-behavior: none;
     }
 
+    /* PANTALLA DE CARGA (LAUNCHER) */
     .launcher {
       position: fixed;
       inset: 0;
@@ -71,10 +74,11 @@
     .loading-progress {
       height: 100%;
       width: 0%;
-      background: #fff;
+      background: var(--accent);
       transition: width 0.1s linear;
     }
 
+    /* CONTENEDOR DE PANELES MÓVILES */
     .app-container {
       position: absolute;
       inset: 0;
@@ -96,7 +100,7 @@
       transform: translate3d(-100vw, 0, 0);
     }
 
-    .panels-container.is-swiping {
+    .panels-container.is-swiping * {
       pointer-events: none;
     }
 
@@ -111,13 +115,22 @@
 
     .panel-header {
       margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 32px;
     }
 
     .panel-title {
       font-size: 24px;
       font-weight: 700;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
+    /* BÚSQUEDA Y BOTONES */
     .search-container {
       position: relative;
       margin-bottom: 14px;
@@ -125,13 +138,14 @@
 
     .search-input {
       width: 100%;
-      padding: 14px 16px;
+      padding: 14px 105px 14px 16px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       color: var(--text);
       font-size: 16px;
       outline: none;
+      transition: border-color 0.15s ease;
     }
 
     .search-input:focus {
@@ -152,12 +166,14 @@
       font-size: 12px;
       display: none;
       cursor: pointer;
+      z-index: 2;
     }
 
     #add-note-btn {
       display: block;
     }
 
+    /* CONTENEDOR Y SCROLL */
     .scroll-container {
       flex: 1;
       position: relative;
@@ -171,6 +187,7 @@
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overscroll-behavior: contain;
+      padding-bottom: 24px;
     }
 
     .scroll-area::-webkit-scrollbar {
@@ -196,6 +213,7 @@
       background: linear-gradient(to top, var(--bg), transparent);
     }
 
+    /* GRID EXPLORAR PRODUCTOS */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
@@ -213,14 +231,21 @@
       font-weight: 500;
       color: var(--muted);
       contain: layout style paint;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      word-break: break-word;
     }
 
     .product-card:active {
-      background: rgba(0, 255, 136, 0.2);
+      background: var(--accent-glow);
+      border-color: var(--accent);
       color: var(--accent);
     }
 
+    /* LISTA DEL CARRITO */
     .cart-list, .notes-grid {
       display: flex;
       flex-direction: column;
@@ -232,24 +257,60 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       contain: layout style paint;
+      transition: opacity 0.2s ease, border-color 0.15s;
     }
 
-    .cart-item:active {
-      border-color: var(--accent);
+    .cart-item.completed {
+      opacity: 0.55;
+      background: rgba(17, 17, 17, 0.4);
     }
 
-    .item-info {
+    .cart-item.completed .item-name {
+      text-decoration: line-through;
+    }
+
+    .item-toggle-wrap {
       flex: 1;
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+    }
+
+    .item-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .cart-item.completed .item-checkbox {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .item-checkbox svg {
+      display: none;
+      width: 14px;
+      height: 14px;
+      stroke: #000;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .cart-item.completed .item-checkbox svg {
+      display: block;
     }
 
     .item-name {
@@ -260,52 +321,80 @@
       text-overflow: ellipsis;
     }
 
-    .item-qty {
-      font-size: 12px;
-      color: var(--muted);
-      background: var(--bg);
-      padding: 2px 8px;
-      border-radius: 10px;
+    .cart-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       flex-shrink: 0;
     }
 
-    .delete-btn {
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: transparent;
-      color: var(--danger);
-      border-radius: 10px;
-      font-size: 22px;
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
     }
 
-    .delete-btn:active {
-      background: rgba(255, 69, 58, 0.15);
+    .qty-btn:active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
     }
 
-    .empty-state {
+    .cart-item.completed .qty-btn {
+      display: none !important;
+    }
+
+    .item-qty-badge {
+      font-size: 13px;
+      font-weight: 600;
+      min-width: 18px;
       text-align: center;
+    }
+
+    .cart-item.completed .item-qty-badge {
+      font-size: 12px;
       color: var(--muted);
-      padding: 60px 20px;
-      grid-column: 1 / -1;
+      background: var(--bg);
+      padding: 3px 8px;
+      border-radius: 8px;
     }
 
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 14px;
-      opacity: 0.5;
+    .cart-item.completed .item-qty-badge::before {
+      content: '×';
     }
 
-    .empty-state-text {
-      font-size: 14px;
-      line-height: 1.5;
+    .delete-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: transparent;
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
     }
 
+    .cart-item.completed .delete-btn {
+      display: flex;
+    }
+
+    .delete-btn:active {
+      background: var(--danger-surface);
+    }
+
+    /* FOOTER DE LISTA */
     .list-footer {
       padding-top: 10px;
       display: none;
@@ -323,16 +412,16 @@
     }
 
     .clear-all:active {
-      background: rgba(255, 69, 58, 0.15);
+      background: var(--danger-surface);
     }
 
+    /* NOTAS (TOTALMENTE VISIBLES SIN RECORTES) */
     .note-card {
-      background: var(--note-bg);
+      background: var(--surface-elevated);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 16px;
       position: relative;
-      contain: layout style paint;
     }
 
     .note-card:active {
@@ -340,18 +429,21 @@
       border-color: var(--accent);
     }
 
+    .note-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+      padding-right: 36px;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
     .note-body {
       font-size: 14px;
       line-height: 1.5;
       white-space: pre-wrap;
       word-break: break-word;
-      padding-right: 32px;
-    }
-
-    .note-body::first-line {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--accent);
     }
 
     .note-date {
@@ -365,7 +457,7 @@
       position: absolute;
       top: 12px;
       right: 12px;
-      background: rgba(255, 69, 58, 0.2);
+      background: var(--danger-surface);
       color: var(--danger);
       border: none;
       border-radius: 50%;
@@ -376,23 +468,45 @@
       justify-content: center;
       font-size: 16px;
       cursor: pointer;
+      z-index: 2;
     }
 
     .delete-note:active {
       background: rgba(255, 69, 58, 0.4);
     }
 
+    /* ESTADOS VACÍOS */
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 60px 20px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 14px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* MODAL DE NOTAS */
     .modal {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.25s ease;
       padding: 20px;
     }
 
@@ -406,13 +520,14 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       width: 100%;
+      max-width: 500px;
       max-height: 85vh;
       max-height: 85dvh;
       display: flex;
       flex-direction: column;
       padding: 18px;
       transform: translateY(20px);
-      transition: transform 0.2s ease;
+      transition: transform 0.25s cubic-bezier(0.25, 1, 0.4, 1);
     }
 
     .modal.active .modal-content {
@@ -428,7 +543,7 @@
 
     .unified-note-input {
       width: 100%;
-      min-height: 70px;
+      min-height: 100px;
       max-height: 50vh;
       max-height: 50dvh;
       padding: 14px;
@@ -443,7 +558,6 @@
       resize: none;
       overflow-y: auto;
       outline: none;
-      field-sizing: content;
       overscroll-behavior: contain;
     }
 
@@ -477,6 +591,31 @@
       background: var(--accent);
       color: #000;
     }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 20px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 1200;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -488,6 +627,8 @@
 
   <div class="app-container" id="app-container">
     <div class="panels-container" id="panels-container">
+      
+      <!-- PANEL 0: EXPLORAR -->
       <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Explorar</h1>
@@ -505,6 +646,7 @@
         </div>
       </div>
 
+      <!-- PANEL 1: LISTA -->
       <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Lista</h1>
@@ -521,6 +663,7 @@
         </div>
       </div>
 
+      <!-- PANEL 2: NOTAS -->
       <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Notas</h1>
@@ -539,10 +682,11 @@
       </div>
     </div>
 
+    <!-- MODAL NOTA -->
     <div class="modal" id="note-modal" role="dialog" aria-modal="true">
       <div class="modal-content">
         <form class="note-form" id="note-form">
-          <textarea id="note-text" class="unified-note-input" placeholder="Escribe tu nota aquí..." rows="2" required></textarea>
+          <textarea id="note-text" class="unified-note-input" placeholder="Escribe tu nota aquí..." rows="3" required></textarea>
           <div class="modal-actions">
             <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
             <button type="submit" class="btn btn-save">Guardar</button>
@@ -552,11 +696,62 @@
     </div>
   </div>
 
+  <div class="toast" id="toast">Añadido a la lista</div>
+
   <script>
-    const KEYS = { PRODUCTS: 'superapp_products', CART: 'superapp_cart', NOTES: 'superapp_notes' };
+    'use strict';
+
+    const KEYS = { PRODUCTS: 'superapp_products_v2', CART: 'superapp_cart_v2', NOTES: 'superapp_notes_v2' };
 
     const defaultProducts = [
-      "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural", "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja", "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva", "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate", "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas", "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo", "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido", "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg", "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello", "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar", "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate", "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles", "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquilares", "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno", "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado", "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano", "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña", "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti", "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24", "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva", "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfec", "Leche condensada entera", "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera", "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja", "Limbiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca", "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji", "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche", "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal", "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia", "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta", "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano", "Pack Cola Zero", "Pan blanco", "Pan bocadillo", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr", "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo", "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo", "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate", "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce", "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas", "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni", "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Pure de patatas", "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage", "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido", "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichon", "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas", "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés", "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo", "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet", "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa", "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas", "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
+      "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural",
+      "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja",
+      "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva",
+      "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate",
+      "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas",
+      "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo",
+      "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido",
+      "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg",
+      "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello",
+      "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar",
+      "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate",
+      "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles",
+      "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquillantes",
+      "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno",
+      "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado",
+      "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano",
+      "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña",
+      "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti",
+      "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24",
+      "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva",
+      "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfect", "Leche condensada entera",
+      "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera",
+      "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja",
+      "Limpiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca",
+      "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji",
+      "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche",
+      "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal",
+      "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia",
+      "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta",
+      "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano",
+      "Pack Cola Zero", "Pan blanco", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr",
+      "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo",
+      "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo",
+      "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate",
+      "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce",
+      "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas",
+      "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni",
+      "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Puré de patatas",
+      "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage",
+      "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido",
+      "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichón",
+      "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas",
+      "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés",
+      "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo",
+      "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet",
+      "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa",
+      "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas",
+      "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
     ];
 
     const $ = id => document.getElementById(id);
@@ -570,32 +765,58 @@
     const productsGrid = $('products-grid');
     const cartList = $('cart-list');
     const notesGrid = $('notes-grid');
+    const listFooter = $('list-footer');
+    const toastEl = $('toast');
 
     let products = [];
     let cartItems = [];
     let notes = [];
     let currentPanel = 1;
     let currentNote = null;
-    let uniqueCounter = 0;
-    let currentContainerX = 0;
+    let currentContainerX = -window.innerWidth;
     let suppressClicksUntil = 0;
+    let toastTimeout = null;
 
-    const generateId = () => Date.now() + (++uniqueCounter);
+    const SMOOTH_EASE = 'cubic-bezier(0.25, 1, 0.4, 1)';
+
+    const normalize = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+    const generateId = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+    };
 
     const store = {
       get: k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } },
       set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
     };
 
-    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+
     const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
+    function parseValidDate(d) {
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toastEl.classList.remove('show'), 1500);
+    }
+
     function autoResizeTextarea() {
-      if (CSS.supports?.('field-sizing', 'content')) return;
       noteTextInput.style.height = 'auto';
       noteTextInput.style.height = `${noteTextInput.scrollHeight}px`;
     }
-
     noteTextInput.addEventListener('input', autoResizeTextarea);
 
     document.addEventListener('click', e => {
@@ -614,17 +835,17 @@
       let progress = 0;
 
       const loop = () => {
-        progress += Math.random() * 12 + 6;
+        progress += Math.random() * 20 + 15;
         if (progress >= 100) {
           progressEl.style.width = '100%';
           setTimeout(() => {
             launcherEl.classList.add('hidden');
             appContainerEl.classList.add('visible');
             snapToPanel(1, 0);
-            launcherEl.addEventListener('transitionend', () => {
+            setTimeout(() => {
               launcherEl.style.display = 'none';
-            }, { once: true });
-          }, 120);
+            }, 350);
+          }, 100);
           return;
         }
         progressEl.style.width = `${progress}%`;
@@ -636,39 +857,51 @@
     function initApp() {
       const storedProducts = store.get(KEYS.PRODUCTS);
       if (!storedProducts.length) {
-        products = defaultProducts.map(name => ({ name, lower: name.toLowerCase() }));
+        products = defaultProducts.map(name => ({ name, norm: normalize(name) }));
         store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
       } else {
-        products = storedProducts.map(p => ({ name: p.name, lower: p.name.toLowerCase() }));
+        products = storedProducts.map(p => ({ name: p.name, norm: normalize(p.name) }));
       }
 
-      cartItems = store.get(KEYS.CART);
-      notes = store.get(KEYS.NOTES).map(n => ({
-        id: String(n.id || generateId()),
-        text: n.text ?? [n.title, n.content].filter(Boolean).join('\n'),
-        lower: (n.text ?? [n.title, n.content].filter(Boolean).join('\n')).toLowerCase(),
-        date: n.date || new Date().toISOString(),
-        formattedDate: dateFormatter.format(new Date(n.date || Date.now()))
+      cartItems = (store.get(KEYS.CART) || []).map(i => ({
+        id: i.id || generateId(),
+        name: String(i.name || ''),
+        qty: Math.max(1, parseInt(i.qty, 10) || 1),
+        completed: Boolean(i.completed)
       }));
+
+      notes = (store.get(KEYS.NOTES) || []).map(n => {
+        const text = String(n.text ?? [n.title, n.content].filter(Boolean).join('\n') ?? '');
+        const validDate = parseValidDate(n.date);
+        return {
+          id: String(n.id || generateId()),
+          text,
+          norm: normalize(text),
+          date: validDate.toISOString(),
+          formattedDate: dateFormatter.format(validDate)
+        };
+      });
 
       renderProducts();
       renderCart();
       renderNotes();
       setupTouchSwipe();
       setupModalKeyboardSync();
+      snapToPanel(1, 0);
     }
 
-    function setContainerPosition(offsetPx, durationMs = 0, easing = 'cubic-bezier(0.22, 1, 0.36, 1)') {
+    function setContainerPosition(offsetPx, durationMs = 0, easing = SMOOTH_EASE) {
       currentContainerX = offsetPx;
       panelsContainer.style.transition = durationMs > 0 ? `transform ${durationMs}ms ${easing}` : 'none';
       panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
     }
 
-    function snapToPanel(index, duration = 240, easing = 'cubic-bezier(0.22, 1, 0.36, 1)') {
+    function snapToPanel(index, duration = 380, easing = SMOOTH_EASE) {
       currentPanel = Math.max(0, Math.min(2, index));
       setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
     }
 
+    /* NAVEGACIÓN MÓVIL SUAVE Y CÓMODA */
     function setupTouchSwipe() {
       let startX = 0, startY = 0, currentX = 0;
       let isDragging = false;
@@ -680,7 +913,7 @@
 
       panelsContainer.addEventListener('touchstart', e => {
         if (noteModal.classList.contains('active') || e.touches.length > 1) return;
-        if (e.target.closest('input, textarea')) return;
+        if (e.target.closest('input, textarea, .qty-btn, .delete-btn, .delete-note, button')) return;
 
         const t = e.touches[0];
         startX = currentX = t.clientX;
@@ -701,7 +934,7 @@
         const dx = t.clientX - startX;
         const dy = t.clientY - startY;
 
-        if (isHorizontal === null && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+        if (isHorizontal === null && (Math.abs(dx) > 7 || Math.abs(dy) > 7)) {
           isHorizontal = Math.abs(dx) > Math.abs(dy);
           if (isHorizontal) {
             panelsContainer.classList.add('is-swiping');
@@ -713,7 +946,7 @@
 
         const now = performance.now();
         velocitySamples.push({ x: currentX, t: now });
-        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 100) {
+        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 90) {
           velocitySamples.shift();
         }
 
@@ -721,9 +954,9 @@
         let targetX = dragBaseOffset + dx;
 
         if (targetX > 0) {
-          targetX = targetX * 0.25;
+          targetX = targetX * 0.22;
         } else if (targetX < -2 * w) {
-          targetX = -2 * w + (targetX - (-2 * w)) * 0.25;
+          targetX = -2 * w + (targetX - (-2 * w)) * 0.22;
         }
 
         if (!rAf) {
@@ -741,7 +974,6 @@
         if (rAf) { cancelAnimationFrame(rAf); rAf = null; }
 
         if (isHorizontal) {
-          suppressClicksUntil = performance.now() + 150;
           const w = window.innerWidth;
           let velocity = 0;
 
@@ -754,33 +986,30 @@
 
           const dx = currentX - startX;
           const absV = Math.abs(velocity);
-          const isFlick = absV > 0.25;
+          const isFlick = absV > 0.22;
 
           if (isFlick) {
-            if (velocity < -0.25 && currentPanel < 2) currentPanel++;
-            else if (velocity > 0.25 && currentPanel > 0) currentPanel--;
+            if (velocity < -0.22 && currentPanel < 2) currentPanel++;
+            else if (velocity > 0.22 && currentPanel > 0) currentPanel--;
           } else {
-            if (dx < -w * 0.32 && currentPanel < 2) currentPanel++;
-            else if (dx > w * 0.32 && currentPanel > 0) currentPanel--;
+            if (dx < -w * 0.26 && currentPanel < 2) currentPanel++;
+            else if (dx > w * 0.26 && currentPanel > 0) currentPanel--;
           }
 
           const targetX = -currentPanel * w;
           const remainingDistance = Math.abs(targetX - currentContainerX);
 
-          let duration, easing;
-          if (absV > 0.35) {
-            duration = Math.round(remainingDistance / (absV * 1.35));
-            duration = Math.max(130, Math.min(230, duration));
-            easing = 'cubic-bezier(0.15, 0.95, 0.3, 1)';
+          let duration;
+          if (isFlick) {
+            duration = Math.round(remainingDistance / (absV * 0.95));
+            duration = Math.max(340, Math.min(420, duration));
           } else {
             const ratio = Math.min(1, remainingDistance / w);
-            duration = Math.round(220 + ratio * 140);
-            easing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+            duration = Math.round(360 + ratio * 80);
           }
 
-          setContainerPosition(targetX, duration, easing);
-        } else {
-          snapToPanel(currentPanel, 200);
+          suppressClicksUntil = performance.now() + duration;
+          setContainerPosition(targetX, duration, SMOOTH_EASE);
         }
       };
 
@@ -796,39 +1025,53 @@
       }, { passive: true });
     }
 
+    /* EXPLORAR PRODUCTOS */
     function renderProducts(query = "") {
-      const q = query.trim().toLowerCase();
+      const q = normalize(query);
       let html = '';
       let count = 0;
       let exactMatch = false;
 
       for (let i = 0, l = products.length; i < l; i++) {
         const p = products[i];
-        if (p.lower === q) exactMatch = true;
-        if (!q || p.lower.includes(q)) {
+        if (p.norm === q) exactMatch = true;
+        if (!q || p.norm.includes(q)) {
           count++;
           const n = esc(p.name);
           html += `<div class="product-card" data-name="${n}">${n}</div>`;
         }
       }
 
-      productsGrid.innerHTML = count ? html : '<div class="empty-state">No hay productos</div>';
+      productsGrid.innerHTML = count ? html : `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <p class="empty-state-text">No se encontraron productos.<br>Pulsa <strong>Añadir</strong> para agregarlo.</p>
+        </div>`;
       addBtn.style.display = (q && !exactMatch) ? 'block' : 'none';
     }
 
     productsGrid.addEventListener('click', e => {
       const card = e.target.closest('.product-card');
       if (!card) return;
-      const name = card.dataset.name;
-      const existing = cartItems.find(i => i.name === name);
+      addToCart(card.dataset.name);
+    });
+
+    function addToCart(name) {
+      const trimmed = (name || '').trim();
+      if (!trimmed) return;
+
+      const norm = normalize(trimmed);
+      const existing = cartItems.find(i => normalize(i.name) === norm);
       if (existing) {
         existing.qty++;
+        existing.completed = false;
       } else {
-        cartItems.push({ id: String(generateId()), name, qty: 1 });
+        cartItems.push({ id: generateId(), name: trimmed, qty: 1, completed: false });
       }
       store.set(KEYS.CART, cartItems);
       renderCart();
-    });
+      showToast(`Añadido: ${trimmed}`);
+    }
 
     let searchTimer = null;
     searchInput.addEventListener('input', e => {
@@ -837,52 +1080,103 @@
       searchTimer = requestAnimationFrame(() => renderProducts(val));
     });
 
-    addBtn.addEventListener('click', () => {
-      const name = searchInput.value.trim();
-      if (!name) return;
-      products.push({ name, lower: name.toLowerCase() });
-      store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+    function handleAddProductFromInput() {
+      const rawName = searchInput.value.trim();
+      if (!rawName) return;
+      const norm = normalize(rawName);
+
+      let productToAdd = products.find(p => p.norm === norm);
+      if (!productToAdd) {
+        productToAdd = { name: rawName, norm };
+        products.push(productToAdd);
+        products.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+      }
+
+      addToCart(productToAdd.name);
       searchInput.value = '';
       addBtn.style.display = 'none';
       renderProducts();
+    }
+
+    addBtn.addEventListener('click', handleAddProductFromInput);
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddProductFromInput();
+      }
     });
 
+    /* LISTA DEL SÚPER */
     function renderCart() {
-      const footer = $('list-footer');
       if (!cartItems.length) {
         cartList.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">🛒</div>
             <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
           </div>`;
-        footer.style.display = 'none';
+        listFooter.style.display = 'none';
         return;
       }
 
-      footer.style.display = 'flex';
-      const sorted = [...cartItems].sort((a, b) => a.name.localeCompare(b.name));
+      listFooter.style.display = 'flex';
+
+      const sorted = [...cartItems].sort((a, b) => {
+        if (a.completed === b.completed) return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+        return a.completed ? 1 : -1;
+      });
+
       let html = '';
       for (let i = 0, l = sorted.length; i < l; i++) {
         const item = sorted[i];
-        if (!item.id) item.id = String(generateId());
         const id = esc(item.id);
+        const isDone = item.completed ? ' completed' : '';
         html += `
-          <div class="cart-item">
-            <div class="item-info">
+          <div class="cart-item${isDone}" data-id="${id}">
+            <div class="item-toggle-wrap">
+              <div class="item-checkbox">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
               <span class="item-name">${esc(item.name)}</span>
-              <span class="item-qty">×${item.qty}</span>
             </div>
-            <button type="button" class="delete-btn" data-id="${id}" aria-label="Eliminar">×</button>
+            <div class="cart-controls">
+              <button type="button" class="qty-btn" data-action="dec" aria-label="Menos">-</button>
+              <span class="item-qty-badge">${item.qty}</span>
+              <button type="button" class="qty-btn" data-action="inc" aria-label="Más">+</button>
+              <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar">×</button>
+            </div>
           </div>`;
       }
       cartList.innerHTML = html;
     }
 
     cartList.addEventListener('click', e => {
-      const btn = e.target.closest('.delete-btn');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      cartItems = cartItems.filter(i => String(i.id) !== id);
+      const itemEl = e.target.closest('.cart-item');
+      if (!itemEl) return;
+      const id = itemEl.dataset.id;
+      const item = cartItems.find(i => String(i.id) === id);
+      if (!item) return;
+
+      const actionBtn = e.target.closest('button');
+      if (actionBtn) {
+        const action = actionBtn.dataset.action;
+        if (action === 'inc') {
+          if (item.completed) return;
+          item.qty++;
+        } else if (action === 'dec') {
+          if (item.completed) return;
+          if (item.qty > 1) {
+            item.qty--;
+          } else {
+            cartItems = cartItems.filter(i => String(i.id) !== id);
+          }
+        } else if (action === 'del') {
+          cartItems = cartItems.filter(i => String(i.id) !== id);
+        }
+      } else {
+        item.completed = !item.completed;
+      }
+
       store.set(KEYS.CART, cartItems);
       renderCart();
     });
@@ -895,20 +1189,30 @@
       }
     });
 
+    /* NOTAS (SIN RECORTES) */
+    function parseNoteParts(rawText) {
+      const lines = (rawText || '').trim().split('\n');
+      const title = lines[0] || 'Nota';
+      const body = lines.slice(1).join('\n').trim();
+      return { title, body };
+    }
+
     function renderNotes(query = "") {
-      const q = query.trim().toLowerCase();
+      const q = normalize(query);
       let html = '';
       let count = 0;
 
       for (let i = 0, l = notes.length; i < l; i++) {
         const note = notes[i];
-        if (!q || note.lower.includes(q)) {
+        if (!q || note.norm.includes(q)) {
           count++;
           const id = esc(note.id);
+          const { title, body } = parseNoteParts(note.text);
           html += `
             <div class="note-card" data-id="${id}">
               <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar">×</button>
-              <div class="note-body">${esc(note.text)}</div>
+              <div class="note-title">${esc(title)}</div>
+              ${body ? `<div class="note-body">${esc(body)}</div>` : ''}
               <div class="note-date">${note.formattedDate}</div>
             </div>`;
         }
@@ -924,6 +1228,7 @@
     notesGrid.addEventListener('click', e => {
       const delBtn = e.target.closest('.delete-note');
       if (delBtn) {
+        e.stopPropagation();
         const id = delBtn.dataset.deleteId;
         if (confirm('¿Eliminar esta nota?')) {
           notes = notes.filter(n => n.id !== id);
@@ -955,6 +1260,8 @@
       noteModal.classList.remove('active');
       noteTextInput.blur();
       currentNote = null;
+      const modalContent = noteModal.querySelector('.modal-content');
+      if (modalContent) modalContent.style.maxHeight = '';
     }
 
     function setupModalKeyboardSync() {
@@ -964,8 +1271,7 @@
       const onViewportChange = () => {
         if (!noteModal.classList.contains('active')) return;
         const vv = window.visualViewport;
-        const availableHeight = vv.height;
-        modalContent.style.maxHeight = `${Math.min(availableHeight - 32, window.innerHeight * 0.85)}px`;
+        modalContent.style.maxHeight = `${Math.min(vv.height - 32, window.innerHeight * 0.85)}px`;
       };
 
       window.visualViewport.addEventListener('resize', onViewportChange);
@@ -986,12 +1292,6 @@
     $('cancel-note').addEventListener('click', closeNoteModal);
     noteModal.addEventListener('click', e => { if (e.target === noteModal) closeNoteModal(); });
 
-    window.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && noteModal.classList.contains('active')) {
-        closeNoteModal();
-      }
-    });
-
     $('note-form').addEventListener('submit', e => {
       e.preventDefault();
       const text = noteTextInput.value.trim();
@@ -999,17 +1299,19 @@
 
       const date = new Date().toISOString();
       const formattedDate = dateFormatter.format(new Date(date));
+      const norm = normalize(text);
 
       if (currentNote) {
         currentNote.text = text;
-        currentNote.lower = text.toLowerCase();
+        currentNote.norm = norm;
         currentNote.date = date;
         currentNote.formattedDate = formattedDate;
+        notes = [currentNote, ...notes.filter(n => n.id !== currentNote.id)];
       } else {
         notes.unshift({
-          id: String(generateId()),
+          id: generateId(),
           text,
-          lower: text.toLowerCase(),
+          norm,
           date,
           formattedDate
         });
