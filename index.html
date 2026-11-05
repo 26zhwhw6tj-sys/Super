@@ -21,7 +21,7 @@
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
 
-      /* Motor óptico de Cristal Líquido Fino y Elegante optimizado */
+      /* Motor óptico de Cristal Líquido Fino y Elegante */
       --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(17, 17, 17, 0.55) 100%);
       --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(26, 26, 26, 0.60) 100%);
       --glass-rim: 1px solid rgba(255, 255, 255, 0.11);
@@ -84,7 +84,6 @@
       display: flex;
       flex-direction: column;
       padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
-      contain: layout style paint;
     }
 
     .panel-header {
@@ -165,7 +164,6 @@
       flex: 1;
       position: relative;
       overflow: hidden;
-      contain: content;
     }
 
     .scroll-area {
@@ -176,7 +174,6 @@
       overscroll-behavior-y: contain;
       scroll-behavior: smooth;
       padding: 6px 2px 30px;
-      will-change: scroll-position;
       -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
       mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
     }
@@ -211,7 +208,6 @@
       justify-content: center;
       word-break: break-word;
       cursor: pointer;
-      contain: layout style;
       transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
     }
 
@@ -242,7 +238,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      contain: layout style;
       transition: opacity 0.2s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
@@ -419,7 +414,6 @@
       box-shadow: var(--glass-lens);
       padding: 14px;
       cursor: pointer;
-      contain: layout style;
       transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
     }
 
