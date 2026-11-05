@@ -861,11 +861,11 @@
     }
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
-      '&': '&',
-      '<': '<',
-      '>': '>',
-      '"': '"',
-      "'": '''
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
     }[c]));
 
     const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
