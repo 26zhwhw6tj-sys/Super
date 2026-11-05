@@ -6,19 +6,28 @@
   <title>🛒 Súper</title>
   <style>
     :root {
+      /* Paleta de colores original intacta */
       --accent: #00ff88;
-      --accent-glow: rgba(0, 255, 136, 0.18);
+      --accent-glow: rgba(0, 255, 136, 0.15);
       --bg: #000;
       --surface: #111;
       --surface-elevated: #1a1a1a;
       --text: #fff;
-      --muted: #aaa;
+      --muted: #8e8e93;
       --border: #2c2c2e;
       --danger: #ff453a;
-      --danger-surface: rgba(255, 69, 58, 0.15);
+      --danger-surface: rgba(255, 69, 58, 0.12);
       --radius: 16px;
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
+
+      /* Motor óptico de Cristal Líquido Fino y Elegante */
+      --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(17, 17, 17, 0.55) 100%);
+      --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(26, 26, 26, 0.60) 100%);
+      --glass-rim: 1px solid rgba(255, 255, 255, 0.11);
+      --glass-rim-active: 1px solid var(--accent);
+      --glass-lens: inset 0 1px 0 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 0 rgba(255, 255, 255, 0.04);
+      --glass-blur: blur(28px) saturate(190%);
     }
 
     *, *::before, *::after {
@@ -47,48 +56,12 @@
       scroll-behavior: smooth;
     }
 
-    /* PANTALLA DE CARGA (LAUNCHER) */
-    .launcher {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      transition: opacity 0.3s ease;
-    }
-
-    .launcher.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .loading-bar {
-      width: 200px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .loading-progress {
-      height: 100%;
-      width: 0%;
-      background: #fff;
-      transition: width 0.12s linear;
-    }
-
     /* CONTENEDOR DE PANELES MÓVILES */
     .app-container {
       position: absolute;
       inset: 0;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .app-container.visible {
       opacity: 1;
+      z-index: 1;
     }
 
     .panels-container {
@@ -111,7 +84,6 @@
       display: flex;
       flex-direction: column;
       padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
-      contain: layout paint;
     }
 
     .panel-header {
@@ -126,12 +98,10 @@
       font-size: 24px;
       font-weight: 700;
       letter-spacing: -0.5px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: var(--text);
     }
 
-    /* BÚSQUEDA Y BOTONES */
+    /* BÚSQUEDA Y BOTONES FINOS */
     .search-container {
       position: relative;
       margin-bottom: 14px;
@@ -139,47 +109,61 @@
 
     .search-input {
       width: 100%;
-      padding: 14px 105px 14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      padding: 13px 115px 13px 16px;
+      background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-rim);
       border-radius: var(--radius);
+      box-shadow: var(--glass-lens);
       color: var(--text);
-      font-size: 16px;
+      font-size: 15px;
       outline: none;
-      transition: border-color 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--muted);
     }
 
     .search-input:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow), var(--glass-lens);
     }
 
     .add-btn {
       position: absolute;
-      right: 8px;
+      right: 6px;
       top: 50%;
       transform: translateY(-50%);
       background: var(--accent);
       color: #000;
       border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
+      border-radius: 10px;
+      padding: 7px 12px;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 11px;
+      letter-spacing: 0.3px;
       display: none;
       cursor: pointer;
       z-index: 2;
+      box-shadow: 0 2px 10px var(--accent-glow);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .add-btn:active {
+      transform: translateY(-50%) scale(0.95);
     }
 
     #add-note-btn {
       display: block;
     }
 
-    /* CONTENEDOR Y SCROLL ADAPTATIVO */
+    /* CONTENEDOR Y SCROLL CON MÁSCARA TRANSPARENTE */
     .scroll-container {
       flex: 1;
       position: relative;
       overflow: hidden;
-      contain: content;
     }
 
     .scroll-area {
@@ -189,93 +173,83 @@
       touch-action: pan-y;
       overscroll-behavior-y: contain;
       scroll-behavior: smooth;
-      padding-bottom: 30px;
-      will-change: scroll-position;
+      padding: 6px 2px 30px;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
     }
 
     .scroll-area::-webkit-scrollbar {
       display: none;
     }
 
-    .fade-overlay {
-      position: absolute;
-      left: 0;
-      width: 100%;
-      height: 24px;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    .top-fade {
-      top: 0;
-      background: linear-gradient(to bottom, var(--bg), transparent);
-    }
-
-    .bottom-fade {
-      bottom: 0;
-      background: linear-gradient(to top, var(--bg), transparent);
-    }
-
     /* GRID EXPLORAR PRODUCTOS */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-      gap: 10px;
-      padding: 8px 2px;
+      gap: 8px;
     }
 
     .product-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      position: relative;
+      background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-rim);
       border-radius: var(--radius);
-      padding: 16px 8px;
+      box-shadow: var(--glass-lens);
+      padding: 14px 8px;
       text-align: center;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 500;
       color: var(--muted);
-      contain: layout style paint;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      min-height: 56px;
+      min-height: 54px;
       display: flex;
       align-items: center;
       justify-content: center;
       word-break: break-word;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
     }
 
     .product-card:active {
-      background: var(--accent-glow);
+      transform: scale(0.96);
+      background: rgba(0, 255, 136, 0.08);
       border-color: var(--accent);
       color: var(--accent);
     }
 
-    /* LISTA DEL CARRITO */
+    /* LISTA DEL CARRITO Y NOTAS */
     .cart-list, .notes-grid {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 8px 2px;
+      gap: 8px;
     }
 
     .cart-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      position: relative;
+      background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-rim);
       border-radius: var(--radius);
-      padding: 12px 14px;
+      box-shadow: var(--glass-lens);
+      padding: 11px 13px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      contain: layout style paint;
-      transition: opacity 0.2s ease, border-color 0.15s, background 0.15s;
+      transition: opacity 0.2s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
     .cart-item.completed {
-      opacity: 0.55;
-      background: rgba(17, 17, 17, 0.4);
+      opacity: 0.5;
+      background: rgba(17, 17, 17, 0.3);
+      border-color: rgba(255, 255, 255, 0.05);
     }
 
     .cart-item.completed .item-name {
       text-decoration: line-through;
+      color: var(--muted);
     }
 
     .item-toggle-wrap {
@@ -284,29 +258,32 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      cursor: pointer;
     }
 
     .item-checkbox {
       width: 22px;
       height: 22px;
-      border-radius: 6px;
-      border: 2px solid var(--border);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
 
     .cart-item.completed .item-checkbox {
       background: var(--accent);
       border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
     }
 
     .item-checkbox svg {
       display: none;
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       stroke: #000;
       stroke-width: 3;
       fill: none;
@@ -317,7 +294,7 @@
     }
 
     .item-name {
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
@@ -332,23 +309,26 @@
     }
 
     .qty-btn {
-      width: 30px;
-      height: 30px;
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
+      width: 28px;
+      height: 28px;
+      background: var(--glass-fill-elevated);
+      border: var(--glass-rim);
+      box-shadow: var(--glass-lens);
       color: var(--text);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease, color 0.12s ease;
     }
 
     .qty-btn:active {
-      background: var(--accent-glow);
+      transform: scale(0.92);
       border-color: var(--accent);
+      color: var(--accent);
     }
 
     .cart-item.completed .qty-btn {
@@ -363,11 +343,12 @@
     }
 
     .cart-item.completed .item-qty-badge {
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--muted);
-      background: var(--bg);
-      padding: 3px 8px;
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 2px 7px;
+      border-radius: 999px;
     }
 
     .cart-item.completed .item-qty-badge::before {
@@ -375,18 +356,18 @@
     }
 
     .delete-btn {
-      width: 30px;
-      height: 30px;
-      border: none;
-      background: transparent;
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(255, 69, 58, 0.25);
+      background: var(--danger-surface);
       color: var(--danger);
       border-radius: 8px;
-      font-size: 20px;
+      font-size: 18px;
       display: none;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: background 0.15s ease;
+      transition: transform 0.12s ease;
     }
 
     .cart-item.completed .delete-btn {
@@ -394,123 +375,135 @@
     }
 
     .delete-btn:active {
-      background: var(--danger-surface);
+      transform: scale(0.92);
     }
 
     /* FOOTER DE LISTA */
     .list-footer {
-      padding-top: 10px;
+      padding-top: 8px;
       display: none;
       justify-content: flex-end;
     }
 
     .clear-all {
       color: var(--danger);
-      background: none;
-      border: none;
-      font-size: 14px;
-      padding: 8px 12px;
-      border-radius: 8px;
+      background: var(--danger-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255, 69, 58, 0.25);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
       cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
     .clear-all:active {
-      background: var(--danger-surface);
+      transform: scale(0.95);
     }
 
-    /* NOTAS (TOTALMENTE VISIBLES Y ADAPTATIVAS) */
+    /* NOTAS */
     .note-card {
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
       position: relative;
-      transition: background 0.18s ease, border-color 0.18s ease;
+      background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-rim);
+      border-radius: var(--radius);
+      box-shadow: var(--glass-lens);
+      padding: 14px;
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
     }
 
     .note-card:active {
-      background: rgba(0, 255, 136, 0.08);
+      transform: scale(0.98);
+      background: rgba(0, 255, 136, 0.06);
       border-color: var(--accent);
     }
 
     .note-title {
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 700;
       color: var(--accent);
-      margin-bottom: 6px;
-      padding-right: 36px;
+      margin-bottom: 4px;
+      padding-right: 32px;
       word-break: break-word;
       white-space: pre-wrap;
     }
 
     .note-body {
-      font-size: 14px;
+      font-size: 13.5px;
       line-height: 1.5;
+      color: var(--text);
       white-space: pre-wrap;
       word-break: break-word;
     }
 
     .note-date {
-      font-size: 11px;
+      font-size: 10.5px;
       color: var(--muted);
-      margin-top: 10px;
+      margin-top: 8px;
       text-align: right;
     }
 
     .delete-note {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 10px;
+      right: 10px;
       background: var(--danger-surface);
       color: var(--danger);
-      border: none;
+      border: 1px solid rgba(255, 69, 58, 0.25);
       border-radius: 50%;
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
       z-index: 2;
+      transition: transform 0.15s ease;
     }
 
     .delete-note:active {
-      background: rgba(255, 69, 58, 0.4);
+      transform: scale(0.9);
     }
 
     /* ESTADOS VACÍOS */
     .empty-state {
       text-align: center;
       color: var(--muted);
-      padding: 60px 20px;
+      padding: 50px 20px;
       grid-column: 1 / -1;
     }
 
     .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 14px;
+      font-size: 42px;
+      margin-bottom: 10px;
       opacity: 0.5;
     }
 
     .empty-state-text {
-      font-size: 14px;
-      line-height: 1.6;
+      font-size: 13.5px;
+      line-height: 1.5;
     }
 
     /* MODAL DE NOTAS */
     .modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s ease;
+      transition: opacity 0.22s ease;
       padding: 20px;
     }
 
@@ -520,22 +513,25 @@
     }
 
     .modal-content {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-rim);
+      border-radius: calc(var(--radius) + 2px);
+      box-shadow: var(--glass-lens), 0 20px 40px rgba(0, 0, 0, 0.6);
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       max-height: 85vh;
       max-height: 85dvh;
       display: flex;
       flex-direction: column;
-      padding: 18px;
-      transform: translateY(20px);
-      transition: transform 0.28s cubic-bezier(0.2, 0.95, 0.3, 1);
+      padding: 16px;
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.25s cubic-bezier(0.2, 0.95, 0.3, 1);
     }
 
     .modal.active .modal-content {
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
 
     .note-form {
@@ -550,51 +546,64 @@
       min-height: 110px;
       max-height: 50vh;
       max-height: 50dvh;
-      padding: 14px;
-      margin-bottom: 14px;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      padding: 13px;
+      margin-bottom: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border: var(--glass-rim);
       border-radius: var(--radius);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
       color: var(--text);
       font: inherit;
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.5;
       resize: none;
       overflow-y: auto;
       outline: none;
       overscroll-behavior: contain;
       scroll-behavior: smooth;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .unified-note-input::placeholder {
+      color: var(--muted);
     }
 
     .unified-note-input:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow), inset 0 1px 3px rgba(0, 0, 0, 0.5);
     }
 
     .modal-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
     }
 
     .btn {
-      padding: 10px 18px;
-      border-radius: var(--radius);
+      padding: 9px 16px;
+      border-radius: 12px;
       border: none;
       font-weight: 700;
       font-size: 13px;
       cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
     }
 
     .btn-cancel {
-      background: var(--surface);
+      background: var(--glass-fill);
       color: var(--muted);
-      border: 1px solid var(--border);
+      border: var(--glass-rim);
     }
 
     .btn-save {
       background: var(--accent);
       color: #000;
+      box-shadow: 0 2px 10px var(--accent-glow);
     }
 
     /* TOAST */
@@ -602,19 +611,21 @@
       position: fixed;
       bottom: calc(var(--safe-bottom) + 20px);
       left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
+      transform: translateX(-50%) translateY(16px);
+      background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(0, 255, 136, 0.3);
       color: var(--accent);
-      padding: 8px 18px;
+      padding: 7px 16px;
       border-radius: 999px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       opacity: 0;
       pointer-events: none;
-      transition: transform 0.25s ease, opacity 0.25s ease;
+      transition: transform 0.22s ease, opacity 0.22s ease;
       z-index: 1200;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 12px var(--accent-glow);
     }
 
     .toast.show {
@@ -624,12 +635,6 @@
   </style>
 </head>
 <body>
-  <div class="launcher" id="launcher">
-    <div class="loading-bar">
-      <div class="loading-progress" id="loading-progress"></div>
-    </div>
-  </div>
-
   <div class="app-container" id="app-container">
     <div class="panels-container" id="panels-container">
       
@@ -643,11 +648,9 @@
           <button type="button" class="add-btn" id="add-btn">AÑADIR</button>
         </div>
         <div class="scroll-container">
-          <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="grid" id="products-grid"></div>
           </div>
-          <div class="fade-overlay bottom-fade"></div>
         </div>
       </div>
 
@@ -657,11 +660,9 @@
           <h1 class="panel-title">Lista</h1>
         </div>
         <div class="scroll-container">
-          <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="cart-list" id="cart-list"></div>
           </div>
-          <div class="fade-overlay bottom-fade"></div>
         </div>
         <div class="list-footer" id="list-footer">
           <button type="button" class="clear-all" id="clear-all">Vaciar</button>
@@ -678,11 +679,9 @@
           <button type="button" class="add-btn" id="add-note-btn">NUEVA NOTA</button>
         </div>
         <div class="scroll-container">
-          <div class="fade-overlay top-fade"></div>
           <div class="scroll-area">
             <div class="notes-grid" id="notes-grid"></div>
           </div>
-          <div class="fade-overlay bottom-fade"></div>
         </div>
       </div>
     </div>
@@ -830,7 +829,6 @@
 
     /* RECUPERACIÓN AUTOMÁTICA DE DATOS ANTERIORES */
     function recoverLegacyStorage() {
-      // 1. Recuperar Productos si la clave actual no existe
       if (!localStorage.getItem(KEYS.PRODUCTS)) {
         for (const oldKey of LEGACY_KEYS.PRODUCTS) {
           const legacy = store.get(oldKey, null);
@@ -841,7 +839,6 @@
         }
       }
 
-      // 2. Recuperar Carrito si la clave actual no existe
       if (!localStorage.getItem(KEYS.CART)) {
         for (const oldKey of LEGACY_KEYS.CART) {
           const legacy = store.get(oldKey, null);
@@ -852,7 +849,6 @@
         }
       }
 
-      // 3. Recuperar Notas si la clave actual no existe
       if (!localStorage.getItem(KEYS.NOTES)) {
         for (const oldKey of LEGACY_KEYS.NOTES) {
           const legacy = store.get(oldKey, null);
@@ -865,11 +861,11 @@
     }
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
+      '&': '&',
+      '<': '<',
+      '>': '>',
+      '"': '"',
+      "'": '''
     }[c]));
 
     const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -916,30 +912,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       initApp();
-
-      const progressEl = $('loading-progress');
-      const launcherEl = $('launcher');
-      const appContainerEl = $('app-container');
-      let progress = 0;
-
-      const loop = () => {
-        progress += Math.random() * 22 + 16;
-        if (progress >= 100) {
-          progressEl.style.width = '100%';
-          setTimeout(() => {
-            launcherEl.classList.add('hidden');
-            appContainerEl.classList.add('visible');
-            snapToPanel(1, 0);
-            setTimeout(() => {
-              launcherEl.style.display = 'none';
-            }, 350);
-          }, 120);
-          return;
-        }
-        progressEl.style.width = `${progress}%`;
-        requestAnimationFrame(loop);
-      };
-      requestAnimationFrame(loop);
+      snapToPanel(1, 0);
     });
 
     /* CARGAS SEGURAS DESDE LOCALSTORAGE */
@@ -992,7 +965,16 @@
       renderNotes();
       setupTouchSwipe();
       setupModalKeyboardSync();
-      snapToPanel(1, 0);
+    }
+
+    function getRealContainerX() {
+      const style = window.getComputedStyle(panelsContainer);
+      const transform = style.transform || style.webkitTransform;
+      if (transform && transform !== 'none') {
+        const matrix = new DOMMatrixReadOnly(transform);
+        return matrix.m41;
+      }
+      return currentContainerX;
     }
 
     function setContainerPosition(offsetPx, durationMs = 0, easing = ADAPTIVE_EASING) {
@@ -1028,7 +1010,7 @@
 
         const now = performance.now();
         velocitySamples = [{ x: startX, t: now }];
-        dragBaseOffset = currentContainerX;
+        dragBaseOffset = getRealContainerX();
         setContainerPosition(dragBaseOffset, 0);
       }, { passive: true });
 
@@ -1173,7 +1155,6 @@
       const trimmed = (name || '').trim();
       if (!trimmed) return;
 
-      // Refresco atómico antes de guardar para no sobrescribir cambios externos
       syncCart();
 
       const norm = normalize(trimmed);
@@ -1272,7 +1253,6 @@
       if (!itemEl) return;
       const id = itemEl.dataset.id;
 
-      // Lectura fresca para evitar condiciones de carrera
       syncCart();
       const item = cartItems.find(i => String(i.id) === id);
       if (!item) return;
