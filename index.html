@@ -6,7 +6,6 @@
   <title>🛒 Súper</title>
   <style>
     :root {
-      /* Paleta de colores original intacta */
       --accent: #00ff88;
       --accent-glow: rgba(0, 255, 136, 0.15);
       --bg: #000;
@@ -21,7 +20,6 @@
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
 
-      /* Motor óptico de Cristal Líquido Fino y Elegante optimizado */
       --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(17, 17, 17, 0.55) 100%);
       --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(26, 26, 26, 0.60) 100%);
       --glass-rim: 1px solid rgba(255, 255, 255, 0.11);
@@ -58,7 +56,6 @@
       touch-action: pan-y;
     }
 
-    /* CONTENEDOR DE PANELES MÓVILES */
     .app-container {
       position: absolute;
       inset: 0;
@@ -106,7 +103,6 @@
       color: var(--text);
     }
 
-    /* BÚSQUEDA Y BOTONES FINOS */
     .search-container {
       position: relative;
       margin-bottom: 14px;
@@ -166,7 +162,6 @@
       display: block;
     }
 
-    /* CONTENEDOR Y SCROLL CON MÁSCARA TRANSPARENTE */
     .scroll-container {
       flex: 1;
       position: relative;
@@ -189,7 +184,6 @@
       display: none;
     }
 
-    /* GRID EXPLORAR PRODUCTOS */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
@@ -225,7 +219,6 @@
       color: var(--accent);
     }
 
-    /* LISTA DEL CARRITO Y NOTAS */
     .cart-list, .notes-grid {
       display: flex;
       flex-direction: column;
@@ -388,7 +381,6 @@
       transform: scale(0.92);
     }
 
-    /* FOOTER DE LISTA */
     .list-footer {
       padding-top: 8px;
       display: none;
@@ -414,7 +406,6 @@
       transform: scale(0.95);
     }
 
-    /* NOTAS */
     .note-card {
       position: relative;
       background: var(--glass-fill-elevated);
@@ -483,7 +474,6 @@
       transform: scale(0.9);
     }
 
-    /* ESTADOS VACÍOS */
     .empty-state {
       text-align: center;
       color: var(--muted);
@@ -502,7 +492,6 @@
       line-height: 1.5;
     }
 
-    /* MODAL DE NOTAS */
     .modal {
       position: fixed;
       inset: 0;
@@ -618,7 +607,6 @@
       box-shadow: 0 2px 10px var(--accent-glow);
     }
 
-    /* TOAST */
     .toast {
       position: fixed;
       bottom: calc(var(--safe-bottom) + 20px);
@@ -650,7 +638,6 @@
   <div class="app-container" id="app-container">
     <div class="panels-container" id="panels-container">
 
-      <!-- PANEL 0: EXPLORAR -->
       <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Explorar</h1>
@@ -666,7 +653,6 @@
         </div>
       </div>
 
-      <!-- PANEL 1: LISTA -->
       <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Lista</h1>
@@ -681,7 +667,6 @@
         </div>
       </div>
 
-      <!-- PANEL 2: NOTAS -->
       <div class="panel">
         <div class="panel-header">
           <h1 class="panel-title">Notas</h1>
@@ -698,7 +683,6 @@
       </div>
     </div>
 
-    <!-- MODAL NOTA -->
     <div class="modal" id="note-modal" role="dialog" aria-modal="true">
       <div class="modal-content">
         <form class="note-form" id="note-form">
@@ -717,14 +701,12 @@
   <script>
     'use strict';
 
-    // CLAVES CENTRALIZADAS EN LOCALSTORAGE
     const KEYS = { 
       PRODUCTS: 'superapp_products_v2', 
       CART: 'superapp_cart_v2', 
       NOTES: 'superapp_notes_v2' 
     };
 
-    // CLAVES LEGADAS PARA AUTORRECUPERACIÓN
     const LEGACY_KEYS = {
       PRODUCTS: ['superapp_products', 'superapp_products_v1', 'products'],
       CART: ['superapp_cart', 'superapp_cart_v1', 'cart', 'super_cart'],
@@ -818,7 +800,6 @@
       return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
     };
 
-    /* GESTOR DE ALMACENAMIENTO EXCLUSIVO EN LOCALSTORAGE */
     const store = {
       get: (k, fallback = []) => {
         try {
@@ -853,7 +834,6 @@
       store.set(KEYS.CART, payload);
     }
 
-    /* RECUPERACIÓN AUTOMÁTICA DE DATOS ANTERIORES */
     function recoverLegacyStorage() {
       if (!localStorage.getItem(KEYS.PRODUCTS)) {
         for (const oldKey of LEGACY_KEYS.PRODUCTS) {
@@ -887,11 +867,11 @@
     }
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
-      '&': '&',
-      '<': '<',
-      '>': '>',
-      '"': '"',
-      "'": '''
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
     }[c]));
 
     function parseValidDate(d) {
@@ -919,7 +899,6 @@
       }
     }, true);
 
-    /* SINCRONIZACIÓN AUTOMÁTICA ANTE CAMBIOS EN OTRAS PESTAÑAS O VENTANAS */
     window.addEventListener('storage', e => {
       if (!e.key) return;
       if (e.key === KEYS.CART) {
@@ -939,7 +918,6 @@
       snapToPanel(1, 0);
     });
 
-    /* CARGAS SEGURAS DESDE LOCALSTORAGE */
     function syncProducts() {
       const storedProducts = store.get(KEYS.PRODUCTS, []);
       if (!storedProducts.length) {
@@ -1032,7 +1010,6 @@
       setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
     }
 
-    /* MOTOR DE GESTOS ADAPTATIVO OPTIMIZADO A 120FPS */
     function setupTouchSwipe() {
       let startX = 0, startY = 0, currentX = 0;
       let isDragging = false;
@@ -1170,7 +1147,6 @@
             duration = Math.round(300 + ratio * 90);
           }
 
-          // Solo suprime el click fantasma inmediato del propio swipe, sin bloquear toques posteriores
           suppressClicksUntil = performance.now() + 50;
           setContainerPosition(targetX, duration, ADAPTIVE_EASING);
         } else if (interruptedAnimation) {
@@ -1191,7 +1167,6 @@
       }, { passive: true });
     }
 
-    /* EXPLORAR PRODUCTOS */
     function renderProducts(query = "") {
       const q = normalize(query);
       let html = '';
@@ -1273,7 +1248,6 @@
       }
     });
 
-    /* LISTA DEL SÚPER */
     function renderCart() {
       if (!cartItems.length) {
         cartList.innerHTML = `
@@ -1364,7 +1338,6 @@
       }
     });
 
-    /* NOTAS */
     function parseNoteParts(rawText) {
       const lines = (rawText || '').trim().split('\n');
       const title = lines[0] || 'Nota';
