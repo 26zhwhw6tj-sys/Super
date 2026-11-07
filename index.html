@@ -36,10 +36,12 @@
       padding: 0;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      -webkit-user-select: none;
     }
 
     input, textarea {
       user-select: auto;
+      -webkit-user-select: auto;
     }
 
     html, body {
@@ -53,7 +55,7 @@
       position: fixed;
       inset: 0;
       overscroll-behavior: none;
-      scroll-behavior: smooth;
+      touch-action: pan-y;
     }
 
     /* CONTENEDOR DE PANELES MÓVILES */
@@ -62,6 +64,7 @@
       inset: 0;
       opacity: 1;
       z-index: 1;
+      overflow: hidden;
     }
 
     .panels-container {
@@ -71,11 +74,12 @@
       height: 100dvh;
       will-change: transform;
       backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       transform: translate3d(-100vw, 0, 0);
     }
 
-    .panels-container.is-swiping * {
-      pointer-events: none !important;
+    .panels-container.is-swiping .panel {
+      pointer-events: none;
     }
 
     .panel {
@@ -134,7 +138,6 @@
 
     .add-btn {
       position: absolute;
-      right: 6px;
       right: 8px;
       top: 50%;
       transform: translateY(-50%);
@@ -150,6 +153,7 @@
       display: none;
       cursor: pointer;
       z-index: 2;
+      touch-action: manipulation;
       box-shadow: 0 2px 10px var(--accent-glow);
       transition: transform 0.15s ease, opacity 0.15s ease;
     }
@@ -167,7 +171,7 @@
       flex: 1;
       position: relative;
       overflow: hidden;
-      contain: content;
+      contain: strict;
     }
 
     .scroll-area {
@@ -176,9 +180,7 @@
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overscroll-behavior-y: contain;
-      scroll-behavior: smooth;
       padding: 6px 2px 30px;
-      will-change: scroll-position;
       -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
       mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
     }
@@ -197,8 +199,6 @@
     .product-card {
       position: relative;
       background: var(--glass-fill);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
@@ -213,8 +213,9 @@
       justify-content: center;
       word-break: break-word;
       cursor: pointer;
-      contain: layout style;
-      transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+      touch-action: manipulation;
+      contain: layout style paint;
+      transition: transform 0.12s ease, border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
     }
 
     .product-card:active {
@@ -234,8 +235,6 @@
     .cart-item {
       position: relative;
       background: var(--glass-fill);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
@@ -244,8 +243,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      contain: layout style;
-      transition: opacity 0.2s ease, border-color 0.15s ease, background 0.15s ease;
+      touch-action: manipulation;
+      contain: layout style paint;
+      transition: opacity 0.18s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
     .cart-item.completed {
@@ -266,6 +266,7 @@
       align-items: center;
       gap: 12px;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     .item-checkbox {
@@ -329,7 +330,8 @@
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+      touch-action: manipulation;
+      transition: transform 0.1s ease, border-color 0.1s ease, color 0.1s ease;
     }
 
     .qty-btn:active {
@@ -374,7 +376,8 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.12s ease;
+      touch-action: manipulation;
+      transition: transform 0.1s ease;
     }
 
     .cart-item.completed .delete-btn {
@@ -403,6 +406,7 @@
       padding: 7px 14px;
       border-radius: 999px;
       cursor: pointer;
+      touch-action: manipulation;
       transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
@@ -414,15 +418,14 @@
     .note-card {
       position: relative;
       background: var(--glass-fill-elevated);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
       padding: 14px;
       cursor: pointer;
-      contain: layout style;
-      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      touch-action: manipulation;
+      contain: layout style paint;
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
     }
 
     .note-card:active {
@@ -472,7 +475,8 @@
       font-size: 15px;
       cursor: pointer;
       z-index: 2;
-      transition: transform 0.15s ease;
+      touch-action: manipulation;
+      transition: transform 0.12s ease;
     }
 
     .delete-note:active {
@@ -568,7 +572,6 @@
       overflow-y: auto;
       outline: none;
       overscroll-behavior: contain;
-      scroll-behavior: smooth;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
@@ -595,6 +598,7 @@
       font-weight: 700;
       font-size: 13px;
       cursor: pointer;
+      touch-action: manipulation;
       transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
@@ -798,10 +802,14 @@
     let currentPanel = 1;
     let currentNote = null;
     let currentContainerX = -window.innerWidth;
+    let isAnimating = false;
+    let animEndTimer = null;
     let suppressClicksUntil = 0;
     let toastTimeout = null;
 
     const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
+    const collator = new Intl.Collator('es', { sensitivity: 'base' });
+    const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
     const normalize = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
@@ -834,6 +842,16 @@
         }
       }
     };
+
+    function saveCartToStorage() {
+      const payload = cartItems.map(i => ({
+        id: i.id,
+        name: i.name,
+        qty: i.qty,
+        completed: i.completed
+      }));
+      store.set(KEYS.CART, payload);
+    }
 
     /* RECUPERACIÓN AUTOMÁTICA DE DATOS ANTERIORES */
     function recoverLegacyStorage() {
@@ -869,14 +887,12 @@
     }
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
+      '&': '&',
+      '<': '<',
+      '>': '>',
+      '"': '"',
+      "'": '''
     }[c]));
-
-    const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
     function parseValidDate(d) {
       const parsed = new Date(d);
@@ -939,12 +955,16 @@
 
     function syncCart() {
       const storedCart = store.get(KEYS.CART, []);
-      cartItems = storedCart.map(i => ({
-        id: i.id || generateId(),
-        name: String(i.name || ''),
-        qty: Math.max(1, parseInt(i.qty, 10) || 1),
-        completed: Boolean(i.completed)
-      }));
+      cartItems = storedCart.map(i => {
+        const name = String(i.name || '');
+        return {
+          id: String(i.id || generateId()),
+          name,
+          norm: normalize(name),
+          qty: Math.max(1, parseInt(i.qty, 10) || 1),
+          completed: Boolean(i.completed)
+        };
+      });
     }
 
     function syncNotes() {
@@ -976,6 +996,7 @@
     }
 
     function getRealContainerX() {
+      if (!isAnimating) return currentContainerX;
       const style = window.getComputedStyle(panelsContainer);
       const transform = style.transform || style.webkitTransform;
       if (transform && transform !== 'none') {
@@ -987,24 +1008,41 @@
 
     function setContainerPosition(offsetPx, durationMs = 0, easing = ADAPTIVE_EASING) {
       currentContainerX = offsetPx;
-      panelsContainer.style.transition = durationMs > 0 ? `transform ${durationMs}ms ${easing}` : 'none';
+      clearTimeout(animEndTimer);
+      if (durationMs > 0) {
+        isAnimating = true;
+        panelsContainer.style.transition = `transform ${durationMs}ms ${easing}`;
+        animEndTimer = setTimeout(() => { isAnimating = false; }, durationMs + 20);
+      } else {
+        isAnimating = false;
+        panelsContainer.style.transition = 'none';
+      }
       panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
     }
+
+    panelsContainer.addEventListener('transitionend', e => {
+      if (e.target === panelsContainer) {
+        isAnimating = false;
+        clearTimeout(animEndTimer);
+      }
+    });
 
     function snapToPanel(index, duration = 380, easing = ADAPTIVE_EASING) {
       currentPanel = Math.max(0, Math.min(2, index));
       setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
     }
 
-    /* MOTOR DE GESTOS ADAPTATIVO CORREGIDO A NIVEL DE DOCUMENTO */
+    /* MOTOR DE GESTOS ADAPTATIVO OPTIMIZADO A 120FPS */
     function setupTouchSwipe() {
       let startX = 0, startY = 0, currentX = 0;
       let isDragging = false;
       let isHorizontal = null;
       let dragBaseOffset = 0;
+      let pendingTargetX = 0;
       let rAf = null;
       let velocitySamples = [];
       let lastWidth = window.innerWidth;
+      let interruptedAnimation = false;
 
       document.addEventListener('touchstart', e => {
         if (noteModal.classList.contains('active') || e.touches.length > 1) return;
@@ -1018,8 +1056,17 @@
 
         const now = performance.now();
         velocitySamples = [{ x: startX, t: now }];
-        dragBaseOffset = getRealContainerX();
-        setContainerPosition(dragBaseOffset, 0);
+
+        if (isAnimating) {
+          interruptedAnimation = true;
+          dragBaseOffset = getRealContainerX();
+          setContainerPosition(dragBaseOffset, 0);
+        } else {
+          interruptedAnimation = false;
+          dragBaseOffset = -currentPanel * window.innerWidth;
+          currentContainerX = dragBaseOffset;
+        }
+        pendingTargetX = dragBaseOffset;
       }, { passive: true });
 
       document.addEventListener('touchmove', e => {
@@ -1038,12 +1085,18 @@
               panelsContainer.classList.add('is-swiping');
             } else {
               isDragging = false;
+              if (interruptedAnimation) {
+                snapToPanel(currentPanel, 220);
+                interruptedAnimation = false;
+              }
               return;
             }
           }
         }
 
         if (!isHorizontal) return;
+        if (e.cancelable) e.preventDefault();
+
         currentX = t.clientX;
 
         const now = performance.now();
@@ -1062,19 +1115,25 @@
           targetX = -2 * w - Math.pow(Math.abs(over), 0.82) * 2.8;
         }
 
+        pendingTargetX = targetX;
+
         if (!rAf) {
           rAf = requestAnimationFrame(() => {
-            setContainerPosition(targetX, 0);
+            setContainerPosition(pendingTargetX, 0);
             rAf = null;
           });
         }
-      }, { passive: true });
+      }, { passive: false });
 
       const onDragEnd = () => {
         if (!isDragging) return;
         isDragging = false;
         panelsContainer.classList.remove('is-swiping');
-        if (rAf) { cancelAnimationFrame(rAf); rAf = null; }
+        if (rAf) {
+          cancelAnimationFrame(rAf);
+          rAf = null;
+          setContainerPosition(pendingTargetX, 0);
+        }
 
         if (isHorizontal) {
           const w = window.innerWidth;
@@ -1105,15 +1164,19 @@
           let duration;
           if (isFlick) {
             duration = Math.round(remainingDistance / (absV * 1.15));
-            duration = Math.max(300, Math.min(410, duration));
+            duration = Math.max(260, Math.min(390, duration));
           } else {
             const ratio = Math.min(1, remainingDistance / w);
-            duration = Math.round(340 + ratio * 90);
+            duration = Math.round(300 + ratio * 90);
           }
 
-          suppressClicksUntil = performance.now() + duration;
+          // Solo suprime el click fantasma inmediato del propio swipe, sin bloquear toques posteriores
+          suppressClicksUntil = performance.now() + 50;
           setContainerPosition(targetX, duration, ADAPTIVE_EASING);
+        } else if (interruptedAnimation) {
+          snapToPanel(currentPanel, 220);
         }
+        interruptedAnimation = false;
       };
 
       document.addEventListener('touchend', onDragEnd, { passive: true });
@@ -1163,17 +1226,15 @@
       const trimmed = (name || '').trim();
       if (!trimmed) return;
 
-      syncCart();
-
       const norm = normalize(trimmed);
-      const existing = cartItems.find(i => normalize(i.name) === norm);
+      const existing = cartItems.find(i => i.norm === norm);
       if (existing) {
         existing.qty++;
         existing.completed = false;
       } else {
-        cartItems.push({ id: generateId(), name: trimmed, qty: 1, completed: false });
+        cartItems.push({ id: generateId(), name: trimmed, norm, qty: 1, completed: false });
       }
-      store.set(KEYS.CART, cartItems);
+      saveCartToStorage();
       renderCart();
       showToast(`Añadido: ${trimmed}`);
     }
@@ -1190,12 +1251,11 @@
       if (!rawName) return;
       const norm = normalize(rawName);
 
-      syncProducts();
       let productToAdd = products.find(p => p.norm === norm);
       if (!productToAdd) {
         productToAdd = { name: rawName, norm };
         products.push(productToAdd);
-        products.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+        products.sort((a, b) => collator.compare(a.name, b.name));
         store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
       }
 
@@ -1228,7 +1288,7 @@
       listFooter.style.display = 'flex';
 
       const sorted = [...cartItems].sort((a, b) => {
-        if (a.completed === b.completed) return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+        if (a.completed === b.completed) return collator.compare(a.name, b.name);
         return a.completed ? 1 : -1;
       });
 
@@ -1261,7 +1321,6 @@
       if (!itemEl) return;
       const id = itemEl.dataset.id;
 
-      syncCart();
       const item = cartItems.find(i => String(i.id) === id);
       if (!item) return;
 
@@ -1271,10 +1330,18 @@
         if (action === 'inc') {
           if (item.completed) return;
           item.qty++;
+          const badge = itemEl.querySelector('.item-qty-badge');
+          if (badge) badge.textContent = item.qty;
+          saveCartToStorage();
+          return;
         } else if (action === 'dec') {
           if (item.completed) return;
           if (item.qty > 1) {
             item.qty--;
+            const badge = itemEl.querySelector('.item-qty-badge');
+            if (badge) badge.textContent = item.qty;
+            saveCartToStorage();
+            return;
           } else {
             cartItems = cartItems.filter(i => String(i.id) !== id);
           }
@@ -1285,14 +1352,14 @@
         item.completed = !item.completed;
       }
 
-      store.set(KEYS.CART, cartItems);
+      saveCartToStorage();
       renderCart();
     });
 
     $('clear-all').addEventListener('click', () => {
       if (cartItems.length && confirm('¿Vaciar toda la lista?')) {
         cartItems = [];
-        store.set(KEYS.CART, cartItems);
+        saveCartToStorage();
         renderCart();
       }
     });
@@ -1339,7 +1406,6 @@
         e.stopPropagation();
         const id = delBtn.dataset.deleteId;
         if (confirm('¿Eliminar esta nota?')) {
-          syncNotes();
           notes = notes.filter(n => n.id !== id);
           store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
           renderNotes(searchNotesInput.value);
@@ -1409,8 +1475,6 @@
       const date = new Date().toISOString();
       const formattedDate = dateFormatter.format(new Date(date));
       const norm = normalize(text);
-
-      syncNotes();
 
       if (currentNote) {
         const idx = notes.findIndex(n => n.id === currentNote.id);
