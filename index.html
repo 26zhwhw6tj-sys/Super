@@ -6,6 +6,7 @@
   <title>🛒 Súper</title>
   <style>
     :root {
+      /* Paleta de colores original intacta */
       --accent: #00ff88;
       --accent-glow: rgba(0, 255, 136, 0.15);
       --bg: #000;
@@ -20,13 +21,13 @@
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
 
-      /* Motor de cristal líquido de alta velocidad */
-      --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(17, 17, 17, 0.6) 100%);
-      --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(26, 26, 26, 0.65) 100%);
+      /* Motor óptico de Cristal Líquido Fino y Elegante optimizado */
+      --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(17, 17, 17, 0.55) 100%);
+      --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(26, 26, 26, 0.60) 100%);
       --glass-rim: 1px solid rgba(255, 255, 255, 0.11);
       --glass-rim-active: 1px solid var(--accent);
       --glass-lens: inset 0 1px 0 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 0 rgba(255, 255, 255, 0.04);
-      --glass-blur: blur(24px) saturate(190%);
+      --glass-blur: blur(28px) saturate(190%);
     }
 
     *, *::before, *::after {
@@ -41,10 +42,6 @@
       user-select: auto;
     }
 
-    button, .product-card, .cart-item, .note-card, .item-toggle-wrap, .search-input, .unified-note-input {
-      touch-action: manipulation;
-    }
-
     html, body {
       background: var(--bg);
       color: var(--text);
@@ -56,14 +53,15 @@
       position: fixed;
       inset: 0;
       overscroll-behavior: none;
+      scroll-behavior: smooth;
     }
 
-    /* CONTENEDOR DE PANELES MÓVILES ACELERADO POR HARDWARE */
+    /* CONTENEDOR DE PANELES MÓVILES */
     .app-container {
       position: absolute;
       inset: 0;
+      opacity: 1;
       z-index: 1;
-      contain: strict;
     }
 
     .panels-container {
@@ -73,9 +71,7 @@
       height: 100dvh;
       will-change: transform;
       backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
       transform: translate3d(-100vw, 0, 0);
-      contain: layout style;
     }
 
     .panels-container.is-swiping * {
@@ -88,7 +84,7 @@
       display: flex;
       flex-direction: column;
       padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
-      contain: strict;
+      contain: layout style paint;
     }
 
     .panel-header {
@@ -97,7 +93,6 @@
       align-items: center;
       justify-content: space-between;
       min-height: 32px;
-      flex-shrink: 0;
     }
 
     .panel-title {
@@ -107,24 +102,25 @@
       color: var(--text);
     }
 
-    /* BÚSQUEDA Y BOTONES */
+    /* BÚSQUEDA Y BOTONES FINOS */
     .search-container {
       position: relative;
       margin-bottom: 14px;
-      flex-shrink: 0;
     }
 
     .search-input {
       width: 100%;
       padding: 13px 115px 13px 16px;
       background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
       color: var(--text);
       font-size: 15px;
       outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
 
     .search-input::placeholder {
@@ -138,6 +134,7 @@
 
     .add-btn {
       position: absolute;
+      right: 6px;
       right: 8px;
       top: 50%;
       transform: translateY(-50%);
@@ -154,18 +151,18 @@
       cursor: pointer;
       z-index: 2;
       box-shadow: 0 2px 10px var(--accent-glow);
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1), opacity 0.15s ease;
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
     .add-btn:active {
-      transform: translateY(-50%) scale(0.94);
+      transform: translateY(-50%) scale(0.95);
     }
 
     #add-note-btn {
       display: block;
     }
 
-    /* SCROLL CONTAINER */
+    /* CONTENEDOR Y SCROLL CON MÁSCARA TRANSPARENTE */
     .scroll-container {
       flex: 1;
       position: relative;
@@ -179,9 +176,9 @@
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overscroll-behavior-y: contain;
+      scroll-behavior: smooth;
       padding: 6px 2px 30px;
       will-change: scroll-position;
-      transform: translateZ(0);
       -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
       mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
     }
@@ -200,6 +197,8 @@
     .product-card {
       position: relative;
       background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
@@ -215,13 +214,11 @@
       word-break: break-word;
       cursor: pointer;
       contain: layout style;
-      content-visibility: auto;
-      contain-intrinsic-size: 54px;
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1), border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+      transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
     }
 
     .product-card:active {
-      transform: scale(0.95);
+      transform: scale(0.96);
       background: rgba(0, 255, 136, 0.08);
       border-color: var(--accent);
       color: var(--accent);
@@ -237,6 +234,8 @@
     .cart-item {
       position: relative;
       background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
@@ -246,9 +245,7 @@
       justify-content: space-between;
       gap: 12px;
       contain: layout style;
-      content-visibility: auto;
-      contain-intrinsic-size: 48px;
-      transition: opacity 0.16s ease, border-color 0.12s ease, background 0.12s ease;
+      transition: opacity 0.2s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
     .cart-item.completed {
@@ -281,7 +278,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.12s ease, border-color 0.12s ease;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
 
     .cart-item.completed .item-checkbox {
@@ -332,11 +329,11 @@
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1), border-color 0.12s ease, color 0.12s ease;
+      transition: transform 0.12s ease, border-color 0.12s ease, color 0.12s ease;
     }
 
     .qty-btn:active {
-      transform: scale(0.9);
+      transform: scale(0.92);
       border-color: var(--accent);
       color: var(--accent);
     }
@@ -377,7 +374,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1);
+      transition: transform 0.12s ease;
     }
 
     .cart-item.completed .delete-btn {
@@ -385,7 +382,7 @@
     }
 
     .delete-btn:active {
-      transform: scale(0.9);
+      transform: scale(0.92);
     }
 
     /* FOOTER DE LISTA */
@@ -393,38 +390,39 @@
       padding-top: 8px;
       display: none;
       justify-content: flex-end;
-      flex-shrink: 0;
     }
 
     .clear-all {
       color: var(--danger);
       background: var(--danger-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: 1px solid rgba(255, 69, 58, 0.25);
       font-size: 13px;
       font-weight: 600;
       padding: 7px 14px;
       border-radius: 999px;
       cursor: pointer;
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1), opacity 0.15s ease;
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
     .clear-all:active {
-      transform: scale(0.94);
+      transform: scale(0.95);
     }
 
     /* NOTAS */
     .note-card {
       position: relative;
       background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
       padding: 14px;
       cursor: pointer;
       contain: layout style;
-      content-visibility: auto;
-      contain-intrinsic-size: 72px;
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1), border-color 0.12s ease, background 0.12s ease;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
     }
 
     .note-card:active {
@@ -474,11 +472,11 @@
       font-size: 15px;
       cursor: pointer;
       z-index: 2;
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1);
+      transition: transform 0.15s ease;
     }
 
     .delete-note:active {
-      transform: scale(0.88);
+      transform: scale(0.9);
     }
 
     /* ESTADOS VACÍOS */
@@ -504,16 +502,16 @@
     .modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.58);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.18s ease;
+      transition: opacity 0.22s ease;
       padding: 20px;
     }
 
@@ -524,9 +522,11 @@
 
     .modal-content {
       background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: calc(var(--radius) + 2px);
-      box-shadow: var(--glass-lens), 0 20px 40px rgba(0, 0, 0, 0.8);
+      box-shadow: var(--glass-lens), 0 20px 40px rgba(0, 0, 0, 0.6);
       width: 100%;
       max-width: 480px;
       max-height: 85vh;
@@ -534,13 +534,12 @@
       display: flex;
       flex-direction: column;
       padding: 16px;
-      transform: translate3d(0, 14px, 0) scale(0.98);
-      will-change: transform;
-      transition: transform 0.22s cubic-bezier(0.18, 0.9, 0.25, 1);
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.25s cubic-bezier(0.2, 0.95, 0.3, 1);
     }
 
     .modal.active .modal-content {
-      transform: translate3d(0, 0, 0) scale(1);
+      transform: translateY(0) scale(1);
     }
 
     .note-form {
@@ -557,7 +556,7 @@
       max-height: 50dvh;
       padding: 13px;
       margin-bottom: 12px;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.4);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -569,8 +568,8 @@
       overflow-y: auto;
       outline: none;
       overscroll-behavior: contain;
-      field-sizing: content;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      scroll-behavior: smooth;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .unified-note-input::placeholder {
@@ -596,7 +595,7 @@
       font-weight: 700;
       font-size: 13px;
       cursor: pointer;
-      transition: transform 0.08s cubic-bezier(0, 0, 0.2, 1), opacity 0.15s ease;
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
     .btn:active {
@@ -620,8 +619,10 @@
       position: fixed;
       bottom: calc(var(--safe-bottom) + 20px);
       left: 50%;
-      transform: translate3d(-50%, 16px, 0);
+      transform: translateX(-50%) translateY(16px);
       background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: 1px solid rgba(0, 255, 136, 0.3);
       color: var(--accent);
       padding: 7px 16px;
@@ -630,14 +631,13 @@
       font-weight: 600;
       opacity: 0;
       pointer-events: none;
-      will-change: transform, opacity;
-      transition: transform 0.18s cubic-bezier(0.18, 0.9, 0.25, 1), opacity 0.18s ease;
+      transition: transform 0.22s ease, opacity 0.22s ease;
       z-index: 1200;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 12px var(--accent-glow);
     }
 
     .toast.show {
-      transform: translate3d(-50%, 0, 0);
+      transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
   </style>
@@ -645,7 +645,7 @@
 <body>
   <div class="app-container" id="app-container">
     <div class="panels-container" id="panels-container">
-      
+
       <!-- PANEL 0: EXPLORAR -->
       <div class="panel">
         <div class="panel-header">
@@ -658,10 +658,6 @@
         <div class="scroll-container">
           <div class="scroll-area">
             <div class="grid" id="products-grid"></div>
-            <div class="empty-state" id="products-empty" style="display: none;">
-              <div class="empty-state-icon">🔍</div>
-              <p class="empty-state-text">No se encontraron productos.<br>Pulsa <strong>Añadir</strong> para agregarlo.</p>
-            </div>
           </div>
         </div>
       </div>
@@ -717,12 +713,14 @@
   <script>
     'use strict';
 
+    // CLAVES CENTRALIZADAS EN LOCALSTORAGE
     const KEYS = { 
       PRODUCTS: 'superapp_products_v2', 
       CART: 'superapp_cart_v2', 
       NOTES: 'superapp_notes_v2' 
     };
 
+    // CLAVES LEGADAS PARA AUTORRECUPERACIÓN
     const LEGACY_KEYS = {
       PRODUCTS: ['superapp_products', 'superapp_products_v1', 'products'],
       CART: ['superapp_cart', 'superapp_cart_v1', 'cart', 'super_cart'],
@@ -789,23 +787,21 @@
     const noteModal = $('note-modal');
     const noteTextInput = $('note-text');
     const productsGrid = $('products-grid');
-    const productsEmpty = $('products-empty');
     const cartList = $('cart-list');
     const notesGrid = $('notes-grid');
     const listFooter = $('list-footer');
     const toastEl = $('toast');
 
     let products = [];
-    let productElements = [];
     let cartItems = [];
     let notes = [];
     let currentPanel = 1;
     let currentNote = null;
     let currentContainerX = -window.innerWidth;
+    let suppressClicksUntil = 0;
     let toastTimeout = null;
-    let isTransitioning = false;
 
-    const ADAPTIVE_EASING = 'cubic-bezier(0.18, 0.9, 0.25, 1)';
+    const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
 
     const normalize = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
@@ -814,11 +810,8 @@
       return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
     };
 
-    /* ALMACENAMIENTO ASÍNCRONO NO BLOQUEANTE (CERO PÉRDIDA DE DATOS) */
+    /* GESTOR DE ALMACENAMIENTO EXCLUSIVO EN LOCALSTORAGE */
     const store = {
-      _queue: new Map(),
-      _scheduled: false,
-
       get: (k, fallback = []) => {
         try {
           const raw = localStorage.getItem(k);
@@ -826,40 +819,21 @@
           const parsed = JSON.parse(raw);
           return Array.isArray(parsed) ? parsed : fallback;
         } catch (e) {
-          console.error(`Error leyendo ${k}:`, e);
+          console.error(`Error leyendo ${k} en LocalStorage:`, e);
           return fallback;
         }
       },
-
-      set: function(k, v) {
-        this._queue.set(k, v);
-        if (!this._scheduled) {
-          this._scheduled = true;
-          // Escribe fuera del fotograma crítico de renderizado
-          queueMicrotask(() => this.flush());
+      set: (k, v) => {
+        try {
+          localStorage.setItem(k, JSON.stringify(v));
+          return true;
+        } catch (e) {
+          console.error(`Error guardando ${k} en LocalStorage:`, e);
+          showToast('Aviso: Espacio de almacenamiento lleno');
+          return false;
         }
-        return true;
-      },
-
-      flush: function() {
-        this._scheduled = false;
-        this._queue.forEach((val, key) => {
-          try {
-            localStorage.setItem(key, JSON.stringify(val));
-          } catch (e) {
-            console.error(`Error guardando ${key}:`, e);
-            showToast('Aviso: Espacio de almacenamiento lleno');
-          }
-        });
-        this._queue.clear();
       }
     };
-
-    window.addEventListener('beforeunload', () => store.flush());
-    window.addEventListener('pagehide', () => store.flush());
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') store.flush();
-    });
 
     /* RECUPERACIÓN AUTOMÁTICA DE DATOS ANTERIORES */
     function recoverLegacyStorage() {
@@ -892,7 +866,6 @@
           }
         }
       }
-      store.flush();
     }
 
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -918,15 +891,19 @@
     }
 
     function autoResizeTextarea() {
-      if ('fieldSizing' in document.documentElement.style) return;
-      requestAnimationFrame(() => {
-        noteTextInput.style.height = 'auto';
-        noteTextInput.style.height = `${noteTextInput.scrollHeight}px`;
-      });
+      noteTextInput.style.height = 'auto';
+      noteTextInput.style.height = `${noteTextInput.scrollHeight}px`;
     }
     noteTextInput.addEventListener('input', autoResizeTextarea);
 
-    /* SINCRONIZACIÓN MULTI-VENTANA */
+    document.addEventListener('click', e => {
+      if (performance.now() < suppressClicksUntil) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    }, true);
+
+    /* SINCRONIZACIÓN AUTOMÁTICA ANTE CAMBIOS EN OTRAS PESTAÑAS O VENTANAS */
     window.addEventListener('storage', e => {
       if (!e.key) return;
       if (e.key === KEYS.CART) {
@@ -946,18 +923,18 @@
       snapToPanel(1, 0);
     });
 
+    /* CARGAS SEGURAS DESDE LOCALSTORAGE */
     function syncProducts() {
-      const stored = store.get(KEYS.PRODUCTS, []);
-      if (!stored.length) {
+      const storedProducts = store.get(KEYS.PRODUCTS, []);
+      if (!storedProducts.length) {
         products = defaultProducts.map(name => ({ name, norm: normalize(name) }));
         store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
       } else {
-        products = stored.map(p => {
+        products = storedProducts.map(p => {
           const name = typeof p === 'string' ? p : (p.name || '');
           return { name, norm: normalize(name) };
         }).filter(p => p.name);
       }
-      rebuildProductsDOM();
     }
 
     function syncCart() {
@@ -991,55 +968,43 @@
       syncCart();
       syncNotes();
 
+      renderProducts();
       renderCart();
       renderNotes();
       setupTouchSwipe();
       setupModalKeyboardSync();
     }
 
+    function getRealContainerX() {
+      const style = window.getComputedStyle(panelsContainer);
+      const transform = style.transform || style.webkitTransform;
+      if (transform && transform !== 'none') {
+        const matrix = new DOMMatrixReadOnly(transform);
+        return matrix.m41;
+      }
+      return currentContainerX;
+    }
+
     function setContainerPosition(offsetPx, durationMs = 0, easing = ADAPTIVE_EASING) {
       currentContainerX = offsetPx;
-      if (durationMs > 0) {
-        isTransitioning = true;
-        panelsContainer.style.transition = `transform ${durationMs}ms ${easing}`;
-      } else {
-        isTransitioning = false;
-        panelsContainer.style.transition = 'none';
-      }
+      panelsContainer.style.transition = durationMs > 0 ? `transform ${durationMs}ms ${easing}` : 'none';
       panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
     }
 
-    panelsContainer.addEventListener('transitionend', e => {
-      if (e.target === panelsContainer && e.propertyName === 'transform') {
-        isTransitioning = false;
-        panelsContainer.style.transition = 'none';
-      }
-    });
-
-    function snapToPanel(index, duration = 340, easing = ADAPTIVE_EASING) {
+    function snapToPanel(index, duration = 380, easing = ADAPTIVE_EASING) {
       currentPanel = Math.max(0, Math.min(2, index));
       setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
     }
 
-    /* MOTOR TÁCTIL DE LATENCIA CERO (REACCIÓN INMEDIATA) */
+    /* MOTOR DE GESTOS ADAPTATIVO CORREGIDO A NIVEL DE DOCUMENTO */
     function setupTouchSwipe() {
       let startX = 0, startY = 0, currentX = 0;
       let isDragging = false;
       let isHorizontal = null;
       let dragBaseOffset = 0;
+      let rAf = null;
       let velocitySamples = [];
       let lastWidth = window.innerWidth;
-      let didSwipe = false;
-      let preventNextClick = false;
-
-      // Intercepta solo el falso clic generado por el propio arrastre
-      document.addEventListener('click', e => {
-        if (preventNextClick) {
-          preventNextClick = false;
-          e.stopImmediatePropagation();
-          e.preventDefault();
-        }
-      }, true);
 
       document.addEventListener('touchstart', e => {
         if (noteModal.classList.contains('active') || e.touches.length > 1) return;
@@ -1050,17 +1015,11 @@
         startY = t.clientY;
         isDragging = true;
         isHorizontal = null;
-        didSwipe = false;
 
         const now = performance.now();
         velocitySamples = [{ x: startX, t: now }];
-
-        // Detener animación en vuelo sin relayout forzado
-        if (isTransitioning) {
-          isTransitioning = false;
-          panelsContainer.style.transition = 'none';
-        }
-        dragBaseOffset = currentContainerX;
+        dragBaseOffset = getRealContainerX();
+        setContainerPosition(dragBaseOffset, 0);
       }, { passive: true });
 
       document.addEventListener('touchmove', e => {
@@ -1073,11 +1032,10 @@
         if (isHorizontal === null) {
           const absX = Math.abs(dx);
           const absY = Math.abs(dy);
-          if (absX > 9 || absY > 9) {
-            isHorizontal = absX > absY * 1.35;
+          if (absX > 6 || absY > 6) {
+            isHorizontal = absX > absY * 1.15;
             if (isHorizontal) {
               panelsContainer.classList.add('is-swiping');
-              didSwipe = true;
             } else {
               isDragging = false;
               return;
@@ -1090,14 +1048,13 @@
 
         const now = performance.now();
         velocitySamples.push({ x: currentX, t: now });
-        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 70) {
+        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 85) {
           velocitySamples.shift();
         }
 
         const w = window.innerWidth;
         let targetX = dragBaseOffset + dx;
 
-        // Resistencia amortiguada en extremos
         if (targetX > 0) {
           targetX = Math.pow(targetX, 0.82) * 2.8;
         } else if (targetX < -2 * w) {
@@ -1105,15 +1062,19 @@
           targetX = -2 * w - Math.pow(Math.abs(over), 0.82) * 2.8;
         }
 
-        // Vínculo directo con GPU sin retrasos de marco
-        currentContainerX = targetX;
-        panelsContainer.style.transform = `translate3d(${targetX}px, 0, 0)`;
+        if (!rAf) {
+          rAf = requestAnimationFrame(() => {
+            setContainerPosition(targetX, 0);
+            rAf = null;
+          });
+        }
       }, { passive: true });
 
       const onDragEnd = () => {
         if (!isDragging) return;
         isDragging = false;
         panelsContainer.classList.remove('is-swiping');
+        if (rAf) { cancelAnimationFrame(rAf); rAf = null; }
 
         if (isHorizontal) {
           const w = window.innerWidth;
@@ -1144,13 +1105,13 @@
           let duration;
           if (isFlick) {
             duration = Math.round(remainingDistance / (absV * 1.15));
-            duration = Math.max(260, Math.min(380, duration));
+            duration = Math.max(300, Math.min(410, duration));
           } else {
             const ratio = Math.min(1, remainingDistance / w);
-            duration = Math.round(300 + ratio * 80);
+            duration = Math.round(340 + ratio * 90);
           }
 
-          preventNextClick = true;
+          suppressClicksUntil = performance.now() + duration;
           setContainerPosition(targetX, duration, ADAPTIVE_EASING);
         }
       };
@@ -1167,45 +1128,28 @@
       }, { passive: true });
     }
 
-    /* EXPLORAR PRODUCTOS CON RECICLAJE DE NODOS A 280 FPS */
-    function rebuildProductsDOM() {
-      productsGrid.innerHTML = '';
-      const frag = document.createDocumentFragment();
-      productElements = products.map(p => {
-        const el = document.createElement('div');
-        el.className = 'product-card';
-        el.textContent = p.name;
-        el.dataset.name = p.name;
-        frag.appendChild(el);
-        return { name: p.name, norm: p.norm, el, hidden: false };
-      });
-      productsGrid.appendChild(frag);
-    }
-
+    /* EXPLORAR PRODUCTOS */
     function renderProducts(query = "") {
       const q = normalize(query);
+      let html = '';
       let count = 0;
       let exactMatch = false;
 
-      for (let i = 0, l = productElements.length; i < l; i++) {
-        const item = productElements[i];
-        if (item.norm === q) exactMatch = true;
-        const match = !q || item.norm.includes(q);
-        if (match) {
-          if (item.hidden) {
-            item.el.style.display = '';
-            item.hidden = false;
-          }
+      for (let i = 0, l = products.length; i < l; i++) {
+        const p = products[i];
+        if (p.norm === q) exactMatch = true;
+        if (!q || p.norm.includes(q)) {
           count++;
-        } else {
-          if (!item.hidden) {
-            item.el.style.display = 'none';
-            item.hidden = true;
-          }
+          const n = esc(p.name);
+          html += `<div class="product-card" data-name="${n}">${n}</div>`;
         }
       }
 
-      productsEmpty.style.display = count ? 'none' : 'block';
+      productsGrid.innerHTML = count ? html : `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <p class="empty-state-text">No se encontraron productos.<br>Pulsa <strong>Añadir</strong> para agregarlo.</p>
+        </div>`;
       addBtn.style.display = (q && !exactMatch) ? 'block' : 'none';
     }
 
@@ -1218,6 +1162,8 @@
     function addToCart(name) {
       const trimmed = (name || '').trim();
       if (!trimmed) return;
+
+      syncCart();
 
       const norm = normalize(trimmed);
       const existing = cartItems.find(i => normalize(i.name) === norm);
@@ -1232,46 +1178,28 @@
       showToast(`Añadido: ${trimmed}`);
     }
 
-    // Ejecución instantánea en el mismo fotograma
+    let searchTimer = null;
     searchInput.addEventListener('input', e => {
-      renderProducts(e.target.value);
+      const val = e.target.value;
+      cancelAnimationFrame(searchTimer);
+      searchTimer = requestAnimationFrame(() => renderProducts(val));
     });
-
-    function addProductToCatalog(rawName) {
-      const norm = normalize(rawName);
-      let existing = productElements.find(p => p.norm === norm);
-      if (!existing) {
-        const el = document.createElement('div');
-        el.className = 'product-card';
-        el.textContent = rawName;
-        el.dataset.name = rawName;
-
-        let inserted = false;
-        for (let i = 0; i < productElements.length; i++) {
-          if (productElements[i].name.localeCompare(rawName, 'es', { sensitivity: 'base' }) > 0) {
-            productsGrid.insertBefore(el, productElements[i].el);
-            productElements.splice(i, 0, { name: rawName, norm, el, hidden: false });
-            products.splice(i, 0, { name: rawName, norm });
-            inserted = true;
-            break;
-          }
-        }
-        if (!inserted) {
-          productsGrid.appendChild(el);
-          productElements.push({ name: rawName, norm, el, hidden: false });
-          products.push({ name: rawName, norm });
-        }
-        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
-        return rawName;
-      }
-      return existing.name;
-    }
 
     function handleAddProductFromInput() {
       const rawName = searchInput.value.trim();
       if (!rawName) return;
-      const canonicalName = addProductToCatalog(rawName);
-      addToCart(canonicalName);
+      const norm = normalize(rawName);
+
+      syncProducts();
+      let productToAdd = products.find(p => p.norm === norm);
+      if (!productToAdd) {
+        productToAdd = { name: rawName, norm };
+        products.push(productToAdd);
+        products.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+      }
+
+      addToCart(productToAdd.name);
       searchInput.value = '';
       addBtn.style.display = 'none';
       renderProducts();
@@ -1285,29 +1213,7 @@
       }
     });
 
-    /* LISTA DEL CARRITO RECONCILIADA (SIN DESTRUCCIÓN DE NODOS) */
-    const cartElementsMap = new Map();
-
-    function createCartItemElement(item) {
-      const el = document.createElement('div');
-      el.className = 'cart-item' + (item.completed ? ' completed' : '');
-      el.dataset.id = item.id;
-      el.innerHTML = `
-        <div class="item-toggle-wrap">
-          <div class="item-checkbox">
-            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-          <span class="item-name">${esc(item.name)}</span>
-        </div>
-        <div class="cart-controls">
-          <button type="button" class="qty-btn" data-action="dec" aria-label="Menos">-</button>
-          <span class="item-qty-badge">${item.qty}</span>
-          <button type="button" class="qty-btn" data-action="inc" aria-label="Más">+</button>
-          <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar">×</button>
-        </div>`;
-      return el;
-    }
-
+    /* LISTA DEL SÚPER */
     function renderCart() {
       if (!cartItems.length) {
         cartList.innerHTML = `
@@ -1316,7 +1222,6 @@
             <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
           </div>`;
         listFooter.style.display = 'none';
-        cartElementsMap.clear();
         return;
       }
 
@@ -1327,34 +1232,28 @@
         return a.completed ? 1 : -1;
       });
 
-      const currentIds = new Set(sorted.map(i => i.id));
-      cartElementsMap.forEach((el, id) => {
-        if (!currentIds.has(id)) {
-          el.remove();
-          cartElementsMap.delete(id);
-        }
-      });
-
-      const emptyEl = cartList.querySelector('.empty-state');
-      if (emptyEl) emptyEl.remove();
-
-      const frag = document.createDocumentFragment();
-      for (let i = 0; i < sorted.length; i++) {
+      let html = '';
+      for (let i = 0, l = sorted.length; i < l; i++) {
         const item = sorted[i];
-        let el = cartElementsMap.get(item.id);
-        if (!el) {
-          el = createCartItemElement(item);
-          cartElementsMap.set(item.id, el);
-        } else {
-          el.classList.toggle('completed', item.completed);
-          const qtyBadge = el.querySelector('.item-qty-badge');
-          if (qtyBadge && qtyBadge.textContent !== String(item.qty)) {
-            qtyBadge.textContent = item.qty;
-          }
-        }
-        frag.appendChild(el);
+        const id = esc(item.id);
+        const isDone = item.completed ? ' completed' : '';
+        html += `
+          <div class="cart-item${isDone}" data-id="${id}">
+            <div class="item-toggle-wrap">
+              <div class="item-checkbox">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <span class="item-name">${esc(item.name)}</span>
+            </div>
+            <div class="cart-controls">
+              <button type="button" class="qty-btn" data-action="dec" aria-label="Menos">-</button>
+              <span class="item-qty-badge">${item.qty}</span>
+              <button type="button" class="qty-btn" data-action="inc" aria-label="Más">+</button>
+              <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar">×</button>
+            </div>
+          </div>`;
       }
-      cartList.appendChild(frag);
+      cartList.innerHTML = html;
     }
 
     cartList.addEventListener('click', e => {
@@ -1362,6 +1261,7 @@
       if (!itemEl) return;
       const id = itemEl.dataset.id;
 
+      syncCart();
       const item = cartItems.find(i => String(i.id) === id);
       if (!item) return;
 
@@ -1371,35 +1271,22 @@
         if (action === 'inc') {
           if (item.completed) return;
           item.qty++;
-          const qtyBadge = itemEl.querySelector('.item-qty-badge');
-          if (qtyBadge) qtyBadge.textContent = item.qty;
-          store.set(KEYS.CART, cartItems);
         } else if (action === 'dec') {
           if (item.completed) return;
           if (item.qty > 1) {
             item.qty--;
-            const qtyBadge = itemEl.querySelector('.item-qty-badge');
-            if (qtyBadge) qtyBadge.textContent = item.qty;
-            store.set(KEYS.CART, cartItems);
           } else {
             cartItems = cartItems.filter(i => String(i.id) !== id);
-            itemEl.remove();
-            cartElementsMap.delete(id);
-            store.set(KEYS.CART, cartItems);
-            if (!cartItems.length) renderCart();
           }
         } else if (action === 'del') {
           cartItems = cartItems.filter(i => String(i.id) !== id);
-          itemEl.remove();
-          cartElementsMap.delete(id);
-          store.set(KEYS.CART, cartItems);
-          if (!cartItems.length) renderCart();
         }
       } else {
         item.completed = !item.completed;
-        store.set(KEYS.CART, cartItems);
-        renderCart();
       }
+
+      store.set(KEYS.CART, cartItems);
+      renderCart();
     });
 
     $('clear-all').addEventListener('click', () => {
@@ -1410,9 +1297,7 @@
       }
     });
 
-    /* NOTAS OPTIMIZADAS */
-    const noteElementsMap = new Map();
-
+    /* NOTAS */
     function parseNoteParts(rawText) {
       const lines = (rawText || '').trim().split('\n');
       const title = lines[0] || 'Nota';
@@ -1420,62 +1305,32 @@
       return { title, body };
     }
 
-    function createNoteElement(note) {
-      const el = document.createElement('div');
-      el.className = 'note-card';
-      el.dataset.id = note.id;
-      const { title, body } = parseNoteParts(note.text);
-      el.innerHTML = `
-        <button type="button" class="delete-note" data-delete-id="${esc(note.id)}" aria-label="Eliminar">×</button>
-        <div class="note-title">${esc(title)}</div>
-        ${body ? `<div class="note-body">${esc(body)}</div>` : ''}
-        <div class="note-date">${note.formattedDate}</div>`;
-      return el;
-    }
-
     function renderNotes(query = "") {
       const q = normalize(query);
-      const filtered = [];
+      let html = '';
+      let count = 0;
 
       for (let i = 0, l = notes.length; i < l; i++) {
         const note = notes[i];
         if (!q || note.norm.includes(q)) {
-          filtered.push(note);
+          count++;
+          const id = esc(note.id);
+          const { title, body } = parseNoteParts(note.text);
+          html += `
+            <div class="note-card" data-id="${id}">
+              <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar">×</button>
+              <div class="note-title">${esc(title)}</div>
+              ${body ? `<div class="note-body">${esc(body)}</div>` : ''}
+              <div class="note-date">${note.formattedDate}</div>
+            </div>`;
         }
       }
 
-      if (!filtered.length) {
-        notesGrid.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">📝</div>
-            <p class="empty-state-text">${q ? 'No se encontraron notas.' : 'No hay notas.<br>¡Crea tu primera nota!'}</p>
-          </div>`;
-        noteElementsMap.clear();
-        return;
-      }
-
-      const emptyEl = notesGrid.querySelector('.empty-state');
-      if (emptyEl) emptyEl.remove();
-
-      const currentIds = new Set(filtered.map(n => n.id));
-      noteElementsMap.forEach((el, id) => {
-        if (!currentIds.has(id)) {
-          el.remove();
-          noteElementsMap.delete(id);
-        }
-      });
-
-      const frag = document.createDocumentFragment();
-      for (let i = 0; i < filtered.length; i++) {
-        const note = filtered[i];
-        let el = noteElementsMap.get(note.id);
-        if (!el) {
-          el = createNoteElement(note);
-          noteElementsMap.set(note.id, el);
-        }
-        frag.appendChild(el);
-      }
-      notesGrid.appendChild(frag);
+      notesGrid.innerHTML = count ? html : `
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <p class="empty-state-text">${q ? 'No se encontraron notas.' : 'No hay notas.<br>¡Crea tu primera nota!'}</p>
+        </div>`;
     }
 
     notesGrid.addEventListener('click', e => {
@@ -1484,12 +1339,8 @@
         e.stopPropagation();
         const id = delBtn.dataset.deleteId;
         if (confirm('¿Eliminar esta nota?')) {
+          syncNotes();
           notes = notes.filter(n => n.id !== id);
-          const el = noteElementsMap.get(id);
-          if (el) {
-            el.remove();
-            noteElementsMap.delete(id);
-          }
           store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
           renderNotes(searchNotesInput.value);
         }
@@ -1528,20 +1379,22 @@
 
       const onViewportChange = () => {
         if (!noteModal.classList.contains('active')) return;
-        requestAnimationFrame(() => {
-          const vv = window.visualViewport;
-          modalContent.style.maxHeight = `${Math.min(vv.height - 32, window.innerHeight * 0.85)}px`;
-        });
+        const vv = window.visualViewport;
+        modalContent.style.maxHeight = `${Math.min(vv.height - 32, window.innerHeight * 0.85)}px`;
       };
 
-      window.visualViewport.addEventListener('resize', onViewportChange, { passive: true });
-      window.visualViewport.addEventListener('scroll', onViewportChange, { passive: true });
+      window.visualViewport.addEventListener('resize', onViewportChange);
+      window.visualViewport.addEventListener('scroll', onViewportChange);
     }
 
+    let searchNotesTimer = null;
     searchNotesInput.addEventListener('input', e => {
       const val = e.target.value;
-      renderNotes(val);
-      addNoteBtn.style.display = val.trim() ? 'none' : 'block';
+      cancelAnimationFrame(searchNotesTimer);
+      searchNotesTimer = requestAnimationFrame(() => {
+        renderNotes(val);
+        addNoteBtn.style.display = val.trim() ? 'none' : 'block';
+      });
     });
 
     addNoteBtn.addEventListener('click', () => openNoteModal());
@@ -1557,6 +1410,8 @@
       const formattedDate = dateFormatter.format(new Date(date));
       const norm = normalize(text);
 
+      syncNotes();
+
       if (currentNote) {
         const idx = notes.findIndex(n => n.id === currentNote.id);
         const updated = {
@@ -1570,11 +1425,6 @@
           notes[idx] = updated;
         } else {
           notes.unshift(updated);
-        }
-        const oldEl = noteElementsMap.get(currentNote.id);
-        if (oldEl) {
-          oldEl.remove();
-          noteElementsMap.delete(currentNote.id);
         }
       } else {
         notes.unshift({
