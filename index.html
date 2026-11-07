@@ -2,123 +2,1477 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lanzador</title>
-  <link rel="preconnect" href="https://super-pearl-iota.vercel.app" crossorigin>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>🛒 Súper</title>
   <style>
     :root {
-      --bar-width: 220px;
-      --bar-height: 6px;
-      --glass-surface: rgba(255, 255, 255, 0.08);
-      --glass-border: rgba(255, 255, 255, 0.16);
-      --apple-white: #ffffff;
+      --accent: #00ff88;
+      --accent-glow: rgba(0, 255, 136, 0.15);
+      --bg: #000;
+      --surface: #111;
+      --surface-elevated: #1a1a1a;
+      --text: #fff;
+      --muted: #8e8e93;
+      --border: #2c2c2e;
+      --danger: #ff453a;
+      --danger-surface: rgba(255, 69, 58, 0.12);
+      --radius: 16px;
+      --safe-top: env(safe-area-inset-top, 20px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+
+      --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(17, 17, 17, 0.55) 100%);
+      --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(26, 26, 26, 0.60) 100%);
+      --glass-rim: 1px solid rgba(255, 255, 255, 0.11);
+      --glass-rim-active: 1px solid var(--accent);
+      --glass-lens: inset 0 1px 0 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 0 rgba(255, 255, 255, 0.04);
+      --glass-blur: blur(28px) saturate(190%);
     }
 
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
-      user-select: none;
-    }
-
-    body {
-      background: #000000;
       margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    input, textarea {
+      user-select: auto;
+      -webkit-user-select: auto;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
       height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
+      height: 100dvh;
+      width: 100vw;
+      position: fixed;
+      inset: 0;
+      overscroll-behavior: none;
+      touch-action: pan-y;
     }
 
-    .loading-bar {
-      width: var(--bar-width);
-      height: var(--bar-height);
-      background: var(--glass-surface);
-      border-radius: 9999px;
-      position: relative;
-      overflow: hidden;
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 
-        inset 0 1px 1px rgba(255, 255, 255, 0.35),
-        inset 0 -1px 1px rgba(0, 0, 0, 0.7),
-        0 4px 16px rgba(0, 0, 0, 0.6),
-        0 0 1px rgba(255, 255, 255, 0.2);
-    }
-
-    .loading-bar::after {
-      content: '';
+    .app-container {
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.2) 50%,
-        transparent 100%
-      );
-      animation: crystal-shimmer 2.2s infinite ease-in-out;
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    .loading-progress {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(180deg, #ffffff 0%, #e6e6e6 100%);
-      border-radius: inherit;
-      position: relative;
+      inset: 0;
+      opacity: 1;
       z-index: 1;
-      box-shadow: 
-        0 0 10px rgba(255, 255, 255, 0.45),
-        inset 0 1px 0.5px rgba(255, 255, 255, 0.9);
-      transition: width 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
     }
 
-    @keyframes crystal-shimmer {
-      0% {
-        transform: translateX(0%);
-      }
-      100% {
-        transform: translateX(250%);
-      }
+    .panels-container {
+      display: flex;
+      width: 300vw;
+      height: 100vh;
+      height: 100dvh;
+      will-change: transform;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform: translate3d(-100vw, 0, 0);
+    }
+
+    .panel {
+      width: 100vw;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
+      contain: layout style paint;
+    }
+
+    .panel-header {
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 32px;
+    }
+
+    .panel-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .search-container {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 13px 115px 13px 16px;
+      background: var(--glass-fill);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-rim);
+      border-radius: var(--radius);
+      box-shadow: var(--glass-lens);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--muted);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow), var(--glass-lens);
+    }
+
+    .add-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      display: none;
+      cursor: pointer;
+      z-index: 2;
+      touch-action: manipulation;
+      box-shadow: 0 2px 10px var(--accent-glow);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .add-btn:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    #add-note-btn {
+      display: block;
+    }
+
+    .scroll-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      contain: strict;
+    }
+
+    .scroll-area {
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
+      padding: 6px 2px 30px;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      gap: 8px;
+    }
+
+    .product-card {
+      position: relative;
+      background: var(--glass-fill);
+      border: var(--glass-rim);
+      border-radius: var(--radius);
+      box-shadow: var(--glass-lens);
+      padding: 14px 8px;
+      text-align: center;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--muted);
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      word-break: break-word;
+      cursor: pointer;
+      touch-action: manipulation;
+      contain: layout style paint;
+      transition: transform 0.12s ease, border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+    }
+
+    .product-card:active {
+      transform: scale(0.96);
+      background: rgba(0, 255, 136, 0.08);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .cart-list, .notes-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cart-item {
+      position: relative;
+      background: var(--glass-fill);
+      border: var(--glass-rim);
+      border-radius: var(--radius);
+      box-shadow: var(--glass-lens);
+      padding: 11px 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      touch-action: manipulation;
+      contain: layout style paint;
+      transition: opacity 0.18s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .cart-item.completed {
+      opacity: 0.5;
+      background: rgba(17, 17, 17, 0.3);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .cart-item.completed .item-name {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .item-toggle-wrap {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .item-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .cart-item.completed .item-checkbox {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .item-checkbox svg {
+      display: none;
+      width: 13px;
+      height: 13px;
+      stroke: #000;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .cart-item.completed .item-checkbox svg {
+      display: block;
+    }
+
+    .item-name {
+      font-size: 14.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      background: var(--glass-fill-elevated);
+      border: var(--glass-rim);
+      box-shadow: var(--glass-lens);
+      color: var(--text);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+    }
+
+    .qty-btn:active {
+      transform: scale(0.92);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .cart-item.completed .qty-btn {
+      display: none !important;
+    }
+
+    .item-qty-badge {
+      font-size: 13px;
+      font-weight: 600;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .cart-item.completed .item-qty-badge {
+      font-size: 11.5px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .cart-item.completed .item-qty-badge::before {
+      content: '×';
+    }
+
+    .delete-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(255, 69, 58, 0.25);
+      background: var(--danger-surface);
+      color: var(--danger);
+      border-radius: 8px;
+      font-size: 18px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.1s ease;
+    }
+
+    .cart-item.completed .delete-btn {
+      display: flex;
+    }
+
+    .delete-btn:active {
+      transform: scale(0.92);
+    }
+
+    .list-footer {
+      padding-top: 8px;
+      display: none;
+      justify-content: flex-end;
+    }
+
+    .clear-all {
+      color: var(--danger);
+      background: var(--danger-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255, 69, 58, 0.25);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .clear-all:active {
+      transform: scale(0.95);
+    }
+
+    .note-card {
+      position: relative;
+      background: var(--glass-fill-elevated);
+      border: var(--glass-rim);
+      border-radius: var(--radius);
+      box-shadow: var(--glass-lens);
+      padding: 14px;
+      cursor: pointer;
+      touch-action: manipulation;
+      contain: layout style paint;
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+    }
+
+    .note-card:active {
+      transform: scale(0.98);
+      background: rgba(0, 255, 136, 0.06);
+      border-color: var(--accent);
+    }
+
+    .note-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+      padding-right: 32px;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .note-body {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .note-date {
+      font-size: 10.5px;
+      color: var(--muted);
+      margin-top: 8px;
+      text-align: right;
+    }
+
+    .delete-note {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--danger-surface);
+      color: var(--danger);
+      border: 1px solid rgba(255, 69, 58, 0.25);
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      z-index: 2;
+      touch-action: manipulation;
+      transition: transform 0.12s ease;
+    }
+
+    .delete-note:active {
+      transform: scale(0.9);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 50px 20px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-state-icon {
+      font-size: 42px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+      padding: 20px;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-rim);
+      border-radius: calc(var(--radius) + 2px);
+      box-shadow: var(--glass-lens), 0 20px 40px rgba(0, 0, 0, 0.6);
+      width: 100%;
+      max-width: 480px;
+      max-height: 85vh;
+      max-height: 85dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.25s cubic-bezier(0.2, 0.95, 0.3, 1);
+    }
+
+    .modal.active .modal-content {
+      transform: translateY(0) scale(1);
+    }
+
+    .note-form {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .unified-note-input {
+      width: 100%;
+      min-height: 110px;
+      max-height: 50vh;
+      max-height: 50dvh;
+      padding: 13px;
+      margin-bottom: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border: var(--glass-rim);
+      border-radius: var(--radius);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+      color: var(--text);
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: none;
+      overflow-y: auto;
+      outline: none;
+      overscroll-behavior: contain;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .unified-note-input::placeholder {
+      color: var(--muted);
+    }
+
+    .unified-note-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow), inset 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      padding: 9px 16px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-cancel {
+      background: var(--glass-fill);
+      color: var(--muted);
+      border: var(--glass-rim);
+    }
+
+    .btn-save {
+      background: var(--accent);
+      color: #000;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 20px);
+      left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--glass-fill-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      color: var(--accent);
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      z-index: 1200;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 12px var(--accent-glow);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
 <body>
+  <div class="app-container" id="app-container">
+    <div class="panels-container" id="panels-container">
 
-  <div class="loading-bar">
-    <div class="loading-progress" id="loading-progress"></div>
+      <div class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Explorar</h1>
+        </div>
+        <div class="search-container">
+          <input type="text" class="search-input" id="search" placeholder="Buscar..." autocomplete="off">
+          <button type="button" class="add-btn" id="add-btn">AÑADIR</button>
+        </div>
+        <div class="scroll-container">
+          <div class="scroll-area">
+            <div class="grid" id="products-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Lista</h1>
+        </div>
+        <div class="scroll-container">
+          <div class="scroll-area">
+            <div class="cart-list" id="cart-list"></div>
+          </div>
+        </div>
+        <div class="list-footer" id="list-footer">
+          <button type="button" class="clear-all" id="clear-all">Vaciar</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Notas</h1>
+        </div>
+        <div class="search-container">
+          <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas..." autocomplete="off">
+          <button type="button" class="add-btn" id="add-note-btn">NUEVA NOTA</button>
+        </div>
+        <div class="scroll-container">
+          <div class="scroll-area">
+            <div class="notes-grid" id="notes-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="note-modal" role="dialog" aria-modal="true">
+      <div class="modal-content">
+        <form class="note-form" id="note-form">
+          <textarea id="note-text" class="unified-note-input" placeholder="Escribe tu nota aquí..." rows="3" required></textarea>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
+            <button type="submit" class="btn btn-save">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
+
+  <div class="toast" id="toast">Añadido a la lista</div>
 
   <script>
     'use strict';
 
-    const progressEl = document.getElementById('loading-progress');
-    let progress = 0;
+    const KEYS = {
+      PRODUCTS: 'superapp_products_v2',
+      CART: 'superapp_cart_v2',
+      NOTES: 'superapp_notes_v2'
+    };
 
-    const advance = () => {
-      const step = progress < 60 
-        ? Math.random() * 9 + 4 
-        : Math.random() * 18 + 12;
+    const LEGACY_KEYS = {
+      PRODUCTS: ['superapp_products', 'superapp_products_v1', 'products'],
+      CART: ['superapp_cart', 'superapp_cart_v1', 'cart', 'super_cart'],
+      NOTES: ['superapp_notes', 'superapp_notes_v1', 'notes', 'super_notes']
+    };
 
-      progress = Math.min(progress + step, 100);
-      progressEl.style.width = `${progress}%`;
+    const defaultProducts = [
+      "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural",
+      "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja",
+      "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva",
+      "Atún pack 6 girasol", "Azúcar", "Bacon cocido ahumado", "Bacon en tiras", "Batido de chocolate",
+      "Bebida de coco", "Bolsa malla", "Bolsa rafia", "Bolsas cierre fácil x40", "Boniato", "Buitoni obleas",
+      "Burger con sésamo", "Burger de vacuno 1000g", "Burrata", "Caballa aceite oliva", "Cabecero de lomo",
+      "Cabeza de lomo", "Calabacín", "Calamares", "Calamares tinta", "Caldo de carne", "Caldo de cocido",
+      "Caldo de pescado", "Caldo de pollo", "Caldo de verduras", "Café", "Callos", "Canónigos", "Cebolla 1 kg",
+      "Cebolla 2 kg", "Cebolla en polvo", "Cebolla roja", "Centro jamón", "Centro paleta ibérica", "Champiñón Portobello",
+      "Champiñón blanco", "Champiñones laminados", "Champú Curl Perfect", "Champú Repair Nutrit", "Chicles sin azúcar",
+      "Cola Zero 0,5L", "Cola Zero lata", "Colgate anticaries", "Coliflor", "Compresas", "Conos", "Cookies chocolate",
+      "Copa choco y nata", "Copos avena suave", "Crunchy choc", "Curry", "Cuña viejo tostado", "Decoración pasteles",
+      "Descafeinado", "Desmaquillante micelar oil", "Detergente color", "Digestive Choco", "Discos desmaquillantes",
+      "Dulce de leche", "Emmental", "Emmental rallado", "Ensalada Duo", "Entraña", "Estofado de vacuno",
+      "Fabada asturiana", "Fideo fino nº 0", "Filete pavo tierno", "Filetes cabeza lomo", "Flan caramelo preparado",
+      "Flash", "Flor pascua grande", "Fresón 500g", "Friegasuelos pétalos", "Fte merluza empanado", "G Pedrosillano",
+      "Gall c chocoblanco", "Galleta rellena", "Galletas", "Gel argán", "Gel lavavajillas", "Griego azúcar caña",
+      "Griego natural", "Guisante con zanahoria", "Guisantes", "Hamburguesa Frisona", "Harina de trigo", "Havarti",
+      "Helado Mini Mix", "Huevos 12M", "Huevos M gallinas suelo", "Huevos frescos 24 uds", "Huevos pack 24",
+      "Jamón cocido P2", "Jamón cocido sándwich", "Jamón de pavo", "Jamón serrano", "Jamón serrano reserva",
+      "Jamón serrano sobre", "Judías verdes", "Ketchup", "Leave-in Curl Perfect", "Leche condensada entera",
+      "Leche de coco", "Leche en polvo desnatada", "Leche entera", "Leche evaporada", "Leche fresca entera",
+      "Leche fresca semi", "Leche semi", "Lenteja pardina", "Lentejas riojana", "Levadura Royal", "Lima bandeja",
+      "Limpiador con oxígeno", "Limones", "Lombarda", "Lomo adobado", "Lomo embuchado", "Longaniza fresca",
+      "Macarrón rayado", "Macedonia verduras", "Mahonesa", "Mango", "Mantequilla past sin", "Manzana acidulce Fuji",
+      "Manzana roja 1kg", "Masa empanad argent", "Medallón cadera año", "Mega rollo papel", "Mejillones escabeche",
+      "Melocotón en mitades", "Mermelada 75% fruta Confitura", "Mezcla 4 quesos", "Miel stars", "Mini biscotes normal",
+      "Minibombon nocciola", "Mix de frutos secos", "Mollete pack 4", "Molletes", "Mortadela Bolonia",
+      "Mousse choco 1+1", "Mozzarella", "Mozzarella rallada", "Muesli crujiente chocolate", "Muesli fruta",
+      "Nata para cocinar", "Natillas con galleta x4", "Natillas preparar", "Nesquick", "Omega-3 cápsulas", "Orégano",
+      "Pack Cola Zero", "Pan blanco", "Pan de molde", "Pan de molde blanco", "Pan de pipas", "Pan rallado 400gr",
+      "Pan rústico", "Panecillo 11 uds", "Papel aluminio", "Papel higiénico", "Papel higiénico húmedo",
+      "Pasta de dientes", "Pastilla cisterna", "Patata 5 kg", "Patatas crujientes", "Patatas fritas", "Patatas gajo",
+      "Patatas gourmet", "Paté de atún", "Paté suave", "Pechuga entera", "Pechuga marinada", "Penne rigate",
+      "Pepinillos anchoa", "Perejil", "Picada de vacuno 99%", "Picos camperos", "Pimienta", "Pimentón dulce",
+      "Pimiento destapa 35", "Pimiento rojo", "Pimiento tricolor", "Pimiento verde freír", "Piña en rodajas",
+      "Pipas gigantes", "Piquillo entero", "Piquillo tiras con ajo", "Pistachos California", "Pizza pepperoni",
+      "Pollo certificado", "Pollo entero", "Porciones 85% cacao", "Preparado para cocido", "Puerros", "Puré de patatas",
+      "Queso Burgos", "Queso Burgos natural", "Queso DO Idiazabal", "Queso Gouda añejo DOP", "Queso cottage",
+      "Queso lonchas", "Queso rallado pizza", "Queso untar suave", "Ramo de rosas", "Rebuenas", "Rodaja potón cocido",
+      "Roja dulce bolsa", "Rosca jamón y queso", "Sal yodada fina", "Salchichas Bockwurst", "Salchichón",
+      "Salmorejo fresco", "Salmón al natural", "Salsa de soja", "Salsa ligera", "Salsa para pasta", "Salsas italianas",
+      "Sardinillas", "Sazonador burrito", "Solomillo", "Special fuets stick", "Special queso inglés",
+      "Special queso St Nect", "Special surtido bloc foie", "Suavizante premium", "Tacos contramuslo ajillo",
+      "Tagliatelle", "Tinta de sepia", "Toall bebe fresc 80", "Toallitas quitagrasa", "Tocino cielo", "Tomate Sweet",
+      "Tomate azul", "Tomate frito artesán", "Tomate negro", "Tomate receta artesana", "Tomate rosa",
+      "Tomate triturado", "Tónica", "Tónica Hibiscus", "Tónica Pink", "Tortas de aceite", "Tostaditas surtidas",
+      "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
+    ];
 
-      if (progress >= 100) {
-        setTimeout(() => {
-          window.location.replace('https://super-pearl-iota.vercel.app/');
-        }, 160);
+    const $ = id => document.getElementById(id);
+    const panelsContainer = $('panels-container');
+    const searchInput = $('search');
+    const addBtn = $('add-btn');
+    const searchNotesInput = $('search-notes');
+    const addNoteBtn = $('add-note-btn');
+    const noteModal = $('note-modal');
+    const noteTextInput = $('note-text');
+    const productsGrid = $('products-grid');
+    const cartList = $('cart-list');
+    const notesGrid = $('notes-grid');
+    const listFooter = $('list-footer');
+    const toastEl = $('toast');
+
+    let products = [];
+    let cartItems = [];
+    let notes = [];
+    let currentPanel = 1;
+    let currentNote = null;
+    let currentContainerX = -window.innerWidth;
+    let isAnimating = false;
+    let animEndTimer = null;
+    let suppressClicksUntil = 0;
+    let toastTimeout = null;
+
+    const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
+    const collator = new Intl.Collator('es', { sensitivity: 'base' });
+    const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    const normalize = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+    const generateId = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+    };
+
+    const store = {
+      get: (k, fallback = []) => {
+        try {
+          const raw = localStorage.getItem(k);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : fallback;
+        } catch (e) {
+          console.error(`Error leyendo ${k} en LocalStorage:`, e);
+          return fallback;
+        }
+      },
+      set: (k, v) => {
+        try {
+          localStorage.setItem(k, JSON.stringify(v));
+          return true;
+        } catch (e) {
+          console.error(`Error guardando ${k} en LocalStorage:`, e);
+          showToast('Aviso: Espacio de almacenamiento lleno');
+          return false;
+        }
+      }
+    };
+
+    function saveCartToStorage() {
+      const payload = cartItems.map(i => ({
+        id: i.id,
+        name: i.name,
+        qty: i.qty,
+        completed: i.completed
+      }));
+      store.set(KEYS.CART, payload);
+    }
+
+    function recoverLegacyStorage() {
+      if (!localStorage.getItem(KEYS.PRODUCTS)) {
+        for (const oldKey of LEGACY_KEYS.PRODUCTS) {
+          const legacy = store.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            store.set(KEYS.PRODUCTS, legacy);
+            break;
+          }
+        }
+      }
+
+      if (!localStorage.getItem(KEYS.CART)) {
+        for (const oldKey of LEGACY_KEYS.CART) {
+          const legacy = store.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            store.set(KEYS.CART, legacy);
+            break;
+          }
+        }
+      }
+
+      if (!localStorage.getItem(KEYS.NOTES)) {
+        for (const oldKey of LEGACY_KEYS.NOTES) {
+          const legacy = store.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            store.set(KEYS.NOTES, legacy);
+            break;
+          }
+        }
+      }
+    }
+
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&',
+      '<': '<',
+      '>': '>',
+      '"': '"',
+      "'": '''
+    }[c]));
+
+    function parseValidDate(d) {
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toastEl.classList.remove('show'), 1500);
+    }
+
+    function autoResizeTextarea() {
+      noteTextInput.style.height = 'auto';
+      noteTextInput.style.height = `${noteTextInput.scrollHeight}px`;
+    }
+    noteTextInput.addEventListener('input', autoResizeTextarea);
+
+    document.addEventListener('click', e => {
+      if (performance.now() < suppressClicksUntil) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    }, true);
+
+    window.addEventListener('storage', e => {
+      if (!e.key) return;
+      if (e.key === KEYS.CART) {
+        syncCart();
+        renderCart();
+      } else if (e.key === KEYS.NOTES) {
+        syncNotes();
+        renderNotes(searchNotesInput.value);
+      } else if (e.key === KEYS.PRODUCTS) {
+        syncProducts();
+        renderProducts(searchInput.value);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp();
+      snapToPanel(1, 0);
+    });
+
+    function syncProducts() {
+      const storedProducts = store.get(KEYS.PRODUCTS, []);
+      if (!storedProducts.length) {
+        products = defaultProducts.map(name => ({ name, norm: normalize(name) }));
+        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+      } else {
+        products = storedProducts.map(p => {
+          const name = typeof p === 'string' ? p : (p.name || '');
+          return { name, norm: normalize(name) };
+        }).filter(p => p.name);
+      }
+    }
+
+    function syncCart() {
+      const storedCart = store.get(KEYS.CART, []);
+      cartItems = storedCart.map(i => {
+        const name = String(i.name || '');
+        return {
+          id: String(i.id || generateId()),
+          name,
+          norm: normalize(name),
+          qty: Math.max(1, parseInt(i.qty, 10) || 1),
+          completed: Boolean(i.completed)
+        };
+      });
+    }
+
+    function syncNotes() {
+      const storedNotes = store.get(KEYS.NOTES, []);
+      notes = storedNotes.map(n => {
+        const text = String(n.text ?? [n.title, n.content].filter(Boolean).join('\n') ?? '');
+        const validDate = parseValidDate(n.date);
+        return {
+          id: String(n.id || generateId()),
+          text,
+          norm: normalize(text),
+          date: validDate.toISOString(),
+          formattedDate: dateFormatter.format(validDate)
+        };
+      });
+    }
+
+    function initApp() {
+      recoverLegacyStorage();
+      syncProducts();
+      syncCart();
+      syncNotes();
+
+      renderProducts();
+      renderCart();
+      renderNotes();
+      setupTouchSwipe();
+      setupModalKeyboardSync();
+    }
+
+    function getRealContainerX() {
+      if (!isAnimating) return currentContainerX;
+      const style = window.getComputedStyle(panelsContainer);
+      const transform = style.transform || style.webkitTransform;
+      if (transform && transform !== 'none') {
+        const matrix = new DOMMatrixReadOnly(transform);
+        return matrix.m41;
+      }
+      return currentContainerX;
+    }
+
+    function setContainerPosition(offsetPx, durationMs = 0, easing = ADAPTIVE_EASING) {
+      currentContainerX = offsetPx;
+      clearTimeout(animEndTimer);
+      if (durationMs > 0) {
+        isAnimating = true;
+        panelsContainer.style.transition = `transform ${durationMs}ms ${easing}`;
+        animEndTimer = setTimeout(() => { isAnimating = false; }, durationMs + 20);
+      } else {
+        isAnimating = false;
+        panelsContainer.style.transition = 'none';
+      }
+      panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
+    }
+
+    panelsContainer.addEventListener('transitionend', e => {
+      if (e.target === panelsContainer) {
+        isAnimating = false;
+        clearTimeout(animEndTimer);
+      }
+    });
+
+    function snapToPanel(index, duration = 380, easing = ADAPTIVE_EASING) {
+      currentPanel = Math.max(0, Math.min(2, index));
+      setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
+    }
+
+    function setupTouchSwipe() {
+      let startX = 0, startY = 0, currentX = 0;
+      let isDragging = false;
+      let isHorizontal = null;
+      let dragBaseOffset = 0;
+      let pendingTargetX = 0;
+      let rAf = null;
+      let velocitySamples = [];
+      let lastWidth = window.innerWidth;
+      let interruptedAnimation = false;
+
+      document.addEventListener('touchstart', e => {
+        if (noteModal.classList.contains('active') || e.touches.length > 1) return;
+        if (e.target.closest('input, textarea, .qty-btn, .delete-btn, .delete-note, button')) return;
+
+        const t = e.touches[0];
+        startX = currentX = t.clientX;
+        startY = t.clientY;
+        isDragging = true;
+        isHorizontal = null;
+
+        const now = performance.now();
+        velocitySamples = [{ x: startX, t: now }];
+
+        if (isAnimating) {
+          interruptedAnimation = true;
+          dragBaseOffset = getRealContainerX();
+          setContainerPosition(dragBaseOffset, 0);
+        } else {
+          interruptedAnimation = false;
+          dragBaseOffset = -currentPanel * window.innerWidth;
+          currentContainerX = dragBaseOffset;
+        }
+        pendingTargetX = dragBaseOffset;
+      }, { passive: true });
+
+      document.addEventListener('touchmove', e => {
+        if (!isDragging || e.touches.length > 1) return;
+
+        const t = e.touches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        const absX = Math.abs(dx);
+        const absY = Math.abs(dy);
+
+        if (isHorizontal === null) {
+          if (absX > 2 && absX > absY && e.cancelable) {
+            e.preventDefault();
+          }
+          if (absX > 6 || absY > 6) {
+            isHorizontal = absX > absY * 1.15;
+            if (!isHorizontal) {
+              isDragging = false;
+              if (interruptedAnimation) {
+                snapToPanel(currentPanel, 220);
+                interruptedAnimation = false;
+              }
+              return;
+            }
+          }
+        }
+
+        if (!isHorizontal) return;
+        if (e.cancelable) e.preventDefault();
+
+        currentX = t.clientX;
+
+        const now = performance.now();
+        velocitySamples.push({ x: currentX, t: now });
+        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 85) {
+          velocitySamples.shift();
+        }
+
+        const w = window.innerWidth;
+        let targetX = dragBaseOffset + dx;
+
+        if (targetX > 0) {
+          targetX = Math.pow(targetX, 0.82) * 2.8;
+        } else if (targetX < -2 * w) {
+          const over = targetX - (-2 * w);
+          targetX = -2 * w - Math.pow(Math.abs(over), 0.82) * 2.8;
+        }
+
+        pendingTargetX = targetX;
+
+        if (!rAf) {
+          rAf = requestAnimationFrame(() => {
+            setContainerPosition(pendingTargetX, 0);
+            rAf = null;
+          });
+        }
+      }, { passive: false });
+
+      const onDragEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        if (rAf) {
+          cancelAnimationFrame(rAf);
+          rAf = null;
+          setContainerPosition(pendingTargetX, 0);
+        }
+
+        if (isHorizontal) {
+          const w = window.innerWidth;
+          let velocity = 0;
+
+          if (velocitySamples.length >= 2) {
+            const first = velocitySamples[0];
+            const last = velocitySamples[velocitySamples.length - 1];
+            const dt = Math.max(1, last.t - first.t);
+            velocity = (last.x - first.x) / dt;
+          }
+
+          const dx = currentX - startX;
+          const absV = Math.abs(velocity);
+          const isFlick = absV > 0.24;
+
+          if (isFlick) {
+            if (velocity < -0.24 && currentPanel < 2) currentPanel++;
+            else if (velocity > 0.24 && currentPanel > 0) currentPanel--;
+          } else {
+            if (dx < -w * 0.25 && currentPanel < 2) currentPanel++;
+            else if (dx > w * 0.25 && currentPanel > 0) currentPanel--;
+          }
+
+          const targetX = -currentPanel * w;
+          const remainingDistance = Math.abs(targetX - currentContainerX);
+
+          let duration;
+          if (isFlick) {
+            duration = Math.round(remainingDistance / (absV * 1.15));
+            duration = Math.max(260, Math.min(390, duration));
+          } else {
+            const ratio = Math.min(1, remainingDistance / w);
+            duration = Math.round(300 + ratio * 90);
+          }
+
+          suppressClicksUntil = performance.now() + 80;
+          setContainerPosition(targetX, duration, ADAPTIVE_EASING);
+        } else if (interruptedAnimation) {
+          snapToPanel(currentPanel, 220);
+        }
+        interruptedAnimation = false;
+      };
+
+      document.addEventListener('touchend', onDragEnd, { passive: true });
+      document.addEventListener('touchcancel', onDragEnd, { passive: true });
+
+      window.addEventListener('resize', () => {
+        const w = window.innerWidth;
+        if (w !== lastWidth) {
+          lastWidth = w;
+          snapToPanel(currentPanel, 0);
+        }
+      }, { passive: true });
+    }
+
+    function renderProducts(query = "") {
+      const q = normalize(query);
+      let html = '';
+      let count = 0;
+      let exactMatch = false;
+
+      for (let i = 0, l = products.length; i < l; i++) {
+        const p = products[i];
+        if (p.norm === q) exactMatch = true;
+        if (!q || p.norm.includes(q)) {
+          count++;
+          const n = esc(p.name);
+          html += `<div class="product-card" data-name="${n}">${n}</div>`;
+        }
+      }
+
+      productsGrid.innerHTML = count ? html : `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <p class="empty-state-text">No se encontraron productos.<br>Pulsa <strong>Añadir</strong> para agregarlo.</p>
+        </div>`;
+      addBtn.style.display = (q && !exactMatch) ? 'block' : 'none';
+    }
+
+    productsGrid.addEventListener('click', e => {
+      const card = e.target.closest('.product-card');
+      if (!card) return;
+      addToCart(card.dataset.name);
+    });
+
+    function addToCart(name) {
+      const trimmed = (name || '').trim();
+      if (!trimmed) return;
+
+      const norm = normalize(trimmed);
+      const existing = cartItems.find(i => i.norm === norm);
+      if (existing) {
+        existing.qty++;
+        existing.completed = false;
+      } else {
+        cartItems.push({ id: generateId(), name: trimmed, norm, qty: 1, completed: false });
+      }
+      saveCartToStorage();
+      renderCart();
+      showToast(`Añadido: ${trimmed}`);
+    }
+
+    let searchTimer = null;
+    searchInput.addEventListener('input', e => {
+      const val = e.target.value;
+      cancelAnimationFrame(searchTimer);
+      searchTimer = requestAnimationFrame(() => renderProducts(val));
+    });
+
+    function handleAddProductFromInput() {
+      const rawName = searchInput.value.trim();
+      if (!rawName) return;
+      const norm = normalize(rawName);
+
+      let productToAdd = products.find(p => p.norm === norm);
+      if (!productToAdd) {
+        productToAdd = { name: rawName, norm };
+        products.push(productToAdd);
+        products.sort((a, b) => collator.compare(a.name, b.name));
+        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+      }
+
+      addToCart(productToAdd.name);
+      searchInput.value = '';
+      addBtn.style.display = 'none';
+      renderProducts();
+    }
+
+    addBtn.addEventListener('click', handleAddProductFromInput);
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddProductFromInput();
+      }
+    });
+
+    function renderCart() {
+      if (!cartItems.length) {
+        cartList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🛒</div>
+            <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
+          </div>`;
+        listFooter.style.display = 'none';
         return;
       }
 
-      setTimeout(advance, Math.random() * 40 + 25);
-    };
+      listFooter.style.display = 'flex';
 
-    advance();
+      const sorted = [...cartItems].sort((a, b) => {
+        if (a.completed === b.completed) return collator.compare(a.name, b.name);
+        return a.completed ? 1 : -1;
+      });
+
+      let html = '';
+      for (let i = 0, l = sorted.length; i < l; i++) {
+        const item = sorted[i];
+        const id = esc(item.id);
+        const isDone = item.completed ? ' completed' : '';
+        html += `
+          <div class="cart-item${isDone}" data-id="${id}">
+            <div class="item-toggle-wrap">
+              <div class="item-checkbox">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <span class="item-name">${esc(item.name)}</span>
+            </div>
+            <div class="cart-controls">
+              <button type="button" class="qty-btn" data-action="dec" aria-label="Menos">-</button>
+              <span class="item-qty-badge">${item.qty}</span>
+              <button type="button" class="qty-btn" data-action="inc" aria-label="Más">+</button>
+              <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar">×</button>
+            </div>
+          </div>`;
+      }
+      cartList.innerHTML = html;
+    }
+
+    cartList.addEventListener('click', e => {
+      const itemEl = e.target.closest('.cart-item');
+      if (!itemEl) return;
+      const id = itemEl.dataset.id;
+
+      const item = cartItems.find(i => String(i.id) === id);
+      if (!item) return;
+
+      const actionBtn = e.target.closest('button');
+      if (actionBtn) {
+        const action = actionBtn.dataset.action;
+        if (action === 'inc') {
+          if (item.completed) return;
+          item.qty++;
+          const badge = itemEl.querySelector('.item-qty-badge');
+          if (badge) badge.textContent = item.qty;
+          saveCartToStorage();
+          return;
+        } else if (action === 'dec') {
+          if (item.completed) return;
+          if (item.qty > 1) {
+            item.qty--;
+            const badge = itemEl.querySelector('.item-qty-badge');
+            if (badge) badge.textContent = item.qty;
+            saveCartToStorage();
+            return;
+          } else {
+            cartItems = cartItems.filter(i => String(i.id) !== id);
+          }
+        } else if (action === 'del') {
+          cartItems = cartItems.filter(i => String(i.id) !== id);
+        }
+      } else {
+        item.completed = !item.completed;
+      }
+
+      saveCartToStorage();
+      renderCart();
+    });
+
+    $('clear-all').addEventListener('click', () => {
+      if (cartItems.length && confirm('¿Vaciar toda la lista?')) {
+        cartItems = [];
+        saveCartToStorage();
+        renderCart();
+      }
+    });
+
+    function parseNoteParts(rawText) {
+      const lines = (rawText || '').trim().split('\n');
+      const title = lines[0] || 'Nota';
+      const body = lines.slice(1).join('\n').trim();
+      return { title, body };
+    }
+
+    function renderNotes(query = "") {
+      const q = normalize(query);
+      let html = '';
+      let count = 0;
+
+      for (let i = 0, l = notes.length; i < l; i++) {
+        const note = notes[i];
+        if (!q || note.norm.includes(q)) {
+          count++;
+          const id = esc(note.id);
+          const { title, body } = parseNoteParts(note.text);
+          html += `
+            <div class="note-card" data-id="${id}">
+              <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar">×</button>
+              <div class="note-title">${esc(title)}</div>
+              ${body ? `<div class="note-body">${esc(body)}</div>` : ''}
+              <div class="note-date">${note.formattedDate}</div>
+            </div>`;
+        }
+      }
+
+      notesGrid.innerHTML = count ? html : `
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <p class="empty-state-text">${q ? 'No se encontraron notas.' : 'No hay notas.<br>¡Crea tu primera nota!'}</p>
+        </div>`;
+    }
+
+    notesGrid.addEventListener('click', e => {
+      const delBtn = e.target.closest('.delete-note');
+      if (delBtn) {
+        e.stopPropagation();
+        const id = delBtn.dataset.deleteId;
+        if (confirm('¿Eliminar esta nota?')) {
+          notes = notes.filter(n => n.id !== id);
+          store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
+          renderNotes(searchNotesInput.value);
+        }
+        return;
+      }
+
+      const card = e.target.closest('.note-card');
+      if (card) {
+        const note = notes.find(n => n.id === card.dataset.id);
+        if (note) openNoteModal(note);
+      }
+    });
+
+    function openNoteModal(note = null) {
+      currentNote = note;
+      noteTextInput.value = note ? note.text : '';
+      noteModal.classList.add('active');
+      requestAnimationFrame(() => {
+        autoResizeTextarea();
+        noteTextInput.scrollTop = 0;
+        noteTextInput.focus({ preventScroll: true });
+      });
+    }
+
+    function closeNoteModal() {
+      noteModal.classList.remove('active');
+      noteTextInput.blur();
+      currentNote = null;
+      const modalContent = noteModal.querySelector('.modal-content');
+      if (modalContent) modalContent.style.maxHeight = '';
+    }
+
+    function setupModalKeyboardSync() {
+      if (!window.visualViewport) return;
+      const modalContent = noteModal.querySelector('.modal-content');
+
+      const onViewportChange = () => {
+        if (!noteModal.classList.contains('active')) return;
+        const vv = window.visualViewport;
+        modalContent.style.maxHeight = `${Math.min(vv.height - 32, window.innerHeight * 0.85)}px`;
+      };
+
+      window.visualViewport.addEventListener('resize', onViewportChange);
+      window.visualViewport.addEventListener('scroll', onViewportChange);
+    }
+
+    let searchNotesTimer = null;
+    searchNotesInput.addEventListener('input', e => {
+      const val = e.target.value;
+      cancelAnimationFrame(searchNotesTimer);
+      searchNotesTimer = requestAnimationFrame(() => {
+        renderNotes(val);
+        addNoteBtn.style.display = val.trim() ? 'none' : 'block';
+      });
+    });
+
+    addNoteBtn.addEventListener('click', () => openNoteModal());
+    $('cancel-note').addEventListener('click', closeNoteModal);
+    noteModal.addEventListener('click', e => { if (e.target === noteModal) closeNoteModal(); });
+
+    $('note-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const text = noteTextInput.value.trim();
+      if (!text) return;
+
+      const date = new Date().toISOString();
+      const formattedDate = dateFormatter.format(new Date(date));
+      const norm = normalize(text);
+
+      if (currentNote) {
+        const idx = notes.findIndex(n => n.id === currentNote.id);
+        const updated = {
+          id: currentNote.id,
+          text,
+          norm,
+          date,
+          formattedDate
+        };
+        if (idx !== -1) {
+          notes[idx] = updated;
+        } else {
+          notes.unshift(updated);
+        }
+      } else {
+        notes.unshift({
+          id: generateId(),
+          text,
+          norm,
+          date,
+          formattedDate
+        });
+      }
+
+      store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
+      renderNotes(searchNotesInput.value);
+      closeNoteModal();
+    });
   </script>
 </body>
 </html>
