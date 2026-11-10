@@ -2,64 +2,188 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>🛒 Súper</title>
+  <!-- user-scalable=no removed: it blocks pinch-zoom (WCAG 1.4.4). Zoom-on-focus on iOS is avoided with 16px inputs. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Súper – Lista de la compra y notas</title>
+  <meta name="description" content="Súper: lista de la compra y notas rápidas que funcionan sin conexión y se guardan en tu dispositivo.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Súper">
+  <!-- Inline favicon: avoids a /favicon.ico 404 and an extra request -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🛒%3C/text%3E%3C/svg%3E">
+
+  <!-- Critical CSS: the whole UI is an app shell, so it stays inline (zero render-blocking requests) -->
   <style>
     :root {
       --accent: #00ff88;
       --accent-glow: rgba(0, 255, 136, 0.15);
       --bg: #000;
-      --surface: #111;
       --surface-elevated: #1a1a1a;
       --text: #fff;
       --muted: #8e8e93;
-      --border: #2c2c2e;
       --danger: #ff453a;
       --danger-surface: rgba(255, 69, 58, 0.12);
       --radius: 16px;
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
 
-      --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 50%, rgba(17, 17, 17, 0.55) 100%);
-      --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(26, 26, 26, 0.60) 100%);
-      --glass-rim: 1px solid rgba(255, 255, 255, 0.11);
-      --glass-rim-active: 1px solid var(--accent);
-      --glass-lens: inset 0 1px 0 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 0 rgba(255, 255, 255, 0.04);
-      --glass-blur: blur(28px) saturate(190%);
+      /* ===== Liquid Glass: clear (not dark-tinted) glass with real light on its edges ===== */
+      --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.022) 38%, rgba(255, 255, 255, 0.012) 62%, rgba(255, 255, 255, 0.05) 100%);
+      --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.028) 38%, rgba(255, 255, 255, 0.015) 62%, rgba(255, 255, 255, 0.06) 100%);
+      --glass-rim: 1px solid rgba(255, 255, 255, 0.10);
+      /* Thin outline, specular light (top-left), bounce light (bottom-right), edge caustics, inner volume */
+      --glass-lens:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+        inset 2px 2px 1.5px -1px rgba(255, 255, 255, 0.80),
+        inset -2px -2px 1.5px -1px rgba(255, 255, 255, 0.42),
+        inset 0 10px 14px -10px rgba(255, 255, 255, 0.22),
+        inset 0 -10px 14px -10px rgba(255, 255, 255, 0.12),
+        inset 0 0 24px rgba(255, 255, 255, 0.045);
+      /* Fallback for browsers without SVG backdrop refraction (Safari/Firefox): very little blur = very translucent */
+      --glass-blur: blur(6px) saturate(180%) brightness(1.12);
+      /* Springy "liquid" response when releasing a press */
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    [hidden] { display: none !important; }
+
+    /* Inherited properties: set once on body instead of on every element via "*" */
+    body {
       -webkit-tap-highlight-color: transparent;
       user-select: none;
       -webkit-user-select: none;
     }
 
     input, textarea {
-      user-select: auto;
-      -webkit-user-select: auto;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    button, input, textarea {
+      font-family: inherit;
     }
 
     html, body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       height: 100vh;
       height: 100dvh;
-      width: 100vw;
+      width: 100%;
       position: fixed;
       inset: 0;
       overscroll-behavior: none;
-      touch-action: pan-y;
+      touch-action: pan-y pinch-zoom;
+    }
+
+    /* Visually hidden but available to assistive technology */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Contenedor de iluminación ambiental con máscara perimetral suave:
+       Garantiza un margen negro imperceptible en los 4 bordes para que ningún foco
+       pueda iluminar jamás el límite de la pantalla. */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      contain: strict;
+      -webkit-mask-image:
+        linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.18) 6%, rgba(0, 0, 0, 0.72) 13%, #000 20%, #000 80%, rgba(0, 0, 0, 0.72) 87%, rgba(0, 0, 0, 0.18) 94%, transparent 100%),
+        linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.18) 5%, rgba(0, 0, 0, 0.72) 11%, #000 17%, #000 83%, rgba(0, 0, 0, 0.72) 89%, rgba(0, 0, 0, 0.18) 95%, transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-image:
+        linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.18) 6%, rgba(0, 0, 0, 0.72) 13%, #000 20%, #000 80%, rgba(0, 0, 0, 0.72) 87%, rgba(0, 0, 0, 0.18) 94%, transparent 100%),
+        linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.18) 5%, rgba(0, 0, 0, 0.72) 11%, #000 17%, #000 83%, rgba(0, 0, 0, 0.72) 89%, rgba(0, 0, 0, 0.18) 95%, transparent 100%);
+      mask-composite: intersect;
+    }
+
+    /* Cada foco verde tiene una caída Gaussiana de 6 paradas que se funde con el negro
+       antes de llegar al límite de su propio contenedor. */
+    .ambient-orb {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: var(--orb-size, 240px);
+      height: var(--orb-size, 240px);
+      border-radius: 50%;
+      pointer-events: none;
+      will-change: transform, opacity;
+      opacity: 0;
+      background: radial-gradient(
+        circle at 50% 50%,
+        rgba(var(--orb-rgb, 0, 255, 136), 0.18) 0%,
+        rgba(var(--orb-rgb, 0, 255, 136), 0.115) 24%,
+        rgba(var(--orb-rgb, 0, 255, 136), 0.052) 48%,
+        rgba(var(--orb-rgb, 0, 255, 136), 0.015) 70%,
+        rgba(var(--orb-rgb, 0, 255, 136), 0.002) 86%,
+        transparent 100%
+      );
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Elements with "contain: paint" would clip an outside outline, so draw it inside */
+    .product-card:focus-visible,
+    .note-open:focus-visible {
+      outline-offset: -4px;
+      border-radius: var(--radius);
+    }
+
+    /* Keyboard / screen-reader panel switcher: only visible while focused */
+    .panel-nav {
+      position: fixed;
+      top: calc(var(--safe-top) + 4px);
+      left: 50%;
+      z-index: 1100;
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: var(--surface-elevated);
+      border: var(--glass-rim);
+      border-radius: 999px;
+      transform: translate(-50%, -300%);
+      transition: transform 0.2s ease;
+    }
+
+    .panel-nav:focus-within {
+      transform: translate(-50%, 0);
+    }
+
+    .panel-nav button[aria-current="true"] {
+      background: var(--accent);
+      color: #000;
     }
 
     .app-container {
       position: absolute;
       inset: 0;
-      opacity: 1;
       z-index: 1;
       overflow: hidden;
     }
@@ -71,7 +195,6 @@
       height: 100dvh;
       will-change: transform;
       backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
       transform: translate3d(-100vw, 0, 0);
     }
 
@@ -114,18 +237,32 @@
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
       color: var(--text);
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      font-size: 16px; /* >=16px prevents iOS auto-zoom on focus */
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search-input::-webkit-search-cancel-button,
+    .search-input::-webkit-search-decoration {
+      -webkit-appearance: none;
+      display: none;
     }
 
     .search-input::placeholder {
       color: var(--muted);
     }
 
+    /* Focus is signalled by the accent border + glow */
+    .search-input:focus-visible,
+    .unified-note-input:focus-visible {
+      outline: none;
+    }
+
+    /* On focus the glass "lights up" from the inside */
     .search-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 14px var(--accent-glow), var(--glass-lens);
+      box-shadow: 0 0 14px var(--accent-glow), inset 0 0 18px rgba(0, 255, 136, 0.08), var(--glass-lens);
     }
 
     .add-btn {
@@ -142,20 +279,16 @@
       font-size: 11px;
       letter-spacing: 0.3px;
       white-space: nowrap;
-      display: none;
       cursor: pointer;
       z-index: 2;
       touch-action: manipulation;
       box-shadow: 0 2px 10px var(--accent-glow);
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.4s var(--spring);
     }
 
     .add-btn:active {
       transform: translateY(-50%) scale(0.95);
-    }
-
-    #add-note-btn {
-      display: block;
+      transition-duration: 0.12s;
     }
 
     .scroll-container {
@@ -168,8 +301,8 @@
     .scroll-area {
       height: 100%;
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
+      scrollbar-width: none;
+      touch-action: pan-y pinch-zoom;
       overscroll-behavior-y: contain;
       padding: 6px 2px 30px;
       -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 12px, #000 calc(100% - 16px), transparent 100%);
@@ -188,6 +321,7 @@
 
     .product-card {
       position: relative;
+      width: 100%;
       background: var(--glass-fill);
       border: var(--glass-rim);
       border-radius: var(--radius);
@@ -201,11 +335,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      word-break: break-word;
+      overflow-wrap: anywhere;
       cursor: pointer;
       touch-action: manipulation;
       contain: layout style paint;
-      transition: transform 0.12s ease, border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 54px;
+      transition: transform 0.4s var(--spring), border-color 0.12s ease, color 0.12s ease;
     }
 
     .product-card:active {
@@ -213,12 +349,14 @@
       background: rgba(0, 255, 136, 0.08);
       border-color: var(--accent);
       color: var(--accent);
+      transition-duration: 0.12s;
     }
 
     .cart-list, .notes-grid {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      list-style: none;
     }
 
     .cart-item {
@@ -234,12 +372,14 @@
       gap: 12px;
       touch-action: manipulation;
       contain: layout style paint;
-      transition: opacity 0.18s ease, border-color 0.15s ease, background 0.15s ease;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 50px;
+      transition: opacity 0.18s ease, border-color 0.15s ease;
     }
 
     .cart-item.completed {
-      opacity: 0.5;
-      background: rgba(17, 17, 17, 0.3);
+      opacity: 0.72;
+      background: rgba(0, 0, 0, 0.25);
       border-color: rgba(255, 255, 255, 0.05);
     }
 
@@ -254,6 +394,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      background: none;
+      border: 0;
+      color: inherit;
+      font: inherit;
+      text-align: left;
       cursor: pointer;
       touch-action: manipulation;
     }
@@ -306,6 +451,7 @@
     }
 
     .qty-btn {
+      position: relative;
       width: 28px;
       height: 28px;
       background: var(--glass-fill-elevated);
@@ -320,13 +466,14 @@
       font-weight: 600;
       cursor: pointer;
       touch-action: manipulation;
-      transition: transform 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+      transition: transform 0.4s var(--spring), border-color 0.1s ease, color 0.1s ease;
     }
 
     .qty-btn:active {
       transform: scale(0.92);
       border-color: var(--accent);
       color: var(--accent);
+      transition-duration: 0.1s;
     }
 
     .cart-item.completed .qty-btn {
@@ -354,6 +501,7 @@
     }
 
     .delete-btn {
+      position: relative;
       width: 28px;
       height: 28px;
       border: 1px solid rgba(255, 69, 58, 0.25);
@@ -366,7 +514,7 @@
       justify-content: center;
       cursor: pointer;
       touch-action: manipulation;
-      transition: transform 0.1s ease;
+      transition: transform 0.4s var(--spring);
     }
 
     .cart-item.completed .delete-btn {
@@ -375,31 +523,35 @@
 
     .delete-btn:active {
       transform: scale(0.92);
+      transition-duration: 0.1s;
     }
 
     .list-footer {
       padding-top: 8px;
-      display: none;
+      display: flex;
       justify-content: flex-end;
     }
 
     .clear-all {
+      position: relative;
       color: var(--danger);
       background: var(--danger-surface);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
       border: 1px solid rgba(255, 69, 58, 0.25);
+      box-shadow: var(--glass-lens);
       font-size: 13px;
       font-weight: 600;
       padding: 7px 14px;
       border-radius: 999px;
       cursor: pointer;
       touch-action: manipulation;
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.4s var(--spring);
     }
 
     .clear-all:active {
       transform: scale(0.95);
+      transition-duration: 0.12s;
     }
 
     .note-card {
@@ -408,38 +560,56 @@
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
-      padding: 14px;
       cursor: pointer;
       touch-action: manipulation;
       contain: layout style paint;
-      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 76px;
+      transition: transform 0.45s var(--spring), border-color 0.14s ease;
     }
 
     .note-card:active {
       transform: scale(0.98);
       background: rgba(0, 255, 136, 0.06);
       border-color: var(--accent);
+      transition-duration: 0.14s;
+    }
+
+    .note-open {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: none;
+      border: 0;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      touch-action: manipulation;
     }
 
     .note-title {
+      display: block;
       font-size: 14.5px;
       font-weight: 700;
       color: var(--accent);
       margin-bottom: 4px;
       padding-right: 32px;
-      word-break: break-word;
+      overflow-wrap: anywhere;
       white-space: pre-wrap;
     }
 
     .note-body {
+      display: block;
       font-size: 13.5px;
       line-height: 1.5;
       color: var(--text);
       white-space: pre-wrap;
-      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     .note-date {
+      display: block;
       font-size: 10.5px;
       color: var(--muted);
       margin-top: 8px;
@@ -463,11 +633,12 @@
       cursor: pointer;
       z-index: 2;
       touch-action: manipulation;
-      transition: transform 0.12s ease;
+      transition: transform 0.4s var(--spring);
     }
 
     .delete-note:active {
       transform: scale(0.9);
+      transition-duration: 0.12s;
     }
 
     .empty-state {
@@ -475,6 +646,7 @@
       color: var(--muted);
       padding: 50px 20px;
       grid-column: 1 / -1;
+      list-style: none;
     }
 
     .empty-state-icon {
@@ -488,34 +660,38 @@
       line-height: 1.5;
     }
 
+    /* The overlay only dims (no backdrop-filter, no opacity): an ancestor with backdrop-filter or
+       opacity<1 becomes a "backdrop root" and would hide the panels from the glass pane inside it.
+       Hidden state uses visibility so nothing is rendered and the dialog leaves the tab order. */
     .modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(0, 0, 0, 0);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      opacity: 0;
+      visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.22s ease;
+      transition: background-color 0.22s ease, visibility 0s linear 0.22s;
       padding: 20px;
     }
 
     .modal.active {
-      opacity: 1;
+      background: rgba(0, 0, 0, 0.32);
+      visibility: visible;
       pointer-events: auto;
+      transition: background-color 0.22s ease, visibility 0s;
     }
 
     .modal-content {
+      position: relative;
       background: var(--glass-fill-elevated);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
       border: var(--glass-rim);
       border-radius: calc(var(--radius) + 2px);
-      box-shadow: var(--glass-lens), 0 20px 40px rgba(0, 0, 0, 0.6);
+      box-shadow: var(--glass-lens), 0 20px 40px rgba(0, 0, 0, 0.45);
       width: 100%;
       max-width: 480px;
       max-height: 85vh;
@@ -523,11 +699,24 @@
       display: flex;
       flex-direction: column;
       padding: 16px;
+      opacity: 0;
       transform: translateY(16px) scale(0.98);
-      transition: transform 0.25s cubic-bezier(0.2, 0.95, 0.3, 1);
+      transition: transform 0.45s var(--spring), opacity 0.22s ease;
+    }
+
+    /* Soft sheen across the pane, like light sliding over curved glass */
+    .modal-content::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: -1;
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.035) 28%, transparent 55%);
     }
 
     .modal.active .modal-content {
+      opacity: 1;
       transform: translateY(0) scale(1);
     }
 
@@ -545,17 +734,15 @@
       max-height: 50dvh;
       padding: 13px;
       margin-bottom: 12px;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.32);
       border: var(--glass-rim);
       border-radius: var(--radius);
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
       color: var(--text);
-      font: inherit;
-      font-size: 15px;
+      font-size: 16px; /* >=16px prevents iOS auto-zoom on focus */
       line-height: 1.5;
       resize: none;
       overflow-y: auto;
-      outline: none;
       overscroll-behavior: contain;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
@@ -577,6 +764,7 @@
     }
 
     .btn {
+      position: relative;
       padding: 9px 16px;
       border-radius: 12px;
       border: none;
@@ -584,11 +772,12 @@
       font-size: 13px;
       cursor: pointer;
       touch-action: manipulation;
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.4s var(--spring);
     }
 
     .btn:active {
       transform: scale(0.95);
+      transition-duration: 0.12s;
     }
 
     .btn-cancel {
@@ -603,6 +792,8 @@
       box-shadow: 0 2px 10px var(--accent-glow);
     }
 
+    /* Toast is hidden with visibility so its backdrop-filter costs nothing while idle.
+       Screen readers are served by the separate #live-region. */
     .toast {
       position: fixed;
       bottom: calc(var(--safe-bottom) + 20px);
@@ -618,71 +809,160 @@
       font-size: 12.5px;
       font-weight: 600;
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
-      transition: transform 0.22s ease, opacity 0.22s ease;
+      transition: transform 0.22s ease, opacity 0.22s ease, visibility 0s linear 0.22s;
       z-index: 1200;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 12px var(--accent-glow);
+      box-shadow: var(--glass-lens), 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 12px var(--accent-glow);
     }
 
     .toast.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+      visibility: visible;
+      transition: transform 0.22s ease, opacity 0.22s ease, visibility 0s;
+    }
+
+    /* ===== Liquid Glass reaction: light that follows your finger under the glass =====
+       --gx / --gy are set from JS on pointerdown. Only the pressed element is repainted. */
+    .product-card::after,
+    .note-card::after,
+    .qty-btn::after,
+    .btn::after,
+    .add-btn::after,
+    .clear-all::after,
+    .delete-btn::after,
+    .delete-note::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%),
+        rgba(255, 255, 255, 0.34) 0%,
+        rgba(255, 255, 255, 0.12) 38%,
+        transparent 72%);
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    .product-card:active::after,
+    .note-card:active::after,
+    .qty-btn:active::after,
+    .btn:active::after,
+    .add-btn:active::after,
+    .clear-all:active::after,
+    .delete-btn:active::after,
+    .delete-note:active::after {
+      opacity: 1;
+      transition-duration: 0.08s;
+    }
+
+    /* Pressing the delete button must not light up the whole note */
+    .note-card:has(.delete-note:active)::after {
+      opacity: 0;
+    }
+
+    /* ===== Real refraction (Chromium only) =====
+       JS builds one SVG displacement filter per glass element and adds .lg-ready.
+       The filter bends the backdrop near the rim like a thick glass lens; a hair of blur hides
+       the pixel steps. Safari/Firefox never get .lg-ready and keep the translucent fallback above. */
+    .lg-ready {
+      backdrop-filter: var(--lg-url) blur(1.5px) saturate(180%) brightness(1.1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    /* Respect the "reduce transparency" accessibility setting: solid surfaces, no blur, no ambient light */
+    @media (prefers-reduced-transparency: reduce) {
+      :root {
+        --glass-fill: linear-gradient(135deg, #1b1b1d, #121213);
+        --glass-fill-elevated: linear-gradient(135deg, #222224, #18181a);
+        --glass-blur: none;
+      }
+      .lg-ready { backdrop-filter: none; }
+      .modal.active { background: rgba(0, 0, 0, 0.8); }
+      .ambient { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="app-container" id="app-container">
+  <div class="ambient" id="ambient" aria-hidden="true"></div>
+
+  <nav class="panel-nav" id="panel-nav" aria-label="Secciones">
+    <button type="button" class="btn btn-cancel" data-panel="0">Explorar</button>
+    <button type="button" class="btn btn-cancel" data-panel="1">Lista</button>
+    <button type="button" class="btn btn-cancel" data-panel="2">Notas</button>
+  </nav>
+
+  <h1 class="sr-only">Súper: lista de la compra y notas</h1>
+
+  <noscript>
+    <p style="padding:24px;color:#fff;position:relative;z-index:2000">Esta aplicación necesita JavaScript para funcionar. Actívalo para usar la lista de la compra y las notas.</p>
+  </noscript>
+
+  <main class="app-container">
     <div class="panels-container" id="panels-container">
 
-      <div class="panel">
-        <div class="panel-header">
-          <h1 class="panel-title">Explorar</h1>
-        </div>
-        <div class="search-container">
-          <input type="text" class="search-input" id="search" placeholder="Buscar..." autocomplete="off">
-          <button type="button" class="add-btn" id="add-btn">AÑADIR</button>
+      <section class="panel" aria-labelledby="title-explore">
+        <header class="panel-header">
+          <h2 class="panel-title" id="title-explore">Explorar</h2>
+        </header>
+        <div class="search-container" role="search">
+          <label class="sr-only" for="search">Buscar o añadir producto</label>
+          <input type="search" class="search-input" id="search" placeholder="Buscar..." autocomplete="off" autocapitalize="sentences" spellcheck="false">
+          <button type="button" class="add-btn" id="add-btn" hidden>AÑADIR</button>
         </div>
         <div class="scroll-container">
           <div class="scroll-area">
             <div class="grid" id="products-grid"></div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="panel">
-        <div class="panel-header">
-          <h1 class="panel-title">Lista</h1>
-        </div>
+      <section class="panel" aria-labelledby="title-list">
+        <header class="panel-header">
+          <h2 class="panel-title" id="title-list">Lista</h2>
+        </header>
         <div class="scroll-container">
           <div class="scroll-area">
-            <div class="cart-list" id="cart-list"></div>
+            <ul class="cart-list" id="cart-list" role="list"></ul>
           </div>
         </div>
-        <div class="list-footer" id="list-footer">
+        <div class="list-footer" id="list-footer" hidden>
           <button type="button" class="clear-all" id="clear-all">Vaciar</button>
         </div>
-      </div>
+      </section>
 
-      <div class="panel">
-        <div class="panel-header">
-          <h1 class="panel-title">Notas</h1>
-        </div>
-        <div class="search-container">
-          <input type="text" class="search-input" id="search-notes" placeholder="Buscar notas..." autocomplete="off">
+      <section class="panel" aria-labelledby="title-notes">
+        <header class="panel-header">
+          <h2 class="panel-title" id="title-notes">Notas</h2>
+        </header>
+        <div class="search-container" role="search">
+          <label class="sr-only" for="search-notes">Buscar notas</label>
+          <input type="search" class="search-input" id="search-notes" placeholder="Buscar notas..." autocomplete="off" spellcheck="false">
           <button type="button" class="add-btn" id="add-note-btn">NUEVA NOTA</button>
         </div>
         <div class="scroll-container">
           <div class="scroll-area">
-            <div class="notes-grid" id="notes-grid"></div>
+            <ul class="notes-grid" id="notes-grid" role="list"></ul>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
-    <div class="modal" id="note-modal" role="dialog" aria-modal="true">
+    <div class="modal" id="note-modal" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
       <div class="modal-content">
+        <h2 class="sr-only" id="note-modal-title">Nota</h2>
         <form class="note-form" id="note-form">
-          <textarea id="note-text" class="unified-note-input" placeholder="Escribe tu nota aquí..." rows="3" required></textarea>
+          <label class="sr-only" for="note-text">Texto de la nota</label>
+          <textarea id="note-text" class="unified-note-input" placeholder="Escribe tu nota aquí..." rows="3" autocapitalize="sentences" required></textarea>
           <div class="modal-actions">
             <button type="button" class="btn btn-cancel" id="cancel-note">Cancelar</button>
             <button type="submit" class="btn btn-save">Guardar</button>
@@ -690,10 +970,13 @@
         </form>
       </div>
     </div>
-  </div>
+  </main>
 
-  <div class="toast" id="toast">Añadido a la lista</div>
+  <!-- Visual toast (decorative) + polite live region (announced by screen readers) -->
+  <div class="toast" id="toast" aria-hidden="true">Añadido a la lista</div>
+  <div class="sr-only" id="live-region" role="status" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- Classic script at the end of <body>: parser is never blocked and the DOM is ready when it runs -->
   <script>
     'use strict';
 
@@ -761,40 +1044,212 @@
     ];
 
     const $ = id => document.getElementById(id);
+    const ambientEl = $('ambient');
     const panelsContainer = $('panels-container');
+    const panels = Array.from(panelsContainer.querySelectorAll('.panel'));
+    const panelNav = $('panel-nav');
+    const panelNavButtons = Array.from(panelNav.querySelectorAll('button[data-panel]'));
     const searchInput = $('search');
     const addBtn = $('add-btn');
     const searchNotesInput = $('search-notes');
     const addNoteBtn = $('add-note-btn');
     const noteModal = $('note-modal');
+    const modalContent = noteModal.querySelector('.modal-content');
     const noteTextInput = $('note-text');
     const productsGrid = $('products-grid');
     const cartList = $('cart-list');
     const notesGrid = $('notes-grid');
     const listFooter = $('list-footer');
     const toastEl = $('toast');
+    const liveRegion = $('live-region');
 
     let products = [];
     let cartItems = [];
     let notes = [];
     let currentPanel = 1;
     let currentNote = null;
+    let lastFocused = null;
     let currentContainerX = -window.innerWidth;
     let isAnimating = false;
     let animEndTimer = null;
     let suppressClicksUntil = 0;
     let toastTimeout = null;
+    let cartRenderRaf = 0;
+    let lastTextareaScrollH = 0;
 
     const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
     const collator = new Intl.Collator('es', { sensitivity: 'base' });
     const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    const normalize = str => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const normalize = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+    const ESC_MAP = {
+      '&': '&',
+      '<': '<',
+      '>': '>',
+      '"': '"',
+      "'": '''
+    };
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC_MAP[c]);
 
     const generateId = () => {
       if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
       return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
     };
+
+    /* =====================================================================
+       Ambient Green Orbs – Aparición aleatoria + movimiento continuo + pulso lento
+       Ejecutado en el compositor GPU (Web Animations API) sin tocar jamás los bordes.
+       ===================================================================== */
+    function setupAmbientOrbs() {
+      if (!ambientEl) return;
+      const GREEN_PALETTE = [
+        '0, 255, 136',  // Esmeralda
+        '0, 185, 95',   // Jade oscuro
+        '16, 225, 118', // Verde bosque
+        '0, 210, 110'   // Verde abisal
+      ];
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const canAnimate = 'animate' in Element.prototype && !reducedMotion;
+      const ORB_COUNT = 4;
+      const orbs = [];
+
+      const rand = (min, max) => min + Math.random() * (max - min);
+
+      function getSafeBounds() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const minDim = Math.min(vw, vh);
+        // Tamaño de la esfera contenido para dejar amplio recorrido interior sin tocar bordes
+        const size = Math.round(Math.max(160, Math.min(340, minDim * 0.44)));
+        const radius = size * 0.5;
+        // Margen extra desde el borde para que ni siquiera la cola Gaussiana se acerque al límite
+        const padX = Math.max(radius * 0.92, vw * 0.15);
+        const padY = Math.max(radius * 0.92, vh * 0.13);
+
+        const minX = padX;
+        const maxX = Math.max(minX + 20, vw - padX);
+        const minY = padY;
+        const maxY = Math.max(minY + 20, vh - padY);
+
+        return { size, radius, minX, maxX, minY, maxY };
+      }
+
+      function pickPoint(bounds, avoidPoint = null) {
+        const spanX = bounds.maxX - bounds.minX;
+        const spanY = bounds.maxY - bounds.minY;
+        const minDist = Math.hypot(spanX, spanY) * 0.28;
+        let best = null;
+        let bestDist = -1;
+
+        for (let i = 0; i < 6; i++) {
+          const x = rand(bounds.minX, bounds.maxX);
+          const y = rand(bounds.minY, bounds.maxY);
+          if (!avoidPoint) return { x, y };
+          const d = Math.hypot(x - avoidPoint.x, y - avoidPoint.y);
+          if (d >= minDist) return { x, y };
+          if (d > bestDist) {
+            bestDist = d;
+            best = { x, y };
+          }
+        }
+        return best;
+      }
+
+      function launchOrbCycle(orb, initialPhase = 0) {
+        const b = getSafeBounds();
+        orb.el.style.setProperty('--orb-size', `${b.size}px`);
+        orb.el.style.setProperty('--orb-rgb', GREEN_PALETTE[Math.floor(Math.random() * GREEN_PALETTE.length)]);
+
+        // 1. Nace en una zona aleatoria segura (totalmente apagado)
+        const pStart = pickPoint(b);
+        // 2. Se desplaza hacia otra zona aleatoria alejada pasando por un punto intermedio curvo
+        const pEnd = pickPoint(b, pStart);
+        const jitterX = (b.maxX - b.minX) * 0.16;
+        const jitterY = (b.maxY - b.minY) * 0.16;
+        const pMid = {
+          x: Math.min(b.maxX, Math.max(b.minX, (pStart.x + pEnd.x) * 0.5 + rand(-jitterX, jitterX))),
+          y: Math.min(b.maxY, Math.max(b.minY, (pStart.y + pEnd.y) * 0.5 + rand(-jitterY, jitterY)))
+        };
+
+        const r = b.radius;
+        const tx0 = Math.round(pStart.x - r), ty0 = Math.round(pStart.y - r);
+        const txM = Math.round(pMid.x - r),   tyM = Math.round(pMid.y - r);
+        const tx1 = Math.round(pEnd.x - r),   ty1 = Math.round(pEnd.y - r);
+
+        if (!canAnimate) {
+          orb.el.style.transform = `translate3d(${txM}px, ${tyM}px, 0)`;
+          orb.el.style.opacity = '0.55';
+          return;
+        }
+
+        const duration = Math.round(rand(7200, 11200));
+
+        if (orb.anim) orb.anim.cancel();
+        const anim = orb.el.animate([
+          {
+            transform: `translate3d(${tx0}px, ${ty0}px, 0) scale(0.82)`,
+            opacity: 0,
+            offset: 0
+          },
+          {
+            transform: `translate3d(${Math.round((tx0 + txM) * 0.5)}px, ${Math.round((ty0 + tyM) * 0.5)}px, 0) scale(0.96)`,
+            opacity: 0.45,
+            offset: 0.25
+          },
+          {
+            transform: `translate3d(${txM}px, ${tyM}px, 0) scale(1.08)`,
+            opacity: 1,
+            offset: 0.5
+          },
+          {
+            transform: `translate3d(${Math.round((txM + tx1) * 0.5)}px, ${Math.round((tyM + ty1) * 0.5)}px, 0) scale(0.96)`,
+            opacity: 0.45,
+            offset: 0.75
+          },
+          {
+            transform: `translate3d(${tx1}px, ${ty1}px, 0) scale(0.84)`,
+            opacity: 0,
+            offset: 1
+          }
+        ], {
+          duration,
+          easing: 'ease-in-out',
+          fill: 'forwards'
+        });
+
+        if (initialPhase > 0) {
+          anim.currentTime = Math.round(duration * initialPhase);
+        }
+
+        orb.anim = anim;
+        // Cuando termina de apagarse (opacity: 0), salta a una nueva zona aleatoria y repite
+        anim.onfinish = () => launchOrbCycle(orb, 0);
+      }
+
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < ORB_COUNT; i++) {
+        const el = document.createElement('div');
+        el.className = 'ambient-orb';
+        frag.appendChild(el);
+        orbs.push({ el, anim: null });
+      }
+      ambientEl.appendChild(frag);
+
+      // Arranca los 4 focos en fases desfasadas para que haya actividad inmediata y asíncrona
+      orbs.forEach((orb, idx) => {
+        launchOrbCycle(orb, (idx + 0.35) / ORB_COUNT);
+      });
+
+      let resizeTimer = 0;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          orbs.forEach((orb, idx) => launchOrbCycle(orb, (idx + 0.25) / ORB_COUNT));
+        }, 180);
+      }, { passive: true });
+    }
 
     const store = {
       get: (k, fallback = []) => {
@@ -830,6 +1285,14 @@
       store.set(KEYS.CART, payload);
     }
 
+    function scheduleCartRender() {
+      if (cartRenderRaf) return;
+      cartRenderRaf = requestAnimationFrame(() => {
+        cartRenderRaf = 0;
+        renderCart();
+      });
+    }
+
     function recoverLegacyStorage() {
       if (!localStorage.getItem(KEYS.PRODUCTS)) {
         for (const oldKey of LEGACY_KEYS.PRODUCTS) {
@@ -862,14 +1325,6 @@
       }
     }
 
-    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[c]));
-
     function parseValidDate(d) {
       const parsed = new Date(d);
       return isNaN(parsed.getTime()) ? new Date() : parsed;
@@ -877,16 +1332,34 @@
 
     function showToast(msg) {
       toastEl.textContent = msg;
+      liveRegion.textContent = msg;
       toastEl.classList.add('show');
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => toastEl.classList.remove('show'), 1500);
     }
 
-    function autoResizeTextarea() {
-      noteTextInput.style.height = 'auto';
-      noteTextInput.style.height = `${noteTextInput.scrollHeight}px`;
+    function autoResizeTextarea(force = false) {
+      if (force) {
+        noteTextInput.style.height = 'auto';
+        const h = noteTextInput.scrollHeight;
+        lastTextareaScrollH = h;
+        noteTextInput.style.height = `${h}px`;
+        return;
+      }
+      const sh = noteTextInput.scrollHeight;
+      const ch = noteTextInput.clientHeight;
+      if (sh > ch || sh < lastTextareaScrollH - 16) {
+        noteTextInput.style.height = 'auto';
+        const nextH = noteTextInput.scrollHeight;
+        if (nextH !== lastTextareaScrollH) {
+          lastTextareaScrollH = nextH;
+          noteTextInput.style.height = `${nextH}px`;
+        } else {
+          noteTextInput.style.height = `${ch}px`;
+        }
+      }
     }
-    noteTextInput.addEventListener('input', autoResizeTextarea);
+    noteTextInput.addEventListener('input', () => autoResizeTextarea(false));
 
     document.addEventListener('click', e => {
       if (performance.now() < suppressClicksUntil) {
@@ -894,6 +1367,225 @@
         e.preventDefault();
       }
     }, true);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && noteModal.classList.contains('active')) closeNoteModal();
+    });
+
+    /* =====================================================================
+       Liquid Glass – real refraction (Chromium: Chrome, Edge, Android)
+       backdrop-filter: url(#svg-filter) is only honoured by Chromium. Safari (all iOS
+       browsers) and Firefox ignore it, so there we keep the translucent CSS fallback.
+       ===================================================================== */
+    const supportsBackdropRefraction = (() => {
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return false;          // iOS = WebKit
+      const brands = navigator.userAgentData && navigator.userAgentData.brands;
+      if (brands) return brands.some(b => b.brand === 'Chromium');
+      return Boolean(window.chrome) && !/Firefox/i.test(navigator.userAgent);
+    })();
+
+    const LENS_SELECTOR = '.search-input, .clear-all, .modal-content, .toast';
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const lensEntries = new Map();
+    let lensDefs = null;
+    let lensCanvas = null;
+
+    /* Displacement map rendered at 0.5x resolution (bilinearly interpolated by feImage)
+       with fast Uint32Array fill and inner-rectangle culling (~12x faster on CPU). */
+    function makeLensMap(w, h, radius, bezel) {
+      const scale = 0.5;
+      const mw = Math.max(4, Math.round(w * scale));
+      const mh = Math.max(4, Math.round(h * scale));
+      const mr = radius * scale;
+      const mb = bezel * scale;
+
+      if (!lensCanvas) lensCanvas = document.createElement('canvas');
+      lensCanvas.width = mw;
+      lensCanvas.height = mh;
+      const ctx = lensCanvas.getContext('2d');
+      const img = ctx.createImageData(mw, mh);
+      const data = img.data;
+
+      // Little-endian ABGR for neutral displacement rgba(128, 128, 128, 255)
+      new Uint32Array(data.buffer).fill(0xFF808080);
+
+      const hw = mw * 0.5, hh = mh * 0.5;
+      const bx = hw - mr, by = hh - mr;
+      const flatLimit = Math.min(0, mr - mb);
+      const invBezel = 1 / mb;
+
+      for (let y = 0; y < mh; y++) {
+        const py = y + 0.5 - hh;
+        const absPy = Math.abs(py);
+        const qy = absPy - by;
+        const signY = py < 0 ? -1 : 1;
+        const yInFlat = qy <= flatLimit;
+        const rowOffset = y * mw;
+
+        for (let x = 0; x < mw; x++) {
+          const px = x + 0.5 - hw;
+          const qx = Math.abs(px) - bx;
+
+          // Fast skip across the flat interior of the row
+          if (yInFlat && qx <= flatLimit) {
+            const skipTo = Math.floor(hw + bx + flatLimit - 0.5);
+            if (x < skipTo) x = skipTo;
+            continue;
+          }
+
+          const signX = px < 0 ? -1 : 1;
+          let gx, gy, dist;
+          if (qx > 0 && qy > 0) {
+            const len = Math.hypot(qx, qy) || 1;
+            gx = (qx / len) * signX;
+            gy = (qy / len) * signY;
+            dist = len - mr;
+          } else if (qx > qy) {
+            gx = signX; gy = 0; dist = qx - mr;
+          } else {
+            gx = 0; gy = signY; dist = qy - mr;
+          }
+
+          const inside = -dist;
+          if (inside < mb) {
+            const t = 1 - Math.max(0, inside) * invBezel;
+            const m = t * t * Math.sqrt(t); // fast approximation of t^2.4
+            const i = (rowOffset + x) << 2;
+            data[i] = 128 - gx * m * 127;
+            data[i + 1] = 128 - gy * m * 127;
+          }
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      return lensCanvas.toDataURL();
+    }
+
+    function buildLens(el) {
+      const w = Math.round(el.offsetWidth), h = Math.round(el.offsetHeight);
+      if (w < 8 || h < 8) return;
+
+      let entry = lensEntries.get(el);
+      if (entry && entry.w === w && entry.h === h) return;
+
+      if (!entry) {
+        const filter = document.createElementNS(SVG_NS, 'filter');
+        filter.id = `lg-lens-${lensEntries.size}`;
+        filter.setAttribute('filterUnits', 'userSpaceOnUse');
+        filter.setAttribute('color-interpolation-filters', 'sRGB');
+
+        const feImage = document.createElementNS(SVG_NS, 'feImage');
+        feImage.setAttribute('preserveAspectRatio', 'none');
+        feImage.setAttribute('result', 'map');
+
+        const disp = document.createElementNS(SVG_NS, 'feDisplacementMap');
+        disp.setAttribute('in', 'SourceGraphic');
+        disp.setAttribute('in2', 'map');
+        disp.setAttribute('xChannelSelector', 'R');
+        disp.setAttribute('yChannelSelector', 'G');
+
+        filter.append(feImage, disp);
+        lensDefs.appendChild(filter);
+        entry = { filter, feImage, disp, base: 0, cur: 0, factor: 1, raf: 0, w: 0, h: 0 };
+        lensEntries.set(el, entry);
+      }
+
+      entry.w = w;
+      entry.h = h;
+
+      const radius = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, w / 2, h / 2);
+      const bezel = Math.max(8, Math.min(22, Math.min(w, h) * 0.3));
+
+      for (const node of [entry.filter, entry.feImage]) {
+        node.setAttribute('x', 0);
+        node.setAttribute('y', 0);
+        node.setAttribute('width', w);
+        node.setAttribute('height', h);
+      }
+      entry.feImage.setAttribute('href', makeLensMap(w, h, radius, bezel));
+
+      entry.base = bezel * 1.7;
+      entry.cur = entry.base * entry.factor;
+      entry.disp.setAttribute('scale', entry.cur.toFixed(2));
+
+      el.style.setProperty('--lg-url', `url(#${entry.filter.id})`);
+      el.classList.add('lg-ready');
+    }
+
+    /* The lens "bulges" (stronger refraction) while pressed or focused, and relaxes on release */
+    function bulgeLens(el, factor) {
+      const entry = lensEntries.get(el);
+      if (!entry) return;
+      entry.factor = factor;
+      const from = entry.cur, to = entry.base * factor, t0 = performance.now(), dur = 160;
+      cancelAnimationFrame(entry.raf);
+      const step = now => {
+        const k = Math.min(1, (now - t0) / dur);
+        const inv = 1 - k;
+        entry.cur = from + (to - from) * (1 - inv * inv * inv);
+        entry.disp.setAttribute('scale', entry.cur.toFixed(2));
+        if (k < 1) entry.raf = requestAnimationFrame(step);
+      };
+      entry.raf = requestAnimationFrame(step);
+    }
+
+    function setupLiquidLens() {
+      if (!supportsBackdropRefraction || !('ResizeObserver' in window)) return;
+
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('width', '0');
+      svg.setAttribute('height', '0');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+      svg.style.position = 'absolute';
+      lensDefs = document.createElementNS(SVG_NS, 'defs');
+      svg.appendChild(lensDefs);
+      document.body.appendChild(svg);
+
+      const pending = new Set();
+      let raf = 0;
+      const observer = new ResizeObserver(records => {
+        records.forEach(r => pending.add(r.target));
+        if (!raf) {
+          raf = requestAnimationFrame(() => {
+            raf = 0;
+            pending.forEach(buildLens);
+            pending.clear();
+          });
+        }
+      });
+      document.querySelectorAll(LENS_SELECTOR).forEach(el => observer.observe(el));
+
+      document.addEventListener('focusin', e => {
+        if (e.target.matches('.search-input')) bulgeLens(e.target, 1.6);
+      });
+      document.addEventListener('focusout', e => {
+        if (e.target.matches('.search-input')) bulgeLens(e.target, 1);
+      });
+    }
+
+    // Liquid Glass: the specular highlight under the glass follows the touch/pointer position
+    const GLASS_REACTIVE = '.product-card, .note-card, .qty-btn, .btn, .add-btn, .clear-all, .delete-btn, .delete-note';
+    let pressedLens = null;
+    document.addEventListener('pointerdown', e => {
+      const el = e.target.closest(GLASS_REACTIVE);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--gx', `${Math.round(e.clientX - r.left)}px`);
+      el.style.setProperty('--gy', `${Math.round(e.clientY - r.top)}px`);
+      if (lensEntries.has(el)) {
+        pressedLens = el;
+        bulgeLens(el, 1.6);
+      }
+    }, { passive: true });
+
+    const releaseLens = () => {
+      if (pressedLens) {
+        bulgeLens(pressedLens, 1);
+        pressedLens = null;
+      }
+    };
+    document.addEventListener('pointerup', releaseLens, { passive: true });
+    document.addEventListener('pointercancel', releaseLens, { passive: true });
 
     window.addEventListener('storage', e => {
       if (!e.key) return;
@@ -909,28 +1601,31 @@
       }
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      initApp();
-      snapToPanel(1, 0);
-    });
-
     function syncProducts() {
       const storedProducts = store.get(KEYS.PRODUCTS, []);
       if (!storedProducts.length) {
         products = defaultProducts.map(name => ({ name, norm: normalize(name) }));
         store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
       } else {
-        products = storedProducts.map(p => {
-          const name = typeof p === 'string' ? p : (p.name || '');
-          return { name, norm: normalize(name) };
-        }).filter(p => p.name);
+        const seen = new Set();
+        products = [];
+        for (let i = 0; i < storedProducts.length; i++) {
+          const p = storedProducts[i];
+          const name = (typeof p === 'string' ? p : (p && p.name ? p.name : '')).trim();
+          if (!name) continue;
+          const norm = normalize(name);
+          if (seen.has(norm)) continue;
+          seen.add(norm);
+          products.push({ name, norm });
+        }
+        products.sort((a, b) => collator.compare(a.name, b.name));
       }
     }
 
     function syncCart() {
       const storedCart = store.get(KEYS.CART, []);
       cartItems = storedCart.map(i => {
-        const name = String(i.name || '');
+        const name = String(i.name || '').trim();
         return {
           id: String(i.id || generateId()),
           name,
@@ -938,13 +1633,14 @@
           qty: Math.max(1, parseInt(i.qty, 10) || 1),
           completed: Boolean(i.completed)
         };
-      });
+      }).filter(i => i.name);
     }
 
     function syncNotes() {
       const storedNotes = store.get(KEYS.NOTES, []);
       notes = storedNotes.map(n => {
-        const text = String(n.text ?? [n.title, n.content].filter(Boolean).join('\n') ?? '');
+        const fallbackText = [n.title, n.content].filter(Boolean).join('\n');
+        const text = String(n.text ?? fallbackText ?? '');
         const validDate = parseValidDate(n.date);
         return {
           id: String(n.id || generateId()),
@@ -967,6 +1663,17 @@
       renderNotes();
       setupTouchSwipe();
       setupModalKeyboardSync();
+    }
+
+    /* Only the visible panel (and the dialog, when open) is reachable by keyboard / screen readers */
+    function syncPanelA11y() {
+      const modalOpen = noteModal.classList.contains('active');
+      panels.forEach((p, i) => { p.inert = modalOpen || i !== currentPanel; });
+      panelNav.inert = modalOpen;
+      panelNavButtons.forEach((b, i) => {
+        if (i === currentPanel) b.setAttribute('aria-current', 'true');
+        else b.removeAttribute('aria-current');
+      });
     }
 
     function getRealContainerX() {
@@ -1004,7 +1711,13 @@
     function snapToPanel(index, duration = 380, easing = ADAPTIVE_EASING) {
       currentPanel = Math.max(0, Math.min(2, index));
       setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
+      syncPanelA11y();
     }
+
+    panelNav.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-panel]');
+      if (btn) snapToPanel(Number(btn.dataset.panel));
+    });
 
     function setupTouchSwipe() {
       let startX = 0, startY = 0, currentX = 0;
@@ -1017,9 +1730,12 @@
       let lastWidth = window.innerWidth;
       let interruptedAnimation = false;
 
-      document.addEventListener('touchstart', e => {
-        if (noteModal.classList.contains('active') || e.touches.length > 1) return;
-        if (e.target.closest('input, textarea, .qty-btn, .delete-btn, .delete-note, button')) return;
+      // Listeners are scoped to the panels container (not document) so the non-passive
+      // touchmove never delays scrolling inside the modal or other UI.
+      panelsContainer.addEventListener('touchstart', e => {
+        if (e.touches.length > 1) return;
+        // Small controls keep their tap; large tappable cards/toggles can start a swipe.
+        if (e.target.closest('input, textarea, .qty-btn, .delete-btn, .delete-note, .add-btn, .clear-all')) return;
 
         const t = e.touches[0];
         startX = currentX = t.clientX;
@@ -1042,7 +1758,7 @@
         pendingTargetX = dragBaseOffset;
       }, { passive: true });
 
-      document.addEventListener('touchmove', e => {
+      panelsContainer.addEventListener('touchmove', e => {
         if (!isDragging || e.touches.length > 1) return;
 
         const t = e.touches[0];
@@ -1052,9 +1768,6 @@
         const absY = Math.abs(dy);
 
         if (isHorizontal === null) {
-          if (absX > 2 && absX > absY && e.cancelable) {
-            e.preventDefault();
-          }
           if (absX > 6 || absY > 6) {
             isHorizontal = absX > absY * 1.15;
             if (!isHorizontal) {
@@ -1065,6 +1778,8 @@
               }
               return;
             }
+          } else {
+            return;
           }
         }
 
@@ -1145,14 +1860,15 @@
 
           suppressClicksUntil = performance.now() + 80;
           setContainerPosition(targetX, duration, ADAPTIVE_EASING);
+          syncPanelA11y();
         } else if (interruptedAnimation) {
           snapToPanel(currentPanel, 220);
         }
         interruptedAnimation = false;
       };
 
-      document.addEventListener('touchend', onDragEnd, { passive: true });
-      document.addEventListener('touchcancel', onDragEnd, { passive: true });
+      panelsContainer.addEventListener('touchend', onDragEnd, { passive: true });
+      panelsContainer.addEventListener('touchcancel', onDragEnd, { passive: true });
 
       window.addEventListener('resize', () => {
         const w = window.innerWidth;
@@ -1163,7 +1879,7 @@
       }, { passive: true });
     }
 
-    function renderProducts(query = "") {
+    function renderProducts(query = '') {
       const q = normalize(query);
       let html = '';
       let count = 0;
@@ -1174,23 +1890,23 @@
         if (p.norm === q) exactMatch = true;
         if (!q || p.norm.includes(q)) {
           count++;
-          const n = esc(p.name);
-          html += `<div class="product-card" data-name="${n}">${n}</div>`;
+          html += `<button type="button" class="product-card" data-idx="${i}">${esc(p.name)}</button>`;
         }
       }
 
       productsGrid.innerHTML = count ? html : `
         <div class="empty-state">
-          <div class="empty-state-icon">🔍</div>
+          <div class="empty-state-icon" aria-hidden="true">🔍</div>
           <p class="empty-state-text">No se encontraron productos.<br>Pulsa <strong>Añadir</strong> para agregarlo.</p>
         </div>`;
-      addBtn.style.display = (q && !exactMatch) ? 'block' : 'none';
+      addBtn.hidden = !(q && !exactMatch);
     }
 
     productsGrid.addEventListener('click', e => {
       const card = e.target.closest('.product-card');
       if (!card) return;
-      addToCart(card.dataset.name);
+      const item = products[Number(card.dataset.idx)];
+      if (item) addToCart(item.name);
     });
 
     function addToCart(name) {
@@ -1206,7 +1922,7 @@
         cartItems.push({ id: generateId(), name: trimmed, norm, qty: 1, completed: false });
       }
       saveCartToStorage();
-      renderCart();
+      scheduleCartRender();
       showToast(`Añadido: ${trimmed}`);
     }
 
@@ -1232,7 +1948,7 @@
 
       addToCart(productToAdd.name);
       searchInput.value = '';
-      addBtn.style.display = 'none';
+      addBtn.hidden = true;
       renderProducts();
     }
 
@@ -1247,15 +1963,15 @@
     function renderCart() {
       if (!cartItems.length) {
         cartList.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">🛒</div>
+          <li class="empty-state">
+            <div class="empty-state-icon" aria-hidden="true">🛒</div>
             <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
-          </div>`;
-        listFooter.style.display = 'none';
+          </li>`;
+        listFooter.hidden = true;
         return;
       }
 
-      listFooter.style.display = 'flex';
+      listFooter.hidden = false;
 
       const sorted = [...cartItems].sort((a, b) => {
         if (a.completed === b.completed) return collator.compare(a.name, b.name);
@@ -1266,22 +1982,23 @@
       for (let i = 0, l = sorted.length; i < l; i++) {
         const item = sorted[i];
         const id = esc(item.id);
+        const name = esc(item.name);
         const isDone = item.completed ? ' completed' : '';
         html += `
-          <div class="cart-item${isDone}" data-id="${id}">
-            <div class="item-toggle-wrap">
-              <div class="item-checkbox">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </div>
-              <span class="item-name">${esc(item.name)}</span>
-            </div>
+          <li class="cart-item${isDone}" data-id="${id}">
+            <button type="button" class="item-toggle-wrap" data-action="toggle" aria-pressed="${item.completed}">
+              <span class="item-checkbox" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </span>
+              <span class="item-name">${name}</span>
+            </button>
             <div class="cart-controls">
-              <button type="button" class="qty-btn" data-action="dec" aria-label="Menos">-</button>
+              <button type="button" class="qty-btn" data-action="dec" aria-label="Disminuir cantidad de ${name}">−</button>
               <span class="item-qty-badge">${item.qty}</span>
-              <button type="button" class="qty-btn" data-action="inc" aria-label="Más">+</button>
-              <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar">×</button>
+              <button type="button" class="qty-btn" data-action="inc" aria-label="Aumentar cantidad de ${name}">+</button>
+              <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar ${name}">×</button>
             </div>
-          </div>`;
+          </li>`;
       }
       cartList.innerHTML = html;
     }
@@ -1295,35 +2012,43 @@
       if (!item) return;
 
       const actionBtn = e.target.closest('button');
-      if (actionBtn) {
-        const action = actionBtn.dataset.action;
-        if (action === 'inc') {
-          if (item.completed) return;
-          item.qty++;
+      const action = actionBtn ? actionBtn.dataset.action : null;
+      let toggled = false;
+
+      if (action === 'inc') {
+        if (item.completed) return;
+        item.qty++;
+        const badge = itemEl.querySelector('.item-qty-badge');
+        if (badge) badge.textContent = item.qty;
+        saveCartToStorage();
+        return;
+      } else if (action === 'dec') {
+        if (item.completed) return;
+        if (item.qty > 1) {
+          item.qty--;
           const badge = itemEl.querySelector('.item-qty-badge');
           if (badge) badge.textContent = item.qty;
           saveCartToStorage();
           return;
-        } else if (action === 'dec') {
-          if (item.completed) return;
-          if (item.qty > 1) {
-            item.qty--;
-            const badge = itemEl.querySelector('.item-qty-badge');
-            if (badge) badge.textContent = item.qty;
-            saveCartToStorage();
-            return;
-          } else {
-            cartItems = cartItems.filter(i => String(i.id) !== id);
-          }
-        } else if (action === 'del') {
-          cartItems = cartItems.filter(i => String(i.id) !== id);
         }
+        cartItems = cartItems.filter(i => String(i.id) !== id);
+      } else if (action === 'del') {
+        cartItems = cartItems.filter(i => String(i.id) !== id);
       } else {
         item.completed = !item.completed;
+        toggled = true;
       }
 
       saveCartToStorage();
       renderCart();
+
+      // The list is re-rendered, so give keyboard users their focus back
+      if (e.detail === 0) {
+        const targetBtn = toggled
+          ? cartList.querySelector(`[data-id="${CSS.escape(id)}"] [data-action="toggle"]`)
+          : cartList.querySelector('[data-action="toggle"]');
+        if (targetBtn) targetBtn.focus();
+      }
     });
 
     $('clear-all').addEventListener('click', () => {
@@ -1335,13 +2060,13 @@
     });
 
     function parseNoteParts(rawText) {
-      const lines = (rawText || '').trim().split('\n');
+      const lines = (rawText || '').trim().split(/\r?\n/);
       const title = lines[0] || 'Nota';
       const body = lines.slice(1).join('\n').trim();
       return { title, body };
     }
 
-    function renderNotes(query = "") {
+    function renderNotes(query = '') {
       const q = normalize(query);
       let html = '';
       let count = 0;
@@ -1353,20 +2078,22 @@
           const id = esc(note.id);
           const { title, body } = parseNoteParts(note.text);
           html += `
-            <div class="note-card" data-id="${id}">
-              <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar">×</button>
-              <div class="note-title">${esc(title)}</div>
-              ${body ? `<div class="note-body">${esc(body)}</div>` : ''}
-              <div class="note-date">${note.formattedDate}</div>
-            </div>`;
+            <li class="note-card" data-id="${id}">
+              <button type="button" class="note-open" aria-label="Editar nota: ${esc(title)}">
+                <span class="note-title">${esc(title)}</span>
+                ${body ? `<span class="note-body">${esc(body)}</span>` : ''}
+                <time class="note-date" datetime="${esc(note.date)}">${esc(note.formattedDate)}</time>
+              </button>
+              <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar nota: ${esc(title)}">×</button>
+            </li>`;
         }
       }
 
       notesGrid.innerHTML = count ? html : `
-        <div class="empty-state">
-          <div class="empty-state-icon">📝</div>
+        <li class="empty-state">
+          <div class="empty-state-icon" aria-hidden="true">📝</div>
           <p class="empty-state-text">${q ? 'No se encontraron notas.' : 'No hay notas.<br>¡Crea tu primera nota!'}</p>
-        </div>`;
+        </li>`;
     }
 
     notesGrid.addEventListener('click', e => {
@@ -1390,11 +2117,14 @@
     });
 
     function openNoteModal(note = null) {
+      const active = document.activeElement;
+      lastFocused = active && active !== document.body ? active : null;
       currentNote = note;
       noteTextInput.value = note ? note.text : '';
       noteModal.classList.add('active');
+      syncPanelA11y();
       requestAnimationFrame(() => {
-        autoResizeTextarea();
+        autoResizeTextarea(true);
         noteTextInput.scrollTop = 0;
         noteTextInput.focus({ preventScroll: true });
       });
@@ -1404,13 +2134,19 @@
       noteModal.classList.remove('active');
       noteTextInput.blur();
       currentNote = null;
-      const modalContent = noteModal.querySelector('.modal-content');
-      if (modalContent) modalContent.style.maxHeight = '';
+      modalContent.style.maxHeight = '';
+      syncPanelA11y();
+
+      // Return focus to whatever opened the dialog (or the "new note" button if it was re-rendered)
+      if (lastFocused) {
+        const target = lastFocused.isConnected ? lastFocused : (addNoteBtn.hidden ? null : addNoteBtn);
+        if (target) target.focus({ preventScroll: true });
+      }
+      lastFocused = null;
     }
 
     function setupModalKeyboardSync() {
       if (!window.visualViewport) return;
-      const modalContent = noteModal.querySelector('.modal-content');
 
       const onViewportChange = () => {
         if (!noteModal.classList.contains('active')) return;
@@ -1428,7 +2164,7 @@
       cancelAnimationFrame(searchNotesTimer);
       searchNotesTimer = requestAnimationFrame(() => {
         renderNotes(val);
-        addNoteBtn.style.display = val.trim() ? 'none' : 'block';
+        addNoteBtn.hidden = Boolean(val.trim());
       });
     });
 
@@ -1441,8 +2177,9 @@
       const text = noteTextInput.value.trim();
       if (!text) return;
 
-      const date = new Date().toISOString();
-      const formattedDate = dateFormatter.format(new Date(date));
+      const nowObj = new Date();
+      const date = nowObj.toISOString();
+      const formattedDate = dateFormatter.format(nowObj);
       const norm = normalize(text);
 
       if (currentNote) {
@@ -1473,6 +2210,12 @@
       renderNotes(searchNotesInput.value);
       closeNoteModal();
     });
+
+    // Boot: the script sits at the end of <body>, so the DOM is already parsed
+    initApp();
+    snapToPanel(1, 0);
+    setupAmbientOrbs();
+    setupLiquidLens();
   </script>
 </body>
 </html>
