@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <!-- user-scalable=no removed: it blocks pinch-zoom (WCAG 1.4.4). Zoom-on-focus on iOS is avoided with 16px inputs. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Súper – Lista de la compra y notas</title>
   <meta name="description" content="Súper: lista de la compra y notas rápidas que funcionan sin conexión y se guardan en tu dispositivo.">
@@ -13,11 +12,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Súper">
-  <!-- Inline favicon: avoids a /favicon.ico 404 and an extra request -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🛒%3C/text%3E%3C/svg%3E">
 
-  <!-- Critical CSS: the whole UI is an app shell, so it stays inline (zero render-blocking requests) -->
   <style>
+    /* ==========================================================================
+       1. VARIABLES Y CONFIGURACIÓN GLOBAL
+       ========================================================================== */
     :root {
       --accent: #00ff88;
       --accent-glow: rgba(0, 255, 136, 0.15);
@@ -31,11 +31,9 @@
       --safe-top: env(safe-area-inset-top, 20px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
 
-      /* ===== Liquid Glass: clear (not dark-tinted) glass with real light on its edges ===== */
       --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.022) 38%, rgba(255, 255, 255, 0.012) 62%, rgba(255, 255, 255, 0.05) 100%);
       --glass-fill-elevated: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.028) 38%, rgba(255, 255, 255, 0.015) 62%, rgba(255, 255, 255, 0.06) 100%);
       --glass-rim: 1px solid rgba(255, 255, 255, 0.10);
-      /* Thin outline, specular light (top-left), bounce light (bottom-right), edge caustics, inner volume */
       --glass-lens:
         inset 0 0 0 1px rgba(255, 255, 255, 0.07),
         inset 2px 2px 1.5px -1px rgba(255, 255, 255, 0.80),
@@ -43,21 +41,23 @@
         inset 0 10px 14px -10px rgba(255, 255, 255, 0.22),
         inset 0 -10px 14px -10px rgba(255, 255, 255, 0.12),
         inset 0 0 24px rgba(255, 255, 255, 0.045);
-      /* Fallback for browsers without SVG backdrop refraction (Safari/Firefox): very little blur = very translucent */
       --glass-blur: blur(6px) saturate(180%) brightness(1.12);
-      /* Springy "liquid" response when releasing a press */
       --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
+    /* ==========================================================================
+       2. RESET Y ESTILOS BASE
+       ========================================================================== */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    [hidden] { display: none !important; }
+    [hidden] {
+      display: none !important;
+    }
 
-    /* Inherited properties: set once on body instead of on every element via "*" */
     body {
       -webkit-tap-highlight-color: transparent;
       user-select: none;
@@ -87,7 +87,6 @@
       touch-action: pan-y pinch-zoom;
     }
 
-    /* Visually hidden but available to assistive technology */
     .sr-only {
       position: absolute;
       width: 1px;
@@ -98,9 +97,20 @@
       border: 0;
     }
 
-    /* Contenedor de iluminación ambiental con máscara perimetral suave:
-       Garantiza un margen negro imperceptible en los 4 bordes para que ningún foco
-       pueda iluminar jamás el límite de la pantalla. */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .product-card:focus-visible,
+    .note-open:focus-visible {
+      outline-offset: -4px;
+      border-radius: var(--radius);
+    }
+
+    /* ==========================================================================
+       3. EFECTOS VISUALES DE FONDO (AMBIENT)
+       ========================================================================== */
     .ambient {
       position: fixed;
       inset: 0;
@@ -121,8 +131,6 @@
       mask-composite: intersect;
     }
 
-    /* Cada foco verde tiene una caída Gaussiana de 6 paradas que se funde con el negro
-       antes de llegar al límite de su propio contenedor. */
     .ambient-orb {
       position: absolute;
       top: 0;
@@ -144,43 +152,9 @@
       );
     }
 
-    :focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    /* Elements with "contain: paint" would clip an outside outline, so draw it inside */
-    .product-card:focus-visible,
-    .note-open:focus-visible {
-      outline-offset: -4px;
-      border-radius: var(--radius);
-    }
-
-    /* Keyboard / screen-reader panel switcher: only visible while focused */
-    .panel-nav {
-      position: fixed;
-      top: calc(var(--safe-top) + 4px);
-      left: 50%;
-      z-index: 1100;
-      display: flex;
-      gap: 6px;
-      padding: 6px;
-      background: var(--surface-elevated);
-      border: var(--glass-rim);
-      border-radius: 999px;
-      transform: translate(-50%, -300%);
-      transition: transform 0.2s ease;
-    }
-
-    .panel-nav:focus-within {
-      transform: translate(-50%, 0);
-    }
-
-    .panel-nav button[aria-current="true"] {
-      background: var(--accent);
-      color: #000;
-    }
-
+    /* ==========================================================================
+       4. ESTRUCTURA DE LA APLICACIÓN Y PANELES
+       ========================================================================== */
     .app-container {
       position: absolute;
       inset: 0;
@@ -205,6 +179,8 @@
       flex-direction: column;
       padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px);
       contain: layout style paint;
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
 
     .panel-header {
@@ -222,6 +198,33 @@
       color: var(--text);
     }
 
+    .panel-nav {
+      position: fixed;
+      top: calc(var(--safe-top) + 4px);
+      left: 50%;
+      z-index: 1100;
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: var(--surface-elevated);
+      border: var(--glass-rim);
+      border-radius: 999px;
+      transform: translate(-50%, -300%);
+      transition: transform 0.2s ease;
+    }
+
+    .panel-nav:focus-within {
+      transform: translate(-50%, 0);
+    }
+
+    .panel-nav button[aria-current="true"] {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* ==========================================================================
+       5. CAMPOS DE BÚSQUEDA Y ENTRADAS
+       ========================================================================== */
     .search-container {
       position: relative;
       margin-bottom: 14px;
@@ -237,7 +240,7 @@
       border-radius: var(--radius);
       box-shadow: var(--glass-lens);
       color: var(--text);
-      font-size: 16px; /* >=16px prevents iOS auto-zoom on focus */
+      font-size: 16px;
       -webkit-appearance: none;
       appearance: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -253,16 +256,46 @@
       color: var(--muted);
     }
 
-    /* Focus is signalled by the accent border + glow */
     .search-input:focus-visible,
     .unified-note-input:focus-visible {
       outline: none;
     }
 
-    /* On focus the glass "lights up" from the inside */
     .search-input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 14px var(--accent-glow), inset 0 0 18px rgba(0, 255, 136, 0.08), var(--glass-lens);
+    }
+
+    /* ==========================================================================
+       6. BOTONES Y ACCIONES
+       ========================================================================== */
+    .btn {
+      position: relative;
+      padding: 9px 16px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.4s var(--spring);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+      transition-duration: 0.12s;
+    }
+
+    .btn-cancel {
+      background: var(--glass-fill);
+      color: var(--muted);
+      border: var(--glass-rim);
+    }
+
+    .btn-save {
+      background: var(--accent);
+      color: #000;
+      box-shadow: 0 2px 10px var(--accent-glow);
     }
 
     .add-btn {
@@ -291,6 +324,31 @@
       transition-duration: 0.12s;
     }
 
+    .clear-all {
+      position: relative;
+      color: var(--danger);
+      background: var(--danger-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255, 69, 58, 0.25);
+      box-shadow: var(--glass-lens);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.4s var(--spring);
+    }
+
+    .clear-all:active {
+      transform: scale(0.95);
+      transition-duration: 0.12s;
+    }
+
+    /* ==========================================================================
+       7. CONTENEDORES CON DESPLAZAMIENTO
+       ========================================================================== */
     .scroll-container {
       flex: 1;
       position: relative;
@@ -313,6 +371,9 @@
       display: none;
     }
 
+    /* ==========================================================================
+       8. SECCIÓN: PRODUCTOS (EXPLORAR)
+       ========================================================================== */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
@@ -339,8 +400,6 @@
       cursor: pointer;
       touch-action: manipulation;
       contain: layout style paint;
-      content-visibility: auto;
-      contain-intrinsic-size: auto 54px;
       transition: transform 0.4s var(--spring), border-color 0.12s ease, color 0.12s ease;
     }
 
@@ -352,7 +411,11 @@
       transition-duration: 0.12s;
     }
 
-    .cart-list, .notes-grid {
+    /* ==========================================================================
+       9. SECCIÓN: LISTA DE LA COMPRA
+       ========================================================================== */
+    .cart-list, 
+    .notes-grid {
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -372,8 +435,6 @@
       gap: 12px;
       touch-action: manipulation;
       contain: layout style paint;
-      content-visibility: auto;
-      contain-intrinsic-size: auto 50px;
       transition: opacity 0.18s ease, border-color 0.15s ease;
     }
 
@@ -532,28 +593,9 @@
       justify-content: flex-end;
     }
 
-    .clear-all {
-      position: relative;
-      color: var(--danger);
-      background: var(--danger-surface);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid rgba(255, 69, 58, 0.25);
-      box-shadow: var(--glass-lens);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      touch-action: manipulation;
-      transition: transform 0.4s var(--spring);
-    }
-
-    .clear-all:active {
-      transform: scale(0.95);
-      transition-duration: 0.12s;
-    }
-
+    /* ==========================================================================
+       10. SECCIÓN: NOTAS
+       ========================================================================== */
     .note-card {
       position: relative;
       background: var(--glass-fill-elevated);
@@ -563,8 +605,6 @@
       cursor: pointer;
       touch-action: manipulation;
       contain: layout style paint;
-      content-visibility: auto;
-      contain-intrinsic-size: auto 76px;
       transition: transform 0.45s var(--spring), border-color 0.14s ease;
     }
 
@@ -641,6 +681,9 @@
       transition-duration: 0.12s;
     }
 
+    /* ==========================================================================
+       11. ESTADOS VACÍOS (EMPTY STATES)
+       ========================================================================== */
     .empty-state {
       text-align: center;
       color: var(--muted);
@@ -660,9 +703,9 @@
       line-height: 1.5;
     }
 
-    /* The overlay only dims (no backdrop-filter, no opacity): an ancestor with backdrop-filter or
-       opacity<1 becomes a "backdrop root" and would hide the panels from the glass pane inside it.
-       Hidden state uses visibility so nothing is rendered and the dialog leaves the tab order. */
+    /* ==========================================================================
+       12. VENTANA MODAL (EDICIÓN DE NOTAS)
+       ========================================================================== */
     .modal {
       position: fixed;
       inset: 0;
@@ -704,7 +747,6 @@
       transition: transform 0.45s var(--spring), opacity 0.22s ease;
     }
 
-    /* Soft sheen across the pane, like light sliding over curved glass */
     .modal-content::before {
       content: '';
       position: absolute;
@@ -739,7 +781,7 @@
       border-radius: var(--radius);
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
       color: var(--text);
-      font-size: 16px; /* >=16px prevents iOS auto-zoom on focus */
+      font-size: 16px;
       line-height: 1.5;
       resize: none;
       overflow-y: auto;
@@ -763,37 +805,9 @@
       flex-shrink: 0;
     }
 
-    .btn {
-      position: relative;
-      padding: 9px 16px;
-      border-radius: 12px;
-      border: none;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      touch-action: manipulation;
-      transition: transform 0.4s var(--spring);
-    }
-
-    .btn:active {
-      transform: scale(0.95);
-      transition-duration: 0.12s;
-    }
-
-    .btn-cancel {
-      background: var(--glass-fill);
-      color: var(--muted);
-      border: var(--glass-rim);
-    }
-
-    .btn-save {
-      background: var(--accent);
-      color: #000;
-      box-shadow: 0 2px 10px var(--accent-glow);
-    }
-
-    /* Toast is hidden with visibility so its backdrop-filter costs nothing while idle.
-       Screen readers are served by the separate #live-region. */
+    /* ==========================================================================
+       13. NOTIFICACIONES (TOAST)
+       ========================================================================== */
     .toast {
       position: fixed;
       bottom: calc(var(--safe-bottom) + 20px);
@@ -823,8 +837,9 @@
       transition: transform 0.22s ease, opacity 0.22s ease, visibility 0s;
     }
 
-    /* ===== Liquid Glass reaction: light that follows your finger under the glass =====
-       --gx / --gy are set from JS on pointerdown. Only the pressed element is repainted. */
+    /* ==========================================================================
+       14. INTERACCIÓN DE LUZ TÁCTIL (GLASS REACTION)
+       ========================================================================== */
     .product-card::after,
     .note-card::after,
     .qty-btn::after,
@@ -858,19 +873,17 @@
       transition-duration: 0.08s;
     }
 
-    /* Pressing the delete button must not light up the whole note */
     .note-card:has(.delete-note:active)::after {
       opacity: 0;
     }
 
-    /* ===== Real refraction (Chromium only) =====
-       JS builds one SVG displacement filter per glass element and adds .lg-ready.
-       The filter bends the backdrop near the rim like a thick glass lens; a hair of blur hides
-       the pixel steps. Safari/Firefox never get .lg-ready and keep the translucent fallback above. */
     .lg-ready {
       backdrop-filter: var(--lg-url) blur(1.5px) saturate(180%) brightness(1.1);
     }
 
+    /* ==========================================================================
+       15. ACCESIBILIDAD Y MEDIAS
+       ========================================================================== */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         transition-duration: 0.01ms !important;
@@ -879,7 +892,6 @@
       }
     }
 
-    /* Respect the "reduce transparency" accessibility setting: solid surfaces, no blur, no ambient light */
     @media (prefers-reduced-transparency: reduce) {
       :root {
         --glass-fill: linear-gradient(135deg, #1b1b1d, #121213);
@@ -910,6 +922,7 @@
   <main class="app-container">
     <div class="panels-container" id="panels-container">
 
+      <!-- Panel 0: Explorar catálogo -->
       <section class="panel" aria-labelledby="title-explore">
         <header class="panel-header">
           <h2 class="panel-title" id="title-explore">Explorar</h2>
@@ -926,6 +939,7 @@
         </div>
       </section>
 
+      <!-- Panel 1: Lista de la compra -->
       <section class="panel" aria-labelledby="title-list">
         <header class="panel-header">
           <h2 class="panel-title" id="title-list">Lista</h2>
@@ -940,6 +954,7 @@
         </div>
       </section>
 
+      <!-- Panel 2: Notas rápidas -->
       <section class="panel" aria-labelledby="title-notes">
         <header class="panel-header">
           <h2 class="panel-title" id="title-notes">Notas</h2>
@@ -957,6 +972,7 @@
       </section>
     </div>
 
+    <!-- Diálogo modal de edición de notas -->
     <div class="modal" id="note-modal" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
       <div class="modal-content">
         <h2 class="sr-only" id="note-modal-title">Nota</h2>
@@ -972,27 +988,28 @@
     </div>
   </main>
 
-  <!-- Visual toast (decorative) + polite live region (announced by screen readers) -->
   <div class="toast" id="toast" aria-hidden="true">Añadido a la lista</div>
   <div class="sr-only" id="live-region" role="status" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Classic script at the end of <body>: parser is never blocked and the DOM is ready when it runs -->
   <script>
     'use strict';
 
-    const KEYS = {
+    /* ==========================================================================
+       CONSTANTES Y CONFIGURACIÓN
+       ========================================================================== */
+    const STORAGE_KEYS = {
       PRODUCTS: 'superapp_products_v2',
       CART: 'superapp_cart_v2',
       NOTES: 'superapp_notes_v2'
     };
 
-    const LEGACY_KEYS = {
+    const LEGACY_STORAGE_KEYS = {
       PRODUCTS: ['superapp_products', 'superapp_products_v1', 'products'],
       CART: ['superapp_cart', 'superapp_cart_v1', 'cart', 'super_cart'],
       NOTES: ['superapp_notes', 'superapp_notes_v1', 'notes', 'super_notes']
     };
 
-    const defaultProducts = [
+    const DEFAULT_PRODUCTS = [
       "Aceite de girasol", "Aceite de oliva 0.4", "Aceitunas aliñadas", "Aceitunas verdes", "Agua mineral natural",
       "Aguadoy 8L", "Ajo en polvo", "Ajo morado", "Ajo troceado", "Alas partidas", "Alubia pinta", "Alubia roja",
       "Anacardos fritos", "Anchoa Cantábrico", "Arroz largo", "Atún aceite girasol", "Atún aceite oliva",
@@ -1043,26 +1060,37 @@
       "Tostas centeno integral", "Yogur bolitas", "Zamburiñas en salsa", "Zanahoria bolsa", "Zanahorias"
     ];
 
-    const $ = id => document.getElementById(id);
-    const ambientEl = $('ambient');
-    const panelsContainer = $('panels-container');
-    const panels = Array.from(panelsContainer.querySelectorAll('.panel'));
-    const panelNav = $('panel-nav');
-    const panelNavButtons = Array.from(panelNav.querySelectorAll('button[data-panel]'));
-    const searchInput = $('search');
-    const addBtn = $('add-btn');
-    const searchNotesInput = $('search-notes');
-    const addNoteBtn = $('add-note-btn');
-    const noteModal = $('note-modal');
-    const modalContent = noteModal.querySelector('.modal-content');
-    const noteTextInput = $('note-text');
-    const productsGrid = $('products-grid');
-    const cartList = $('cart-list');
-    const notesGrid = $('notes-grid');
-    const listFooter = $('list-footer');
-    const toastEl = $('toast');
-    const liveRegion = $('live-region');
+    const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
+    const GLASS_REACTIVE_SELECTOR = '.product-card, .note-card, .qty-btn, .btn, .add-btn, .clear-all, .delete-btn, .delete-note';
+    const LENS_TARGET_SELECTOR = '.search-input, .clear-all, .modal-content, .toast';
+    const SVG_XMLNS = 'http://www.w3.org/2000/svg';
 
+    /* ==========================================================================
+       SELECTORES DOM
+       ========================================================================== */
+    const getEl = id => document.getElementById(id);
+    const ambientEl = getEl('ambient');
+    const panelsContainer = getEl('panels-container');
+    const panels = Array.from(panelsContainer.querySelectorAll('.panel'));
+    const panelNav = getEl('panel-nav');
+    const panelNavButtons = Array.from(panelNav.querySelectorAll('button[data-panel]'));
+    const searchInput = getEl('search');
+    const addBtn = getEl('add-btn');
+    const searchNotesInput = getEl('search-notes');
+    const addNoteBtn = getEl('add-note-btn');
+    const noteModal = getEl('note-modal');
+    const modalContent = noteModal.querySelector('.modal-content');
+    const noteTextInput = getEl('note-text');
+    const productsGrid = getEl('products-grid');
+    const cartList = getEl('cart-list');
+    const notesGrid = getEl('notes-grid');
+    const listFooter = getEl('list-footer');
+    const toastEl = getEl('toast');
+    const liveRegion = getEl('live-region');
+
+    /* ==========================================================================
+       ESTADO DE LA APLICACIÓN
+       ========================================================================== */
     let products = [];
     let cartItems = [];
     let notes = [];
@@ -1071,43 +1099,606 @@
     let lastFocused = null;
     let currentContainerX = -window.innerWidth;
     let isAnimating = false;
+    let hasTransition = false;
     let animEndTimer = null;
     let suppressClicksUntil = 0;
     let toastTimeout = null;
     let cartRenderRaf = 0;
     let lastTextareaScrollH = 0;
 
-    const ADAPTIVE_EASING = 'cubic-bezier(0.2, 0.95, 0.3, 1)';
     const collator = new Intl.Collator('es', { sensitivity: 'base' });
     const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
+    /* ==========================================================================
+       UTILIDADES GENERALES
+       ========================================================================== */
     const normalize = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
     const ESC_MAP = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
+      '&': '&',
+      '<': '<',
+      '>': '>',
+      '"': '"',
+      "'": '''
     };
-    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC_MAP[c]);
+    const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, char => ESC_MAP[char]);
 
     const generateId = () => {
       if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
       return Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
     };
 
-    /* =====================================================================
-       Ambient Green Orbs – Aparición aleatoria + movimiento continuo + pulso lento
-       Ejecutado en el compositor GPU (Web Animations API) sin tocar jamás los bordes.
-       ===================================================================== */
+    const parseValidDate = dateInput => {
+      const parsed = new Date(dateInput);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    };
+
+    /* ==========================================================================
+       GESTIÓN DE PERSISTENCIA (LOCAL STORAGE)
+       ========================================================================== */
+    const storageService = {
+      get: (key, fallback = []) => {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return fallback;
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : fallback;
+        } catch (error) {
+          console.error(`Error leyendo ${key} en LocalStorage:`, error);
+          return fallback;
+        }
+      },
+      set: (key, value) => {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+          return true;
+        } catch (error) {
+          console.error(`Error guardando ${key} en LocalStorage:`, error);
+          showToast('Aviso: Espacio de almacenamiento lleno');
+          return false;
+        }
+      }
+    };
+
+    function saveCartToStorage() {
+      const payload = cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        qty: item.qty,
+        completed: item.completed
+      }));
+      storageService.set(STORAGE_KEYS.CART, payload);
+    }
+
+    function recoverLegacyStorage() {
+      if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
+        for (const oldKey of LEGACY_STORAGE_KEYS.PRODUCTS) {
+          const legacy = storageService.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            storageService.set(STORAGE_KEYS.PRODUCTS, legacy);
+            break;
+          }
+        }
+      }
+
+      if (!localStorage.getItem(STORAGE_KEYS.CART)) {
+        for (const oldKey of LEGACY_STORAGE_KEYS.CART) {
+          const legacy = storageService.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            storageService.set(STORAGE_KEYS.CART, legacy);
+            break;
+          }
+        }
+      }
+
+      if (!localStorage.getItem(STORAGE_KEYS.NOTES)) {
+        for (const oldKey of LEGACY_STORAGE_KEYS.NOTES) {
+          const legacy = storageService.get(oldKey, null);
+          if (legacy && legacy.length > 0) {
+            storageService.set(STORAGE_KEYS.NOTES, legacy);
+            break;
+          }
+        }
+      }
+    }
+
+    function syncProducts() {
+      const storedProducts = storageService.get(STORAGE_KEYS.PRODUCTS, []);
+      if (!storedProducts.length) {
+        products = DEFAULT_PRODUCTS.map(name => ({ name, norm: normalize(name) }));
+        storageService.set(STORAGE_KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+      } else {
+        const seen = new Set();
+        products = [];
+        for (let i = 0; i < storedProducts.length; i++) {
+          const p = storedProducts[i];
+          const name = (typeof p === 'string' ? p : (p && p.name ? p.name : '')).trim();
+          if (!name) continue;
+          const norm = normalize(name);
+          if (seen.has(norm)) continue;
+          seen.add(norm);
+          products.push({ name, norm });
+        }
+        products.sort((a, b) => collator.compare(a.name, b.name));
+      }
+    }
+
+    function syncCart() {
+      const storedCart = storageService.get(STORAGE_KEYS.CART, []);
+      cartItems = storedCart.map(item => {
+        const name = String(item.name || '').trim();
+        return {
+          id: String(item.id || generateId()),
+          name,
+          norm: normalize(name),
+          qty: Math.max(1, parseInt(item.qty, 10) || 1),
+          completed: Boolean(item.completed)
+        };
+      }).filter(item => item.name);
+    }
+
+    function syncNotes() {
+      const storedNotes = storageService.get(STORAGE_KEYS.NOTES, []);
+      notes = storedNotes.map(item => {
+        const fallbackText = [item.title, item.content].filter(Boolean).join('\n');
+        const text = String(item.text ?? fallbackText ?? '');
+        const validDate = parseValidDate(item.date);
+        return {
+          id: String(item.id || generateId()),
+          text,
+          norm: normalize(text),
+          date: validDate.toISOString(),
+          formattedDate: dateFormatter.format(validDate)
+        };
+      });
+    }
+
+    /* ==========================================================================
+       GESTIÓN DE INTERFAZ Y NAVEGACIÓN ENTRE PANELES
+       ========================================================================== */
+    function syncPanelA11y() {
+      const modalOpen = noteModal.classList.contains('active');
+      panels.forEach((panel, index) => { 
+        panel.inert = modalOpen || index !== currentPanel; 
+      });
+      panelNav.inert = modalOpen;
+      panelNavButtons.forEach((btn, index) => {
+        if (index === currentPanel) btn.setAttribute('aria-current', 'true');
+        else btn.removeAttribute('aria-current');
+      });
+    }
+
+    function getRealContainerX() {
+      if (!isAnimating) return currentContainerX;
+      const style = window.getComputedStyle(panelsContainer);
+      const transform = style.transform || style.webkitTransform;
+      if (transform && transform !== 'none') {
+        const matrix = new DOMMatrixReadOnly(transform);
+        return matrix.m41;
+      }
+      return currentContainerX;
+    }
+
+    function setContainerPosition(offsetPx, durationMs = 0, easing = ADAPTIVE_EASING) {
+      currentContainerX = offsetPx;
+      clearTimeout(animEndTimer);
+      if (durationMs > 0) {
+        isAnimating = true;
+        hasTransition = true;
+        panelsContainer.style.transition = `transform ${durationMs}ms ${easing}`;
+        animEndTimer = setTimeout(() => {
+          isAnimating = false;
+          syncPanelA11y();
+        }, durationMs + 20);
+      } else {
+        isAnimating = false;
+        if (hasTransition) {
+          hasTransition = false;
+          panelsContainer.style.transition = 'none';
+        }
+      }
+      panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
+    }
+
+    function snapToPanel(index, duration = 380, easing = ADAPTIVE_EASING) {
+      currentPanel = Math.max(0, Math.min(2, index));
+      setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
+      if (duration === 0) syncPanelA11y();
+    }
+
+    function setupTouchSwipe() {
+      let startX = 0, startY = 0, currentX = 0;
+      let isDragging = false;
+      let isHorizontal = null;
+      let dragBaseOffset = 0;
+      let pendingTargetX = 0;
+      let rAf = null;
+      let velocitySamples = [];
+      let lastWidth = window.innerWidth;
+      let interruptedAnimation = false;
+
+      panelsContainer.addEventListener('touchstart', e => {
+        if (e.touches.length > 1) return;
+        if (e.target.closest('input, textarea, .qty-btn, .delete-btn, .delete-note, .add-btn, .clear-all')) return;
+
+        const touch = e.touches[0];
+        startX = currentX = touch.clientX;
+        startY = touch.clientY;
+        isDragging = true;
+        isHorizontal = null;
+
+        const now = performance.now();
+        velocitySamples = [{ x: startX, t: now }];
+
+        if (isAnimating) {
+          interruptedAnimation = true;
+          dragBaseOffset = getRealContainerX();
+          setContainerPosition(dragBaseOffset, 0);
+        } else {
+          interruptedAnimation = false;
+          dragBaseOffset = -currentPanel * window.innerWidth;
+          currentContainerX = dragBaseOffset;
+        }
+        pendingTargetX = dragBaseOffset;
+      }, { passive: true });
+
+      panelsContainer.addEventListener('touchmove', e => {
+        if (!isDragging || e.touches.length > 1) return;
+
+        const touch = e.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        const absX = Math.abs(dx);
+        const absY = Math.abs(dy);
+
+        if (isHorizontal === null) {
+          if (absX > 6 || absY > 6) {
+            isHorizontal = absX > absY * 1.15;
+            if (!isHorizontal) {
+              isDragging = false;
+              if (interruptedAnimation) {
+                snapToPanel(currentPanel, 220);
+                interruptedAnimation = false;
+              }
+              return;
+            }
+          } else {
+            return;
+          }
+        }
+
+        if (!isHorizontal) return;
+        if (e.cancelable) e.preventDefault();
+
+        currentX = touch.clientX;
+
+        const now = performance.now();
+        velocitySamples.push({ x: currentX, t: now });
+        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 85) {
+          velocitySamples.shift();
+        }
+
+        const width = window.innerWidth;
+        let targetX = dragBaseOffset + dx;
+
+        if (targetX > 0) {
+          targetX = Math.pow(targetX, 0.82) * 2.8;
+        } else if (targetX < -2 * width) {
+          const over = targetX - (-2 * width);
+          targetX = -2 * width - Math.pow(Math.abs(over), 0.82) * 2.8;
+        }
+
+        pendingTargetX = targetX;
+
+        if (!rAf) {
+          rAf = requestAnimationFrame(() => {
+            setContainerPosition(pendingTargetX, 0);
+            rAf = null;
+          });
+        }
+      }, { passive: false });
+
+      const onDragEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        if (rAf) {
+          cancelAnimationFrame(rAf);
+          rAf = null;
+          setContainerPosition(pendingTargetX, 0);
+        }
+
+        if (isHorizontal) {
+          const width = window.innerWidth;
+          let velocity = 0;
+
+          if (velocitySamples.length >= 2) {
+            const first = velocitySamples[0];
+            const last = velocitySamples[velocitySamples.length - 1];
+            const dt = Math.max(1, last.t - first.t);
+            velocity = (last.x - first.x) / dt;
+          }
+
+          const dx = currentX - startX;
+          const absVelocity = Math.abs(velocity);
+          const isFlick = absVelocity > 0.24;
+
+          if (isFlick) {
+            if (velocity < -0.24 && currentPanel < 2) currentPanel++;
+            else if (velocity > 0.24 && currentPanel > 0) currentPanel--;
+          } else {
+            if (dx < -width * 0.25 && currentPanel < 2) currentPanel++;
+            else if (dx > width * 0.25 && currentPanel > 0) currentPanel--;
+          }
+
+          const targetX = -currentPanel * width;
+          const remainingDistance = Math.abs(targetX - currentContainerX);
+
+          let duration;
+          if (isFlick) {
+            duration = Math.round(remainingDistance / (absVelocity * 1.15));
+            duration = Math.max(260, Math.min(390, duration));
+          } else {
+            const ratio = Math.min(1, remainingDistance / width);
+            duration = Math.round(300 + ratio * 90);
+          }
+
+          suppressClicksUntil = performance.now() + 80;
+          setContainerPosition(targetX, duration, ADAPTIVE_EASING);
+        } else if (interruptedAnimation) {
+          snapToPanel(currentPanel, 220);
+        }
+        interruptedAnimation = false;
+      };
+
+      panelsContainer.addEventListener('touchend', onDragEnd, { passive: true });
+      panelsContainer.addEventListener('touchcancel', onDragEnd, { passive: true });
+
+      window.addEventListener('resize', () => {
+        const width = window.innerWidth;
+        if (width !== lastWidth) {
+          lastWidth = width;
+          snapToPanel(currentPanel, 0);
+        }
+      }, { passive: true });
+    }
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      liveRegion.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toastEl.classList.remove('show'), 1500);
+    }
+
+    /* ==========================================================================
+       CONTROLADOR: CATÁLOGO DE PRODUCTOS
+       ========================================================================== */
+    function renderProducts(query = '') {
+      const q = normalize(query);
+      let html = '';
+      let count = 0;
+      let exactMatch = false;
+
+      for (let i = 0, l = products.length; i < l; i++) {
+        const p = products[i];
+        if (p.norm === q) exactMatch = true;
+        if (!q || p.norm.includes(q)) {
+          count++;
+          html += `<button type="button" class="product-card" data-idx="${i}">${escapeHtml(p.name)}</button>`;
+        }
+      }
+
+      productsGrid.innerHTML = count ? html : `
+        <div class="empty-state">
+          <div class="empty-state-icon" aria-hidden="true">🔍</div>
+          <p class="empty-state-text">No se encontraron productos.<br>Pulsa <strong>Añadir</strong> para agregarlo.</p>
+        </div>`;
+      addBtn.hidden = !(q && !exactMatch);
+    }
+
+    function handleAddProductFromInput() {
+      const rawName = searchInput.value.trim();
+      if (!rawName) return;
+      const norm = normalize(rawName);
+
+      let productToAdd = products.find(p => p.norm === norm);
+      if (!productToAdd) {
+        productToAdd = { name: rawName, norm };
+        products.push(productToAdd);
+        products.sort((a, b) => collator.compare(a.name, b.name));
+        storageService.set(STORAGE_KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
+      }
+
+      addToCart(productToAdd.name);
+      searchInput.value = '';
+      addBtn.hidden = true;
+      renderProducts();
+    }
+
+    /* ==========================================================================
+       CONTROLADOR: LISTA DE LA COMPRA
+       ========================================================================== */
+    function addToCart(name) {
+      const trimmed = (name || '').trim();
+      if (!trimmed) return;
+
+      const norm = normalize(trimmed);
+      const existing = cartItems.find(i => i.norm === norm);
+      if (existing) {
+        existing.qty++;
+        existing.completed = false;
+      } else {
+        cartItems.push({ id: generateId(), name: trimmed, norm, qty: 1, completed: false });
+      }
+      saveCartToStorage();
+      scheduleCartRender();
+      showToast(`Añadido: ${trimmed}`);
+    }
+
+    function scheduleCartRender() {
+      if (cartRenderRaf) return;
+      cartRenderRaf = requestAnimationFrame(() => {
+        cartRenderRaf = 0;
+        renderCart();
+      });
+    }
+
+    function renderCart() {
+      if (!cartItems.length) {
+        cartList.innerHTML = `
+          <li class="empty-state">
+            <div class="empty-state-icon" aria-hidden="true">🛒</div>
+            <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
+          </li>`;
+        listFooter.hidden = true;
+        return;
+      }
+
+      listFooter.hidden = false;
+
+      const sorted = [...cartItems].sort((a, b) => {
+        if (a.completed === b.completed) return collator.compare(a.name, b.name);
+        return a.completed ? 1 : -1;
+      });
+
+      let html = '';
+      for (let i = 0, l = sorted.length; i < l; i++) {
+        const item = sorted[i];
+        const id = escapeHtml(item.id);
+        const name = escapeHtml(item.name);
+        const isDone = item.completed ? ' completed' : '';
+        html += `
+          <li class="cart-item${isDone}" data-id="${id}">
+            <button type="button" class="item-toggle-wrap" data-action="toggle" aria-pressed="${item.completed}">
+              <span class="item-checkbox" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </span>
+              <span class="item-name">${name}</span>
+            </button>
+            <div class="cart-controls">
+              <button type="button" class="qty-btn" data-action="dec" aria-label="Disminuir cantidad de ${name}">−</button>
+              <span class="item-qty-badge">${item.qty}</span>
+              <button type="button" class="qty-btn" data-action="inc" aria-label="Aumentar cantidad de ${name}">+</button>
+              <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar ${name}">×</button>
+            </div>
+          </li>`;
+      }
+      cartList.innerHTML = html;
+    }
+
+    /* ==========================================================================
+       CONTROLADOR: NOTAS RÁPIDAS
+       ========================================================================== */
+    function parseNoteParts(rawText) {
+      const lines = (rawText || '').trim().split(/\r?\n/);
+      const title = lines[0] || 'Nota';
+      const body = lines.slice(1).join('\n').trim();
+      return { title, body };
+    }
+
+    function renderNotes(query = '') {
+      const q = normalize(query);
+      let html = '';
+      let count = 0;
+
+      for (let i = 0, l = notes.length; i < l; i++) {
+        const note = notes[i];
+        if (!q || note.norm.includes(q)) {
+          count++;
+          const id = escapeHtml(note.id);
+          const { title, body } = parseNoteParts(note.text);
+          html += `
+            <li class="note-card" data-id="${id}">
+              <button type="button" class="note-open" aria-label="Editar nota: ${escapeHtml(title)}">
+                <span class="note-title">${escapeHtml(title)}</span>
+                ${body ? `<span class="note-body">${escapeHtml(body)}</span>` : ''}
+                <time class="note-date" datetime="${escapeHtml(note.date)}">${escapeHtml(note.formattedDate)}</time>
+              </button>
+              <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar nota: ${escapeHtml(title)}">×</button>
+            </li>`;
+        }
+      }
+
+      notesGrid.innerHTML = count ? html : `
+        <li class="empty-state">
+          <div class="empty-state-icon" aria-hidden="true">📝</div>
+          <p class="empty-state-text">${q ? 'No se encontraron notas.' : 'No hay notas.<br>¡Crea tu primera nota!'}</p>
+        </li>`;
+    }
+
+    function autoResizeTextarea(force = false) {
+      if (force) {
+        noteTextInput.style.height = 'auto';
+        const h = noteTextInput.scrollHeight;
+        lastTextareaScrollH = h;
+        noteTextInput.style.height = `${h}px`;
+        return;
+      }
+      const sh = noteTextInput.scrollHeight;
+      const ch = noteTextInput.clientHeight;
+      if (sh > ch || sh < lastTextareaScrollH - 16) {
+        noteTextInput.style.height = 'auto';
+        const nextH = noteTextInput.scrollHeight;
+        if (nextH !== lastTextareaScrollH) {
+          lastTextareaScrollH = nextH;
+          noteTextInput.style.height = `${nextH}px`;
+        } else {
+          noteTextInput.style.height = `${ch}px`;
+        }
+      }
+    }
+
+    function openNoteModal(note = null) {
+      const active = document.activeElement;
+      lastFocused = active && active !== document.body ? active : null;
+      currentNote = note;
+      noteTextInput.value = note ? note.text : '';
+      noteModal.classList.add('active');
+      syncPanelA11y();
+      requestAnimationFrame(() => {
+        autoResizeTextarea(true);
+        noteTextInput.scrollTop = 0;
+        noteTextInput.focus({ preventScroll: true });
+      });
+    }
+
+    function closeNoteModal() {
+      noteModal.classList.remove('active');
+      noteTextInput.blur();
+      currentNote = null;
+      modalContent.style.maxHeight = '';
+      syncPanelA11y();
+
+      if (lastFocused) {
+        const target = lastFocused.isConnected ? lastFocused : (addNoteBtn.hidden ? null : addNoteBtn);
+        if (target) target.focus({ preventScroll: true });
+      }
+      lastFocused = null;
+    }
+
+    function setupModalKeyboardSync() {
+      if (!window.visualViewport) return;
+
+      const onViewportChange = () => {
+        if (!noteModal.classList.contains('active')) return;
+        const vv = window.visualViewport;
+        modalContent.style.maxHeight = `${Math.min(vv.height - 32, window.innerHeight * 0.85)}px`;
+      };
+
+      window.visualViewport.addEventListener('resize', onViewportChange);
+      window.visualViewport.addEventListener('scroll', onViewportChange);
+    }
+
+    /* ==========================================================================
+       EFECTOS GRÁFICOS: AMBIENT ORBS Y LIQUID LENS
+       ========================================================================== */
     function setupAmbientOrbs() {
       if (!ambientEl) return;
       const GREEN_PALETTE = [
-        '0, 255, 136',  // Esmeralda
-        '0, 185, 95',   // Jade oscuro
-        '16, 225, 118', // Verde bosque
-        '0, 210, 110'   // Verde abisal
+        '0, 255, 136',
+        '0, 185, 95',
+        '16, 225, 118',
+        '0, 210, 110'
       ];
 
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1121,10 +1712,8 @@
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         const minDim = Math.min(vw, vh);
-        // Tamaño de la esfera contenido para dejar amplio recorrido interior sin tocar bordes
         const size = Math.round(Math.max(160, Math.min(340, minDim * 0.44)));
         const radius = size * 0.5;
-        // Margen extra desde el borde para que ni siquiera la cola Gaussiana se acerque al límite
         const padX = Math.max(radius * 0.92, vw * 0.15);
         const padY = Math.max(radius * 0.92, vh * 0.13);
 
@@ -1162,9 +1751,7 @@
         orb.el.style.setProperty('--orb-size', `${b.size}px`);
         orb.el.style.setProperty('--orb-rgb', GREEN_PALETTE[Math.floor(Math.random() * GREEN_PALETTE.length)]);
 
-        // 1. Nace en una zona aleatoria segura (totalmente apagado)
         const pStart = pickPoint(b);
-        // 2. Se desplaza hacia otra zona aleatoria alejada pasando por un punto intermedio curvo
         const pEnd = pickPoint(b, pStart);
         const jitterX = (b.maxX - b.minX) * 0.16;
         const jitterY = (b.maxY - b.minY) * 0.16;
@@ -1188,31 +1775,11 @@
 
         if (orb.anim) orb.anim.cancel();
         const anim = orb.el.animate([
-          {
-            transform: `translate3d(${tx0}px, ${ty0}px, 0) scale(0.82)`,
-            opacity: 0,
-            offset: 0
-          },
-          {
-            transform: `translate3d(${Math.round((tx0 + txM) * 0.5)}px, ${Math.round((ty0 + tyM) * 0.5)}px, 0) scale(0.96)`,
-            opacity: 0.45,
-            offset: 0.25
-          },
-          {
-            transform: `translate3d(${txM}px, ${tyM}px, 0) scale(1.08)`,
-            opacity: 1,
-            offset: 0.5
-          },
-          {
-            transform: `translate3d(${Math.round((txM + tx1) * 0.5)}px, ${Math.round((tyM + ty1) * 0.5)}px, 0) scale(0.96)`,
-            opacity: 0.45,
-            offset: 0.75
-          },
-          {
-            transform: `translate3d(${tx1}px, ${ty1}px, 0) scale(0.84)`,
-            opacity: 0,
-            offset: 1
-          }
+          { transform: `translate3d(${tx0}px, ${ty0}px, 0) scale(0.82)`, opacity: 0, offset: 0 },
+          { transform: `translate3d(${Math.round((tx0 + txM) * 0.5)}px, ${Math.round((ty0 + tyM) * 0.5)}px, 0) scale(0.96)`, opacity: 0.45, offset: 0.25 },
+          { transform: `translate3d(${txM}px, ${tyM}px, 0) scale(1.08)`, opacity: 1, offset: 0.5 },
+          { transform: `translate3d(${Math.round((txM + tx1) * 0.5)}px, ${Math.round((ty0 + tyM) * 0.5)}px, 0) scale(0.96)`, opacity: 0.45, offset: 0.75 },
+          { transform: `translate3d(${tx1}px, ${ty1}px, 0) scale(0.84)`, opacity: 0, offset: 1 }
         ], {
           duration,
           easing: 'ease-in-out',
@@ -1224,7 +1791,6 @@
         }
 
         orb.anim = anim;
-        // Cuando termina de apagarse (opacity: 0), salta a una nueva zona aleatoria y repite
         anim.onfinish = () => launchOrbCycle(orb, 0);
       }
 
@@ -1237,7 +1803,6 @@
       }
       ambientEl.appendChild(frag);
 
-      // Arranca los 4 focos en fases desfasadas para que haya actividad inmediata y asíncrona
       orbs.forEach((orb, idx) => {
         launchOrbCycle(orb, (idx + 0.35) / ORB_COUNT);
       });
@@ -1251,147 +1816,17 @@
       }, { passive: true });
     }
 
-    const store = {
-      get: (k, fallback = []) => {
-        try {
-          const raw = localStorage.getItem(k);
-          if (!raw) return fallback;
-          const parsed = JSON.parse(raw);
-          return Array.isArray(parsed) ? parsed : fallback;
-        } catch (e) {
-          console.error(`Error leyendo ${k} en LocalStorage:`, e);
-          return fallback;
-        }
-      },
-      set: (k, v) => {
-        try {
-          localStorage.setItem(k, JSON.stringify(v));
-          return true;
-        } catch (e) {
-          console.error(`Error guardando ${k} en LocalStorage:`, e);
-          showToast('Aviso: Espacio de almacenamiento lleno');
-          return false;
-        }
-      }
-    };
-
-    function saveCartToStorage() {
-      const payload = cartItems.map(i => ({
-        id: i.id,
-        name: i.name,
-        qty: i.qty,
-        completed: i.completed
-      }));
-      store.set(KEYS.CART, payload);
-    }
-
-    function scheduleCartRender() {
-      if (cartRenderRaf) return;
-      cartRenderRaf = requestAnimationFrame(() => {
-        cartRenderRaf = 0;
-        renderCart();
-      });
-    }
-
-    function recoverLegacyStorage() {
-      if (!localStorage.getItem(KEYS.PRODUCTS)) {
-        for (const oldKey of LEGACY_KEYS.PRODUCTS) {
-          const legacy = store.get(oldKey, null);
-          if (legacy && legacy.length > 0) {
-            store.set(KEYS.PRODUCTS, legacy);
-            break;
-          }
-        }
-      }
-
-      if (!localStorage.getItem(KEYS.CART)) {
-        for (const oldKey of LEGACY_KEYS.CART) {
-          const legacy = store.get(oldKey, null);
-          if (legacy && legacy.length > 0) {
-            store.set(KEYS.CART, legacy);
-            break;
-          }
-        }
-      }
-
-      if (!localStorage.getItem(KEYS.NOTES)) {
-        for (const oldKey of LEGACY_KEYS.NOTES) {
-          const legacy = store.get(oldKey, null);
-          if (legacy && legacy.length > 0) {
-            store.set(KEYS.NOTES, legacy);
-            break;
-          }
-        }
-      }
-    }
-
-    function parseValidDate(d) {
-      const parsed = new Date(d);
-      return isNaN(parsed.getTime()) ? new Date() : parsed;
-    }
-
-    function showToast(msg) {
-      toastEl.textContent = msg;
-      liveRegion.textContent = msg;
-      toastEl.classList.add('show');
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => toastEl.classList.remove('show'), 1500);
-    }
-
-    function autoResizeTextarea(force = false) {
-      if (force) {
-        noteTextInput.style.height = 'auto';
-        const h = noteTextInput.scrollHeight;
-        lastTextareaScrollH = h;
-        noteTextInput.style.height = `${h}px`;
-        return;
-      }
-      const sh = noteTextInput.scrollHeight;
-      const ch = noteTextInput.clientHeight;
-      if (sh > ch || sh < lastTextareaScrollH - 16) {
-        noteTextInput.style.height = 'auto';
-        const nextH = noteTextInput.scrollHeight;
-        if (nextH !== lastTextareaScrollH) {
-          lastTextareaScrollH = nextH;
-          noteTextInput.style.height = `${nextH}px`;
-        } else {
-          noteTextInput.style.height = `${ch}px`;
-        }
-      }
-    }
-    noteTextInput.addEventListener('input', () => autoResizeTextarea(false));
-
-    document.addEventListener('click', e => {
-      if (performance.now() < suppressClicksUntil) {
-        e.stopImmediatePropagation();
-        e.preventDefault();
-      }
-    }, true);
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && noteModal.classList.contains('active')) closeNoteModal();
-    });
-
-    /* =====================================================================
-       Liquid Glass – real refraction (Chromium: Chrome, Edge, Android)
-       backdrop-filter: url(#svg-filter) is only honoured by Chromium. Safari (all iOS
-       browsers) and Firefox ignore it, so there we keep the translucent CSS fallback.
-       ===================================================================== */
     const supportsBackdropRefraction = (() => {
-      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return false;          // iOS = WebKit
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return false;
       const brands = navigator.userAgentData && navigator.userAgentData.brands;
       if (brands) return brands.some(b => b.brand === 'Chromium');
       return Boolean(window.chrome) && !/Firefox/i.test(navigator.userAgent);
     })();
 
-    const LENS_SELECTOR = '.search-input, .clear-all, .modal-content, .toast';
-    const SVG_NS = 'http://www.w3.org/2000/svg';
     const lensEntries = new Map();
     let lensDefs = null;
     let lensCanvas = null;
 
-    /* Displacement map rendered at 0.5x resolution (bilinearly interpolated by feImage)
-       with fast Uint32Array fill and inner-rectangle culling (~12x faster on CPU). */
     function makeLensMap(w, h, radius, bezel) {
       const scale = 0.5;
       const mw = Math.max(4, Math.round(w * scale));
@@ -1406,7 +1841,6 @@
       const img = ctx.createImageData(mw, mh);
       const data = img.data;
 
-      // Little-endian ABGR for neutral displacement rgba(128, 128, 128, 255)
       new Uint32Array(data.buffer).fill(0xFF808080);
 
       const hw = mw * 0.5, hh = mh * 0.5;
@@ -1426,7 +1860,6 @@
           const px = x + 0.5 - hw;
           const qx = Math.abs(px) - bx;
 
-          // Fast skip across the flat interior of the row
           if (yInFlat && qx <= flatLimit) {
             const skipTo = Math.floor(hw + bx + flatLimit - 0.5);
             if (x < skipTo) x = skipTo;
@@ -1449,7 +1882,7 @@
           const inside = -dist;
           if (inside < mb) {
             const t = 1 - Math.max(0, inside) * invBezel;
-            const m = t * t * Math.sqrt(t); // fast approximation of t^2.4
+            const m = t * t * Math.sqrt(t);
             const i = (rowOffset + x) << 2;
             data[i] = 128 - gx * m * 127;
             data[i + 1] = 128 - gy * m * 127;
@@ -1468,16 +1901,16 @@
       if (entry && entry.w === w && entry.h === h) return;
 
       if (!entry) {
-        const filter = document.createElementNS(SVG_NS, 'filter');
+        const filter = document.createElementNS(SVG_XMLNS, 'filter');
         filter.id = `lg-lens-${lensEntries.size}`;
         filter.setAttribute('filterUnits', 'userSpaceOnUse');
         filter.setAttribute('color-interpolation-filters', 'sRGB');
 
-        const feImage = document.createElementNS(SVG_NS, 'feImage');
+        const feImage = document.createElementNS(SVG_XMLNS, 'feImage');
         feImage.setAttribute('preserveAspectRatio', 'none');
         feImage.setAttribute('result', 'map');
 
-        const disp = document.createElementNS(SVG_NS, 'feDisplacementMap');
+        const disp = document.createElementNS(SVG_XMLNS, 'feDisplacementMap');
         disp.setAttribute('in', 'SourceGraphic');
         disp.setAttribute('in2', 'map');
         disp.setAttribute('xChannelSelector', 'R');
@@ -1511,7 +1944,6 @@
       el.classList.add('lg-ready');
     }
 
-    /* The lens "bulges" (stronger refraction) while pressed or focused, and relaxes on release */
     function bulgeLens(el, factor) {
       const entry = lensEntries.get(el);
       if (!entry) return;
@@ -1531,13 +1963,13 @@
     function setupLiquidLens() {
       if (!supportsBackdropRefraction || !('ResizeObserver' in window)) return;
 
-      const svg = document.createElementNS(SVG_NS, 'svg');
+      const svg = document.createElementNS(SVG_XMLNS, 'svg');
       svg.setAttribute('width', '0');
       svg.setAttribute('height', '0');
       svg.setAttribute('aria-hidden', 'true');
       svg.setAttribute('focusable', 'false');
       svg.style.position = 'absolute';
-      lensDefs = document.createElementNS(SVG_NS, 'defs');
+      lensDefs = document.createElementNS(SVG_XMLNS, 'defs');
       svg.appendChild(lensDefs);
       document.body.appendChild(svg);
 
@@ -1553,7 +1985,7 @@
           });
         }
       });
-      document.querySelectorAll(LENS_SELECTOR).forEach(el => observer.observe(el));
+      document.querySelectorAll(LENS_TARGET_SELECTOR).forEach(el => observer.observe(el));
 
       document.addEventListener('focusin', e => {
         if (e.target.matches('.search-input')) bulgeLens(e.target, 1.6);
@@ -1563,11 +1995,12 @@
       });
     }
 
-    // Liquid Glass: the specular highlight under the glass follows the touch/pointer position
-    const GLASS_REACTIVE = '.product-card, .note-card, .qty-btn, .btn, .add-btn, .clear-all, .delete-btn, .delete-note';
+    /* ==========================================================================
+       LISTENERS DE EVENTOS Y ENLACES
+       ========================================================================== */
     let pressedLens = null;
     document.addEventListener('pointerdown', e => {
-      const el = e.target.closest(GLASS_REACTIVE);
+      const el = e.target.closest(GLASS_REACTIVE_SELECTOR);
       if (!el) return;
       const r = el.getBoundingClientRect();
       el.style.setProperty('--gx', `${Math.round(e.clientX - r.left)}px`);
@@ -1587,320 +2020,43 @@
     document.addEventListener('pointerup', releaseLens, { passive: true });
     document.addEventListener('pointercancel', releaseLens, { passive: true });
 
+    document.addEventListener('click', e => {
+      if (performance.now() < suppressClicksUntil) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    }, true);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && noteModal.classList.contains('active')) closeNoteModal();
+    });
+
     window.addEventListener('storage', e => {
       if (!e.key) return;
-      if (e.key === KEYS.CART) {
+      if (e.key === STORAGE_KEYS.CART) {
         syncCart();
         renderCart();
-      } else if (e.key === KEYS.NOTES) {
+      } else if (e.key === STORAGE_KEYS.NOTES) {
         syncNotes();
         renderNotes(searchNotesInput.value);
-      } else if (e.key === KEYS.PRODUCTS) {
+      } else if (e.key === STORAGE_KEYS.PRODUCTS) {
         syncProducts();
         renderProducts(searchInput.value);
       }
     });
 
-    function syncProducts() {
-      const storedProducts = store.get(KEYS.PRODUCTS, []);
-      if (!storedProducts.length) {
-        products = defaultProducts.map(name => ({ name, norm: normalize(name) }));
-        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
-      } else {
-        const seen = new Set();
-        products = [];
-        for (let i = 0; i < storedProducts.length; i++) {
-          const p = storedProducts[i];
-          const name = (typeof p === 'string' ? p : (p && p.name ? p.name : '')).trim();
-          if (!name) continue;
-          const norm = normalize(name);
-          if (seen.has(norm)) continue;
-          seen.add(norm);
-          products.push({ name, norm });
-        }
-        products.sort((a, b) => collator.compare(a.name, b.name));
-      }
-    }
-
-    function syncCart() {
-      const storedCart = store.get(KEYS.CART, []);
-      cartItems = storedCart.map(i => {
-        const name = String(i.name || '').trim();
-        return {
-          id: String(i.id || generateId()),
-          name,
-          norm: normalize(name),
-          qty: Math.max(1, parseInt(i.qty, 10) || 1),
-          completed: Boolean(i.completed)
-        };
-      }).filter(i => i.name);
-    }
-
-    function syncNotes() {
-      const storedNotes = store.get(KEYS.NOTES, []);
-      notes = storedNotes.map(n => {
-        const fallbackText = [n.title, n.content].filter(Boolean).join('\n');
-        const text = String(n.text ?? fallbackText ?? '');
-        const validDate = parseValidDate(n.date);
-        return {
-          id: String(n.id || generateId()),
-          text,
-          norm: normalize(text),
-          date: validDate.toISOString(),
-          formattedDate: dateFormatter.format(validDate)
-        };
-      });
-    }
-
-    function initApp() {
-      recoverLegacyStorage();
-      syncProducts();
-      syncCart();
-      syncNotes();
-
-      renderProducts();
-      renderCart();
-      renderNotes();
-      setupTouchSwipe();
-      setupModalKeyboardSync();
-    }
-
-    /* Only the visible panel (and the dialog, when open) is reachable by keyboard / screen readers */
-    function syncPanelA11y() {
-      const modalOpen = noteModal.classList.contains('active');
-      panels.forEach((p, i) => { p.inert = modalOpen || i !== currentPanel; });
-      panelNav.inert = modalOpen;
-      panelNavButtons.forEach((b, i) => {
-        if (i === currentPanel) b.setAttribute('aria-current', 'true');
-        else b.removeAttribute('aria-current');
-      });
-    }
-
-    function getRealContainerX() {
-      if (!isAnimating) return currentContainerX;
-      const style = window.getComputedStyle(panelsContainer);
-      const transform = style.transform || style.webkitTransform;
-      if (transform && transform !== 'none') {
-        const matrix = new DOMMatrixReadOnly(transform);
-        return matrix.m41;
-      }
-      return currentContainerX;
-    }
-
-    function setContainerPosition(offsetPx, durationMs = 0, easing = ADAPTIVE_EASING) {
-      currentContainerX = offsetPx;
-      clearTimeout(animEndTimer);
-      if (durationMs > 0) {
-        isAnimating = true;
-        panelsContainer.style.transition = `transform ${durationMs}ms ${easing}`;
-        animEndTimer = setTimeout(() => { isAnimating = false; }, durationMs + 20);
-      } else {
-        isAnimating = false;
-        panelsContainer.style.transition = 'none';
-      }
-      panelsContainer.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
-    }
-
     panelsContainer.addEventListener('transitionend', e => {
       if (e.target === panelsContainer) {
         isAnimating = false;
         clearTimeout(animEndTimer);
+        syncPanelA11y();
       }
     });
-
-    function snapToPanel(index, duration = 380, easing = ADAPTIVE_EASING) {
-      currentPanel = Math.max(0, Math.min(2, index));
-      setContainerPosition(-currentPanel * window.innerWidth, duration, easing);
-      syncPanelA11y();
-    }
 
     panelNav.addEventListener('click', e => {
       const btn = e.target.closest('button[data-panel]');
       if (btn) snapToPanel(Number(btn.dataset.panel));
     });
-
-    function setupTouchSwipe() {
-      let startX = 0, startY = 0, currentX = 0;
-      let isDragging = false;
-      let isHorizontal = null;
-      let dragBaseOffset = 0;
-      let pendingTargetX = 0;
-      let rAf = null;
-      let velocitySamples = [];
-      let lastWidth = window.innerWidth;
-      let interruptedAnimation = false;
-
-      // Listeners are scoped to the panels container (not document) so the non-passive
-      // touchmove never delays scrolling inside the modal or other UI.
-      panelsContainer.addEventListener('touchstart', e => {
-        if (e.touches.length > 1) return;
-        // Small controls keep their tap; large tappable cards/toggles can start a swipe.
-        if (e.target.closest('input, textarea, .qty-btn, .delete-btn, .delete-note, .add-btn, .clear-all')) return;
-
-        const t = e.touches[0];
-        startX = currentX = t.clientX;
-        startY = t.clientY;
-        isDragging = true;
-        isHorizontal = null;
-
-        const now = performance.now();
-        velocitySamples = [{ x: startX, t: now }];
-
-        if (isAnimating) {
-          interruptedAnimation = true;
-          dragBaseOffset = getRealContainerX();
-          setContainerPosition(dragBaseOffset, 0);
-        } else {
-          interruptedAnimation = false;
-          dragBaseOffset = -currentPanel * window.innerWidth;
-          currentContainerX = dragBaseOffset;
-        }
-        pendingTargetX = dragBaseOffset;
-      }, { passive: true });
-
-      panelsContainer.addEventListener('touchmove', e => {
-        if (!isDragging || e.touches.length > 1) return;
-
-        const t = e.touches[0];
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
-        const absX = Math.abs(dx);
-        const absY = Math.abs(dy);
-
-        if (isHorizontal === null) {
-          if (absX > 6 || absY > 6) {
-            isHorizontal = absX > absY * 1.15;
-            if (!isHorizontal) {
-              isDragging = false;
-              if (interruptedAnimation) {
-                snapToPanel(currentPanel, 220);
-                interruptedAnimation = false;
-              }
-              return;
-            }
-          } else {
-            return;
-          }
-        }
-
-        if (!isHorizontal) return;
-        if (e.cancelable) e.preventDefault();
-
-        currentX = t.clientX;
-
-        const now = performance.now();
-        velocitySamples.push({ x: currentX, t: now });
-        while (velocitySamples.length > 1 && now - velocitySamples[0].t > 85) {
-          velocitySamples.shift();
-        }
-
-        const w = window.innerWidth;
-        let targetX = dragBaseOffset + dx;
-
-        if (targetX > 0) {
-          targetX = Math.pow(targetX, 0.82) * 2.8;
-        } else if (targetX < -2 * w) {
-          const over = targetX - (-2 * w);
-          targetX = -2 * w - Math.pow(Math.abs(over), 0.82) * 2.8;
-        }
-
-        pendingTargetX = targetX;
-
-        if (!rAf) {
-          rAf = requestAnimationFrame(() => {
-            setContainerPosition(pendingTargetX, 0);
-            rAf = null;
-          });
-        }
-      }, { passive: false });
-
-      const onDragEnd = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        if (rAf) {
-          cancelAnimationFrame(rAf);
-          rAf = null;
-          setContainerPosition(pendingTargetX, 0);
-        }
-
-        if (isHorizontal) {
-          const w = window.innerWidth;
-          let velocity = 0;
-
-          if (velocitySamples.length >= 2) {
-            const first = velocitySamples[0];
-            const last = velocitySamples[velocitySamples.length - 1];
-            const dt = Math.max(1, last.t - first.t);
-            velocity = (last.x - first.x) / dt;
-          }
-
-          const dx = currentX - startX;
-          const absV = Math.abs(velocity);
-          const isFlick = absV > 0.24;
-
-          if (isFlick) {
-            if (velocity < -0.24 && currentPanel < 2) currentPanel++;
-            else if (velocity > 0.24 && currentPanel > 0) currentPanel--;
-          } else {
-            if (dx < -w * 0.25 && currentPanel < 2) currentPanel++;
-            else if (dx > w * 0.25 && currentPanel > 0) currentPanel--;
-          }
-
-          const targetX = -currentPanel * w;
-          const remainingDistance = Math.abs(targetX - currentContainerX);
-
-          let duration;
-          if (isFlick) {
-            duration = Math.round(remainingDistance / (absV * 1.15));
-            duration = Math.max(260, Math.min(390, duration));
-          } else {
-            const ratio = Math.min(1, remainingDistance / w);
-            duration = Math.round(300 + ratio * 90);
-          }
-
-          suppressClicksUntil = performance.now() + 80;
-          setContainerPosition(targetX, duration, ADAPTIVE_EASING);
-          syncPanelA11y();
-        } else if (interruptedAnimation) {
-          snapToPanel(currentPanel, 220);
-        }
-        interruptedAnimation = false;
-      };
-
-      panelsContainer.addEventListener('touchend', onDragEnd, { passive: true });
-      panelsContainer.addEventListener('touchcancel', onDragEnd, { passive: true });
-
-      window.addEventListener('resize', () => {
-        const w = window.innerWidth;
-        if (w !== lastWidth) {
-          lastWidth = w;
-          snapToPanel(currentPanel, 0);
-        }
-      }, { passive: true });
-    }
-
-    function renderProducts(query = '') {
-      const q = normalize(query);
-      let html = '';
-      let count = 0;
-      let exactMatch = false;
-
-      for (let i = 0, l = products.length; i < l; i++) {
-        const p = products[i];
-        if (p.norm === q) exactMatch = true;
-        if (!q || p.norm.includes(q)) {
-          count++;
-          html += `<button type="button" class="product-card" data-idx="${i}">${esc(p.name)}</button>`;
-        }
-      }
-
-      productsGrid.innerHTML = count ? html : `
-        <div class="empty-state">
-          <div class="empty-state-icon" aria-hidden="true">🔍</div>
-          <p class="empty-state-text">No se encontraron productos.<br>Pulsa <strong>Añadir</strong> para agregarlo.</p>
-        </div>`;
-      addBtn.hidden = !(q && !exactMatch);
-    }
 
     productsGrid.addEventListener('click', e => {
       const card = e.target.closest('.product-card');
@@ -1909,48 +2065,12 @@
       if (item) addToCart(item.name);
     });
 
-    function addToCart(name) {
-      const trimmed = (name || '').trim();
-      if (!trimmed) return;
-
-      const norm = normalize(trimmed);
-      const existing = cartItems.find(i => i.norm === norm);
-      if (existing) {
-        existing.qty++;
-        existing.completed = false;
-      } else {
-        cartItems.push({ id: generateId(), name: trimmed, norm, qty: 1, completed: false });
-      }
-      saveCartToStorage();
-      scheduleCartRender();
-      showToast(`Añadido: ${trimmed}`);
-    }
-
     let searchTimer = null;
     searchInput.addEventListener('input', e => {
       const val = e.target.value;
       cancelAnimationFrame(searchTimer);
       searchTimer = requestAnimationFrame(() => renderProducts(val));
     });
-
-    function handleAddProductFromInput() {
-      const rawName = searchInput.value.trim();
-      if (!rawName) return;
-      const norm = normalize(rawName);
-
-      let productToAdd = products.find(p => p.norm === norm);
-      if (!productToAdd) {
-        productToAdd = { name: rawName, norm };
-        products.push(productToAdd);
-        products.sort((a, b) => collator.compare(a.name, b.name));
-        store.set(KEYS.PRODUCTS, products.map(p => ({ name: p.name })));
-      }
-
-      addToCart(productToAdd.name);
-      searchInput.value = '';
-      addBtn.hidden = true;
-      renderProducts();
-    }
 
     addBtn.addEventListener('click', handleAddProductFromInput);
     searchInput.addEventListener('keydown', e => {
@@ -1959,49 +2079,6 @@
         handleAddProductFromInput();
       }
     });
-
-    function renderCart() {
-      if (!cartItems.length) {
-        cartList.innerHTML = `
-          <li class="empty-state">
-            <div class="empty-state-icon" aria-hidden="true">🛒</div>
-            <p class="empty-state-text">Tu lista está vacía.<br>Añade productos desde <strong>Explorar</strong>.</p>
-          </li>`;
-        listFooter.hidden = true;
-        return;
-      }
-
-      listFooter.hidden = false;
-
-      const sorted = [...cartItems].sort((a, b) => {
-        if (a.completed === b.completed) return collator.compare(a.name, b.name);
-        return a.completed ? 1 : -1;
-      });
-
-      let html = '';
-      for (let i = 0, l = sorted.length; i < l; i++) {
-        const item = sorted[i];
-        const id = esc(item.id);
-        const name = esc(item.name);
-        const isDone = item.completed ? ' completed' : '';
-        html += `
-          <li class="cart-item${isDone}" data-id="${id}">
-            <button type="button" class="item-toggle-wrap" data-action="toggle" aria-pressed="${item.completed}">
-              <span class="item-checkbox" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </span>
-              <span class="item-name">${name}</span>
-            </button>
-            <div class="cart-controls">
-              <button type="button" class="qty-btn" data-action="dec" aria-label="Disminuir cantidad de ${name}">−</button>
-              <span class="item-qty-badge">${item.qty}</span>
-              <button type="button" class="qty-btn" data-action="inc" aria-label="Aumentar cantidad de ${name}">+</button>
-              <button type="button" class="delete-btn" data-action="del" aria-label="Eliminar ${name}">×</button>
-            </div>
-          </li>`;
-      }
-      cartList.innerHTML = html;
-    }
 
     cartList.addEventListener('click', e => {
       const itemEl = e.target.closest('.cart-item');
@@ -2042,7 +2119,6 @@
       saveCartToStorage();
       renderCart();
 
-      // The list is re-rendered, so give keyboard users their focus back
       if (e.detail === 0) {
         const targetBtn = toggled
           ? cartList.querySelector(`[data-id="${CSS.escape(id)}"] [data-action="toggle"]`)
@@ -2051,50 +2127,13 @@
       }
     });
 
-    $('clear-all').addEventListener('click', () => {
+    getEl('clear-all').addEventListener('click', () => {
       if (cartItems.length && confirm('¿Vaciar toda la lista?')) {
         cartItems = [];
         saveCartToStorage();
         renderCart();
       }
     });
-
-    function parseNoteParts(rawText) {
-      const lines = (rawText || '').trim().split(/\r?\n/);
-      const title = lines[0] || 'Nota';
-      const body = lines.slice(1).join('\n').trim();
-      return { title, body };
-    }
-
-    function renderNotes(query = '') {
-      const q = normalize(query);
-      let html = '';
-      let count = 0;
-
-      for (let i = 0, l = notes.length; i < l; i++) {
-        const note = notes[i];
-        if (!q || note.norm.includes(q)) {
-          count++;
-          const id = esc(note.id);
-          const { title, body } = parseNoteParts(note.text);
-          html += `
-            <li class="note-card" data-id="${id}">
-              <button type="button" class="note-open" aria-label="Editar nota: ${esc(title)}">
-                <span class="note-title">${esc(title)}</span>
-                ${body ? `<span class="note-body">${esc(body)}</span>` : ''}
-                <time class="note-date" datetime="${esc(note.date)}">${esc(note.formattedDate)}</time>
-              </button>
-              <button type="button" class="delete-note" data-delete-id="${id}" aria-label="Eliminar nota: ${esc(title)}">×</button>
-            </li>`;
-        }
-      }
-
-      notesGrid.innerHTML = count ? html : `
-        <li class="empty-state">
-          <div class="empty-state-icon" aria-hidden="true">📝</div>
-          <p class="empty-state-text">${q ? 'No se encontraron notas.' : 'No hay notas.<br>¡Crea tu primera nota!'}</p>
-        </li>`;
-    }
 
     notesGrid.addEventListener('click', e => {
       const delBtn = e.target.closest('.delete-note');
@@ -2103,7 +2142,7 @@
         const id = delBtn.dataset.deleteId;
         if (confirm('¿Eliminar esta nota?')) {
           notes = notes.filter(n => n.id !== id);
-          store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
+          storageService.set(STORAGE_KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
           renderNotes(searchNotesInput.value);
         }
         return;
@@ -2116,47 +2155,7 @@
       }
     });
 
-    function openNoteModal(note = null) {
-      const active = document.activeElement;
-      lastFocused = active && active !== document.body ? active : null;
-      currentNote = note;
-      noteTextInput.value = note ? note.text : '';
-      noteModal.classList.add('active');
-      syncPanelA11y();
-      requestAnimationFrame(() => {
-        autoResizeTextarea(true);
-        noteTextInput.scrollTop = 0;
-        noteTextInput.focus({ preventScroll: true });
-      });
-    }
-
-    function closeNoteModal() {
-      noteModal.classList.remove('active');
-      noteTextInput.blur();
-      currentNote = null;
-      modalContent.style.maxHeight = '';
-      syncPanelA11y();
-
-      // Return focus to whatever opened the dialog (or the "new note" button if it was re-rendered)
-      if (lastFocused) {
-        const target = lastFocused.isConnected ? lastFocused : (addNoteBtn.hidden ? null : addNoteBtn);
-        if (target) target.focus({ preventScroll: true });
-      }
-      lastFocused = null;
-    }
-
-    function setupModalKeyboardSync() {
-      if (!window.visualViewport) return;
-
-      const onViewportChange = () => {
-        if (!noteModal.classList.contains('active')) return;
-        const vv = window.visualViewport;
-        modalContent.style.maxHeight = `${Math.min(vv.height - 32, window.innerHeight * 0.85)}px`;
-      };
-
-      window.visualViewport.addEventListener('resize', onViewportChange);
-      window.visualViewport.addEventListener('scroll', onViewportChange);
-    }
+    noteTextInput.addEventListener('input', () => autoResizeTextarea(false));
 
     let searchNotesTimer = null;
     searchNotesInput.addEventListener('input', e => {
@@ -2169,10 +2168,10 @@
     });
 
     addNoteBtn.addEventListener('click', () => openNoteModal());
-    $('cancel-note').addEventListener('click', closeNoteModal);
+    getEl('cancel-note').addEventListener('click', closeNoteModal);
     noteModal.addEventListener('click', e => { if (e.target === noteModal) closeNoteModal(); });
 
-    $('note-form').addEventListener('submit', e => {
+    getEl('note-form').addEventListener('submit', e => {
       e.preventDefault();
       const text = noteTextInput.value.trim();
       if (!text) return;
@@ -2206,12 +2205,27 @@
         });
       }
 
-      store.set(KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
+      storageService.set(STORAGE_KEYS.NOTES, notes.map(n => ({ id: n.id, text: n.text, date: n.date })));
       renderNotes(searchNotesInput.value);
       closeNoteModal();
     });
 
-    // Boot: the script sits at the end of <body>, so the DOM is already parsed
+    /* ==========================================================================
+       ARRANQUE E INICIALIZACIÓN
+       ========================================================================== */
+    function initApp() {
+      recoverLegacyStorage();
+      syncProducts();
+      syncCart();
+      syncNotes();
+
+      renderProducts();
+      renderCart();
+      renderNotes();
+      setupTouchSwipe();
+      setupModalKeyboardSync();
+    }
+
     initApp();
     snapToPanel(1, 0);
     setupAmbientOrbs();
