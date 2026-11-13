@@ -1115,11 +1115,11 @@
     const normalize = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
     const ESC_MAP = {
-      '&': '&',
-      '<': '<',
-      '>': '>',
-      '"': '"',
-      "'": '''
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
     };
     const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, char => ESC_MAP[char]);
 
